@@ -15,12 +15,13 @@ pub struct Movement(pub u32);
 #[derive(Component)]
 pub struct UnitName(pub String);
 
-/// Is the unit player controlled
-#[derive(Component, Copy, Clone, Debug, PartialEq)]
-pub enum UnitAllegiance {
-    Player,
-    Enemy
-}
+/// Marker component for Player controlled units
+#[derive(Component, Copy, Clone, Debug)]
+pub struct PlayerUnit;
+
+/// Marker component for Enemy units
+#[derive(Component, Copy, Clone, Debug)]
+pub struct EnemyUnit;
 
 /// Grid position of the unit
 #[derive(Component, Copy, Clone, Debug, Deref, DerefMut, PartialEq)]
@@ -52,6 +53,7 @@ pub enum Terrain {
 pub enum Ability {
     /// Intagible units can move through all other units, walls and buildings. 
     Intangible,
+    
     /// Can move through all terrain
     /// Can move diagonally    
     Flying,
