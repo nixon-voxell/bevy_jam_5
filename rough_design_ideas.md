@@ -49,15 +49,15 @@ Buildings can be demolished, takes 1 turn per tile.
 * tavern - mercenaries stay even if you don't pay them 2x1
 * blacksmith - unlocks new types of traps and equipment 2x1
 * guard tower - when manned, can attack a monster once per turn
-* witch - grant minor powerups
-* moat - blocks monsters that can't swim or fly
+* witch - brew potions that can be used at night 
+* moat - water hazard that blocks monsters that can't swim or fly
 
 ## Traps
 * Bear traps
 * Landmines
 * Crossbow and pressure plates
 * Burning oil
-* Crossbow tower (has to be manned by a worker who won't be available next day for building)
+* Crossbow tower (has to be manned by a worker who won't be available next day for building) can shoot in four directions
 
 ## Hunters + Mercenaries
 During the night they can be controlled by the player to fight the monsters. They have a number of actions they can perform each turn. Maybe can also trigger traps or use certain structures in some ways.
@@ -65,6 +65,45 @@ Hunters fight monsters because its their duty or something.
 Mercenaries charge gold per night, if you don't pay them they leave the village.
 * Could be a building like a tavern you can build then mercenaries stay at the tavern and you can choose each night if you'll pay them to fight
 
+## Combat Rules
+Broadly similar to "Into the Breach" and "Xcom: EU" rules.
+
+Each turn a unit (both player and computer controlled) can make a move and then an action. 
+An action could be an attack or using a special ability
+They can't make an action and then a move (unless they have a special ability that allows them to do so).
+
+* Each unit has a movement characteristic that determines how many tiles they can move by rook move rules (no diagonal movement) unless they are flying in which case they can move in all eight directions. Each move takes 1 movement point.
+* Two units can never occupy the same tile, including flying units. They also can't enter a building tile. They can enter a trapped tile.
+* Flying units can move through any terrain without restriction.
+* Units can have a swim ability that allows them to move through a water tile. They can't end a turn on a water tile however.
+* Aquatic units can move like with the swim ability but can also end their turn on a water tile and take actions while on a water tile.
+* Player controlled characters can move through buildings and gates but not walls, as long as they have enough movement to reach a tile on the other side of the building. They can't end their move on a building tile. Enemy movement is completely blocked by buildings.
+* Towers can't move, but can perform actions.
+
+## Actions
+* Attack: attack a target with an equipped weapon. The target must be within the weapon's range and there can't be any other units or buildings between the attacker and the target.
+* Throw: toss a potion or bomb up to three tiles in four directions.
+* First Aid: Heal an adjacent unit for 1hp.
+* Heal: Cure an adjacent units disease or poison.
+* Recovery: Heal self for 1hp.
+* Unweb: Available when webbed, removes web status.
+* Block: Blocks the next attack against this unit.
+* Kick: Knock an enemy back a tile
+
+## Debuffs 
+* Webbed: Can't move until an unweb action is performed.
+* Poison: Lose 1hp per turn while poisoned.
+* Disease: Lose 1 max hp and 1 move while diseased.
+
+## Special Abilities (names subject to change)
+* Run: take a second move instead of taking an action.
+* Operator: can perform two actions if they don't move this turn.
+* Tactician: can move after performing an action, if they hadn't already moved this turn.
+* Intangible: can move through other units and buildings.
+* Swim: can move through water tiles, but not end their move on a water tile.
+* Aquatic: can move through and end their move on water tile.
+* Flying: Can move through any terrain.
+ 
 ## Hitpoints
 * Death is permanent
 * To recover HP they have to skip a night of fighting and rest.
@@ -84,5 +123,6 @@ Mercenaries charge gold per night, if you don't pay them they leave the village.
 * Skeleton archer - skeleton but with ranged attack
 * Wizard - easy to kill but strong ranged attack against buildings
 * Spider - creates webs that take a turn for characters to break out of, poisoned melee attack
-* Revenant - armoured undead, big sword attack
+* Revenant - armoured undead, big axe attack
 * Thrall - human servant, can have similar abilities to player's mercenaries and hunters
+* Ghost - Can pass through player units, walls and buildings. 
