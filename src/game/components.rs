@@ -34,6 +34,12 @@ pub struct UnitState {
     pub used_action: bool,
 }
 
+impl UnitState {
+    pub fn reset(&mut self) {
+        *self = Self::default();
+    }
+}
+
 #[derive(Component, Default, Debug, Copy, Clone)]
 pub enum Terrain {
     #[default]
@@ -67,6 +73,12 @@ pub enum Ability {
     Tactician
 }
 
+/// The abilities could be individual marker components but storing them together in a hashmap
+/// seems more manageable.
 #[derive(Component, Default, Debug, Clone)]
 pub struct Abilites(pub HashSet<Ability>);
+
+/// Marker component for a building
+#[derive(Component)]
+pub struct Structure;
 

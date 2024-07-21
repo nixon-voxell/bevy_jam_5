@@ -9,6 +9,7 @@ mod movement;
 pub mod spawn;
 pub mod resources;
 pub mod components;
+pub mod systems;
 
 pub(super) fn plugin(app: &mut App) {
     app.add_plugins((
