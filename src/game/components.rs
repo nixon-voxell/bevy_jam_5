@@ -23,19 +23,16 @@ pub struct PlayerUnit;
 #[derive(Component, Copy, Clone, Debug)]
 pub struct EnemyUnit;
 
-/// Grid position of the unit
-#[derive(Component, Copy, Clone, Debug, Deref, DerefMut, PartialEq)]
-pub struct Position(pub UVec2);
 
 /// Has unit moved or performed an action yet
 /// Needs to be reset to default after each turn (Not good?)
 #[derive(Component, Default, Debug)]
-pub struct UnitState {
+pub struct UnitTurnState {
     pub used_move: bool,
     pub used_action: bool,
 }
 
-impl UnitState {
+impl UnitTurnState {
     pub fn reset(&mut self) {
         *self = Self::default();
     }
@@ -78,9 +75,28 @@ pub enum Ability {
 /// The abilities could be individual marker components but storing them together in a hashmap
 /// seems more manageable.
 #[derive(Component, Default, Debug, Clone)]
-pub struct Abilites(pub HashSet<Ability>);
+pub struct Abilities(pub HashSet<Ability>);
 
 /// Marker component for a building
 #[derive(Component)]
 pub struct Structure;
 
+#[derive(Bundle)]
+pub struct PlayerUnitBundle {
+    name: UnitName,
+    hit_points: HitPoints,
+    movement: Movement,
+    abilities: Abilities,
+    turn_state: UnitTurnState,
+    player: PlayerUnit,
+}
+
+#[derive(Bundle)]
+pub struct EnemyUnitBundle {
+    name: UnitName,
+    hit_points: HitPoints,
+    movement: Movement,
+    abilities: Abilities,
+    turn_state: UnitTurnState,
+    player: PlayerUnit,
+}
