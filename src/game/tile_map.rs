@@ -3,9 +3,15 @@ use bevy::utils::HashMap;
 use bimap::BiHashMap;
 use bimap::Overwritten;
 
+/// Width of a tile.
 pub const TILE_SIZE: f32 = 256.0;
+/// A single right direction unit in the isometric world.
 pub const RIGHT_DIR: Vec2 = Vec2::new(TILE_SIZE / 2.0, -TILE_SIZE / 4.0 - 26.0);
+/// A single down direction unit in the isometric world.
 pub const DOWN_DIR: Vec2 = Vec2::new(-TILE_SIZE / 2.0, -TILE_SIZE / 4.0 - 26.0);
+
+/// Z-depth of a single layer.
+pub const LAYER_DEPTH: f32 = 10.0;
 
 pub struct TileMapPlugin;
 
@@ -57,11 +63,11 @@ impl TileMap {
 }
 
 #[derive(Resource, Default, Debug)]
-pub struct TileSet(HashMap<TileType, Handle<Image>>);
+pub struct TileSet(HashMap<&'static str, Handle<Image>>);
 
 impl TileSet {
-    pub fn insert(&mut self, ty: TileType, handle: Handle<Image>) -> Option<Handle<Image>> {
-        self.0.insert(ty, handle)
+    pub fn insert(&mut self, name: &'static str, handle: Handle<Image>) -> Option<Handle<Image>> {
+        self.0.insert(name, handle)
     }
 
     /// Get cloned image handle.
@@ -69,21 +75,16 @@ impl TileSet {
     /// # Panic
     ///
     /// For ease of use, unwrap is used to panic if value does not exists for certain key.
-    pub fn get(&self, ty: TileType) -> Handle<Image> {
-        self.0.get(&ty).unwrap().clone()
+    pub fn get(&self, name: &str) -> Handle<Image> {
+        self.0.get(name).unwrap().clone()
     }
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
-pub enum TileType {
-    Block,
-}
-
-#[derive(Component, Clone, Copy)]
-pub struct Tile;
-
 fn load_tiles(asset_server: Res<AssetServer>, mut tile_set: ResMut<TileSet>) {
-    tile_set.insert(TileType::Block, asset_server.load("tiles/block.png"));
+    tile_set.insert("block_grey", asset_server.load("tiles/block_grey.png"));
+    tile_set.insert("block_blue", asset_server.load("tiles/block_blue.png"));
+    tile_set.insert("block_green", asset_server.load("tiles/block_green.png"));
+    tile_set.insert("block_orange", asset_server.load("tiles/block_orange.png"));
 }
 
 fn load_level(mut commands: Commands, tile_set: Res<TileSet>) {
@@ -98,7 +99,7 @@ fn load_level(mut commands: Commands, tile_set: Res<TileSet>) {
             translation.z *= -0.001;
 
             commands.spawn(SpriteBundle {
-                texture: tile_set.get(TileType::Block),
+                texture: tile_set.get("block_grey"),
                 transform: Transform::from_translation(translation),
                 ..default()
             });
