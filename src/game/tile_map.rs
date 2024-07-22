@@ -4,8 +4,8 @@ use bimap::BiHashMap;
 use bimap::Overwritten;
 
 pub const TILE_SIZE: f32 = 256.0;
-pub const RIGHT_DIR: Vec2 = Vec2::new(TILE_SIZE / 2.0, -TILE_SIZE / 4.0);
-pub const DOWN_DIR: Vec2 = Vec2::new(-TILE_SIZE / 2.0, -TILE_SIZE / 4.0);
+pub const RIGHT_DIR: Vec2 = Vec2::new(TILE_SIZE / 2.0, -TILE_SIZE / 4.0 - 26.0);
+pub const DOWN_DIR: Vec2 = Vec2::new(-TILE_SIZE / 2.0, -TILE_SIZE / 4.0 - 26.0);
 
 pub struct TileMapPlugin;
 
@@ -88,7 +88,7 @@ fn load_tiles(asset_server: Res<AssetServer>, mut tile_set: ResMut<TileSet>) {
 
 fn load_level(mut commands: Commands, tile_set: Res<TileSet>) {
     let tile_size = 10;
-    let start_translation = Vec3::new(0.0, 600.0, 0.0);
+    let start_translation = Vec3::new(0.0, 1000.0, 0.0);
 
     for y in 0..tile_size {
         for x in 0..tile_size {
