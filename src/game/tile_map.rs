@@ -3,6 +3,10 @@ use bevy::utils::HashMap;
 use bimap::BiHashMap;
 use bimap::Overwritten;
 
+pub const TILE_SIZE: f32 = 256.0;
+pub const RIGHT_DIR: Vec2 = Vec2::new(TILE_SIZE / 2.0, -TILE_SIZE / 4.0);
+pub const DOWN_DIR: Vec2 = Vec2::new(-TILE_SIZE / 2.0, -TILE_SIZE / 4.0);
+
 pub struct TileMapPlugin;
 
 impl Plugin for TileMapPlugin {
@@ -83,13 +87,21 @@ fn load_tiles(asset_server: Res<AssetServer>, mut tile_set: ResMut<TileSet>) {
 }
 
 fn load_level(mut commands: Commands, tile_set: Res<TileSet>) {
-    commands.spawn(SpriteBundle {
-        texture: tile_set.get(TileType::Block),
-        ..default()
-    });
-    commands.spawn(SpriteBundle {
-        texture: tile_set.get(TileType::Block),
-        transform: Transform::from_xyz(123.0, -123.0 / 2.0, 1.0),
-        ..default()
-    });
+    let tile_size = 10;
+    let start_translation = Vec3::new(0.0, 600.0, 0.0);
+
+    for y in 0..tile_size {
+        for x in 0..tile_size {
+            let mut translation = start_translation;
+            translation += RIGHT_DIR.xyy() * x as f32;
+            translation += DOWN_DIR.xyy() * y as f32;
+            translation.z *= -0.001;
+
+            commands.spawn(SpriteBundle {
+                texture: tile_set.get(TileType::Block),
+                transform: Transform::from_translation(translation),
+                ..default()
+            });
+        }
+    }
 }
