@@ -1,11 +1,11 @@
 use bevy::prelude::*;
 use bevy::utils::HashSet;
 
-/// amount of damage a unit can take before dying
+/// Amount of damage a unit can take before dying
 #[derive(Component, Copy, Clone, Debug, Deref, DerefMut, PartialEq)]
 pub struct HitPoints(pub u32);
 
-/// number of tiles a unit can move per turn
+/// Number of tiles a unit can move per turn
 #[derive(Component, Copy, Clone, Debug, Deref, DerefMut, PartialEq)]
 pub struct Movement(pub u32);
 
