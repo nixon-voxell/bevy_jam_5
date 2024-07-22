@@ -1,7 +1,5 @@
 use bevy::prelude::*;
-use bevy::math::UVec2;
 use bevy::utils::HashSet;
-
 
 /// amount of damage a unit can take before dying
 #[derive(Component, Copy, Clone, Debug, Deref, DerefMut, PartialEq)]
@@ -22,7 +20,6 @@ pub struct PlayerUnit;
 /// Marker component for Enemy units
 #[derive(Component, Copy, Clone, Debug)]
 pub struct EnemyUnit;
-
 
 /// Has unit moved or performed an action yet
 /// Needs to be reset to default after each turn (Not good?)
@@ -48,9 +45,9 @@ pub enum Terrain {
 
 #[derive(Debug, Copy, Clone)]
 pub enum Ability {
-    /// Intagible units can move through all other units, walls and buildings. 
+    /// Intagible units can move through all other units, walls and buildings.
     Intangible,
-    
+
     /// Can move through all terrain
     /// Can move diagonally    
     Flying,
@@ -69,7 +66,7 @@ pub enum Ability {
     Operator,
 
     /// Can move after performing an action, if they hadn't already moved this turn.
-    Tactician
+    Tactician,
 }
 
 /// The abilities could be individual marker components but storing them together in a hashmap
