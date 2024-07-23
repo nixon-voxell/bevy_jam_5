@@ -27,8 +27,8 @@ impl VillageMap {
     pub fn new(size: UVec2) -> VillageMap {
         VillageMap {
             size,
-            foreground: TileMap::new(size),
-            background: TileMap::new(size),
+            foreground: TileMap::new(size.as_ivec2()),
+            background: TileMap::new(size.as_ivec2()),
         }
     }
 }
