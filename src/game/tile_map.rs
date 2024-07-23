@@ -4,20 +4,22 @@ use bimap::BiHashMap;
 use bimap::Overwritten;
 
 /// Width of a tile.
-pub const TILE_SIZE: f32 = 256.0;
+pub const TILE_WIDTH: f32 = 256.0;
+/// Half height of a tile surface.
+pub const TILE_HALF_HEIGHT: f32 = TILE_WIDTH / 4.0 + 26.0;
 /// A single right direction unit in the isometric world.
-pub const RIGHT_DIR: Vec2 = Vec2::new(TILE_SIZE / 2.0, -TILE_SIZE / 4.0 - 26.0);
+pub const RIGHT_DIR: Vec2 = Vec2::new(TILE_WIDTH / 2.0, -TILE_HALF_HEIGHT);
 /// A single down direction unit in the isometric world.
-pub const DOWN_DIR: Vec2 = Vec2::new(-TILE_SIZE / 2.0, -TILE_SIZE / 4.0 - 26.0);
+pub const DOWN_DIR: Vec2 = Vec2::new(-TILE_WIDTH / 2.0, -TILE_HALF_HEIGHT);
 
 /// Z-depth of a single layer.
 pub const LAYER_DEPTH: f32 = 10.0;
 
 /// Convert tile coordinate to world translation.
 pub fn tile_coord_translation(x: f32, y: f32, layer: f32) -> Vec3 {
-    let mut translation = Vec3::new(RIGHT_DIR.x, RIGHT_DIR.y, -RIGHT_DIR.y) * x;
-    translation += Vec3::new(DOWN_DIR.x, DOWN_DIR.y, -DOWN_DIR.y) * y;
-    translation.z += layer * LAYER_DEPTH;
+    let mut translation = RIGHT_DIR.xyy() * x;
+    translation += DOWN_DIR.xyy() * y;
+    translation.z = translation.z * -0.001 + layer * LAYER_DEPTH;
 
     translation
 }
@@ -42,7 +44,7 @@ pub struct TileMap {
 pub const NORTH: IVec2 = IVec2::Y;
 pub const EAST: IVec2 = IVec2::X;
 pub const SOUTH: IVec2 = IVec2 { y: -1, x: 0 };
-pub const WEST: IVec2 = IVec2 { x: -1, y: 0  };
+pub const WEST: IVec2 = IVec2 { x: -1, y: 0 };
 pub const NORTHEAST: IVec2 = NORTH.wrapping_add(EAST);
 pub const SOUTHEAST: IVec2 = SOUTH.wrapping_add(EAST);
 pub const NORTHWEST: IVec2 = NORTH.wrapping_add(WEST);
@@ -52,7 +54,9 @@ pub const SOUTHWEST: IVec2 = SOUTH.wrapping_add(WEST);
 pub const ROOK_MOVES: [IVec2; 4] = [NORTH, EAST, SOUTH, WEST];
 
 /// Eight directional movement like a king
-pub const KING_MOVES: [IVec2; 8] = [NORTH, NORTHEAST, EAST, SOUTHEAST, SOUTH, SOUTHWEST, WEST, NORTHWEST];
+pub const KING_MOVES: [IVec2; 8] = [
+    NORTH, NORTHEAST, EAST, SOUTHEAST, SOUTH, SOUTHWEST, WEST, NORTHWEST,
+];
 
 impl TileMap {
     pub fn new(size: IVec2) -> TileMap {
@@ -94,17 +98,27 @@ impl TileMap {
             .remove_by_right(&entity)
             .map(|(position, _)| position)
     }
-    
-    pub fn get_neighbouring_positions_rook<'a>(&'a self, position: IVec2) -> impl Iterator<Item = IVec2> + 'a {
-        ROOK_MOVES.iter().copied()
-        .map(move |translation| position + translation)
-        .filter(|target| self.bounds().contains(*target))
+
+    pub fn get_neighbouring_positions_rook<'a>(
+        &'a self,
+        position: IVec2,
+    ) -> impl Iterator<Item = IVec2> + 'a {
+        ROOK_MOVES
+            .iter()
+            .copied()
+            .map(move |translation| position + translation)
+            .filter(|target| self.bounds().contains(*target))
     }
 
-    pub fn get_neighbouring_positions_king<'a>(&'a self, position: IVec2) -> impl Iterator<Item = IVec2> + 'a {
-        KING_MOVES.iter().copied()
-        .map(move |translation| position + translation)
-        .filter(|target| self.bounds().contains(*target))
+    pub fn get_neighbouring_positions_king<'a>(
+        &'a self,
+        position: IVec2,
+    ) -> impl Iterator<Item = IVec2> + 'a {
+        KING_MOVES
+            .iter()
+            .copied()
+            .map(move |translation| position + translation)
+            .filter(|target| self.bounds().contains(*target))
     }
 }
 
@@ -131,4 +145,6 @@ fn load_tiles(asset_server: Res<AssetServer>, mut tile_set: ResMut<TileSet>) {
     tile_set.insert("block_blue", asset_server.load("tiles/block_blue.png"));
     tile_set.insert("block_green", asset_server.load("tiles/block_green.png"));
     tile_set.insert("block_orange", asset_server.load("tiles/block_orange.png"));
+    tile_set.insert("grassblock", asset_server.load("tiles/grassblock.png"));
+    tile_set.insert("werewolf", asset_server.load("tiles/werewolf.png"));
 }

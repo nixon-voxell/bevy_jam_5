@@ -6,7 +6,7 @@ use bevy::{
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use crate::game::tile_map::{tile_coord_translation, TileSet};
+use crate::game::tile_map::{tile_coord_translation, TileSet, TILE_HALF_HEIGHT};
 
 pub struct LevelAssetPlugin;
 
@@ -93,6 +93,7 @@ pub struct LevelMarker;
 
 /// Load levels from json file.
 fn load_levels(mut commands: Commands, asset_sever: Res<AssetServer>, mut levels: ResMut<Levels>) {
+    info!("Loading levels from json...");
     levels.0.insert(
         "debug_level",
         LevelLoad::new(
@@ -134,20 +135,24 @@ fn prespawn_levels(
             info!("Loading level: {name}");
 
             // TODO: Make this into a part of the level asset.
-            let start_translation = Vec3::new(0.0, 1000.0, 0.0);
+            let start_translation = Vec3::new(0.0, TILE_HALF_HEIGHT * debug_level.size as f32, 0.0);
             let mut children = Vec::new();
 
             for (layer, tiles) in debug_level.tiles.iter().enumerate() {
-                for (i, tile) in tiles.iter().enumerate() {
+                let layer = layer as f32;
+                for (i, tile_name) in tiles.iter().enumerate() {
+                    if tile_name == "empty" {
+                        continue;
+                    }
+
                     let x = (i % debug_level.size) as f32;
                     let y = (i / debug_level.size) as f32;
-                    let translation =
-                        start_translation + tile_coord_translation(x, y, layer as f32);
+                    let translation = start_translation + tile_coord_translation(x, y, layer);
 
                     children.push(
                         commands
                             .spawn(SpriteBundle {
-                                texture: tile_set.get(tile),
+                                texture: tile_set.get(tile_name),
                                 transform: Transform::from_translation(translation),
                                 ..default()
                             })

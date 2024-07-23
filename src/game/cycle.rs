@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
 pub const TURN_PER_DAY: u32 = 10;
+pub const DAY_PER_SEASON: u32 = 10;
 
 pub struct CyclePlugin;
 
@@ -67,6 +68,16 @@ pub enum Season {
     Summer,
     Autumn,
     Winter,
+}
+
+impl Season {
+    pub fn label(&self) -> &'static str {
+        match self {
+            Season::Summer => "Summer",
+            Season::Autumn => "Autumn",
+            Season::Winter => "Winter",
+        }
+    }
 }
 
 #[derive(Event, Copy, Clone, PartialEq, Default)]

@@ -1,5 +1,8 @@
 use bevy::prelude::*;
 
+pub const LABEL_SIZE: f32 = 32.0;
+pub const HEADER_SIZE: f32 = 48.0;
+
 pub const BUTTON_HOVERED_BACKGROUND: Color = Color::srgb(0.186, 0.328, 0.573);
 pub const BUTTON_PRESSED_BACKGROUND: Color = Color::srgb(0.286, 0.478, 0.773);
 

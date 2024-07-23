@@ -5,6 +5,7 @@ use bevy::{input::common_conditions::input_just_pressed, prelude::*};
 use sickle_ui::prelude::*;
 
 use super::Screen;
+use crate::game::cycle::{NextTurn, Season};
 use crate::game::{assets::SoundtrackKey, audio::soundtrack::PlaySoundtrack};
 use crate::ui::{palette::*, prelude::*};
 
@@ -21,6 +22,7 @@ pub(super) fn plugin(app: &mut App) {
             pause_btn_interaction,
             resume_btn_interaction,
             exit_btn_interaction,
+            next_turn_btn_interaction,
         ),
     )
     .add_systems(
@@ -46,7 +48,10 @@ pub struct PauseButton;
 #[derive(Component)]
 pub struct ExitButton;
 
-fn enter_playing(mut commands: Commands) {
+#[derive(Component)]
+pub struct EndTurnButton;
+
+fn enter_playing(mut commands: Commands, season: Res<State<Season>>) {
     commands.trigger(PlaySoundtrack::Key(SoundtrackKey::Gameplay));
     commands
         .ui_builder(UiRoot)
@@ -62,24 +67,27 @@ fn enter_playing(mut commands: Commands) {
                     .justify_content(JustifyContent::SpaceBetween)
                     .align_items(AlignItems::Center);
 
-                ui.label(LabelConfig::from("Season"))
+                let season = season.label();
+                ui.label(LabelConfig::from(season))
                     .style()
-                    .font_size(30.0);
+                    .font_size(HEADER_SIZE);
 
                 ui.column(|_| {}).style().flex_grow(1.0);
 
                 ui.label(LabelConfig::from("Currency: "))
                     .style()
-                    .font_size(20.0);
+                    .font_size(LABEL_SIZE);
 
                 ui.label(LabelConfig::from("Population: "))
                     .style()
-                    .font_size(20.0);
+                    .font_size(LABEL_SIZE);
 
                 ui.column(|_| {}).style().width(Val::Px(20.0));
 
                 ui.container(ButtonBundle { ..default() }, |ui| {
-                    ui.label(LabelConfig::from("Pause")).style().font_size(20.0);
+                    ui.label(LabelConfig::from("Pause"))
+                        .style()
+                        .font_size(LABEL_SIZE);
                 })
                 .insert((
                     InteractionPalette {
@@ -100,20 +108,23 @@ fn enter_playing(mut commands: Commands) {
             ui.row(|ui| {
                 ui.label(LabelConfig::from("Turns until x: "))
                     .style()
-                    .font_size(20.0);
+                    .font_size(LABEL_SIZE);
 
                 ui.column(|_| {}).style().flex_grow(1.0);
 
                 ui.container(ButtonBundle { ..default() }, |ui| {
                     ui.label(LabelConfig::from("End Turn"))
                         .style()
-                        .font_size(20.0);
+                        .font_size(LABEL_SIZE);
                 })
-                .insert(InteractionPalette {
-                    none: NODE_BACKGROUND,
-                    hovered: BUTTON_HOVERED_BACKGROUND,
-                    pressed: BUTTON_PRESSED_BACKGROUND,
-                })
+                .insert((
+                    InteractionPalette {
+                        none: css::RED.into(),
+                        hovered: css::DARK_RED.into(),
+                        pressed: css::INDIAN_RED.into(),
+                    },
+                    EndTurnButton,
+                ))
                 .style()
                 .padding(UiRect::all(Val::Px(10.0)))
                 .border_radius(BorderRadius::all(Val::Px(5.0)));
@@ -147,7 +158,7 @@ fn enter_pause(mut commands: Commands) {
                     ui.container(ButtonBundle { ..default() }, |ui| {
                         ui.label(LabelConfig::from("Resume"))
                             .style()
-                            .font_size(20.0);
+                            .font_size(LABEL_SIZE);
                     })
                     .insert((
                         InteractionPalette {
@@ -165,7 +176,9 @@ fn enter_pause(mut commands: Commands) {
 
                     // Exit button
                     ui.container(ButtonBundle { ..default() }, |ui| {
-                        ui.label(LabelConfig::from("Exit")).style().font_size(20.0);
+                        ui.label(LabelConfig::from("Exit"))
+                            .style()
+                            .font_size(LABEL_SIZE);
                     })
                     .insert((
                         InteractionPalette {
@@ -183,16 +196,16 @@ fn enter_pause(mut commands: Commands) {
             .style()
             .padding(UiRect::all(Val::Px(18.0)))
             .border_radius(BorderRadius::all(Val::Px(8.0)))
-            .background_color(Color::srgba(0.0, 0.0, 0.0, 0.3));
+            .background_color(Color::srgba(0.0, 0.0, 0.0, 0.6));
         })
         .insert(StateScoped(GameState::Paused));
 }
 
 fn pause_btn_interaction(
-    interactions: Query<&Interaction, (Changed<Interaction>, With<PauseButton>)>,
+    q_interactions: Query<&Interaction, (Changed<Interaction>, With<PauseButton>)>,
     mut next_game_state: ResMut<NextState<GameState>>,
 ) {
-    for interaction in interactions.iter() {
+    for interaction in q_interactions.iter() {
         if let Interaction::Pressed = interaction {
             next_game_state.set(GameState::Paused);
         }
@@ -221,6 +234,17 @@ fn exit_btn_interaction(
             // when we go back into the game later.
             next_game_state.set(GameState::Resumed);
             next_screen.set(Screen::Title);
+        }
+    }
+}
+
+fn next_turn_btn_interaction(
+    q_interactions: Query<&Interaction, (Changed<Interaction>, With<ExitButton>)>,
+    mut next_turn_evt: EventWriter<NextTurn>,
+) {
+    for interaction in q_interactions.iter() {
+        if let Interaction::Pressed = interaction {
+            next_turn_evt.send(NextTurn);
         }
     }
 }
