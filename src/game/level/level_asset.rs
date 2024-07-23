@@ -1,0 +1,159 @@
+use bevy::{
+    asset::{io::Reader, AssetLoader, AsyncReadExt, LoadContext, LoadState},
+    prelude::*,
+    utils::HashMap,
+};
+use serde::{Deserialize, Serialize};
+use thiserror::Error;
+
+use crate::game::tile_map::{tile_coord_translation, TileSet};
+
+pub struct LevelAssetPlugin;
+
+impl Plugin for LevelAssetPlugin {
+    fn build(&self, app: &mut App) {
+        app.init_asset::<LevelAsset>()
+            .init_asset_loader::<LevelAssetLoader>()
+            .init_resource::<Levels>()
+            .add_systems(PreStartup, load_levels)
+            .add_systems(Update, prespawn_levels);
+    }
+}
+
+#[derive(Asset, TypePath, Serialize, Deserialize)]
+pub struct LevelAsset {
+    pub name: String,
+    pub size: usize,
+    pub tiles: Vec<Vec<String>>,
+}
+
+#[derive(Default)]
+pub struct LevelAssetLoader;
+
+impl AssetLoader for LevelAssetLoader {
+    type Asset = LevelAsset;
+    type Settings = ();
+    type Error = LevelAssetLoaderError;
+
+    async fn load<'a>(
+        &'a self,
+        reader: &'a mut Reader<'_>,
+        _settings: &'a Self::Settings,
+        _load_context: &'a mut LoadContext<'_>,
+    ) -> Result<Self::Asset, Self::Error> {
+        let mut bytes = Vec::new();
+        reader.read_to_end(&mut bytes).await?;
+
+        let tile_map_asset = serde_json::from_slice::<LevelAsset>(&bytes)?;
+
+        Ok(tile_map_asset)
+    }
+
+    fn extensions(&self) -> &[&str] {
+        &[".json"]
+    }
+}
+
+#[non_exhaustive]
+#[derive(Debug, Error)]
+pub enum LevelAssetLoaderError {
+    #[error("Could not load json file: {0}")]
+    Io(#[from] std::io::Error),
+    #[error("Could not deserialize using serde: {0}")]
+    Serde(#[from] serde_json::Error),
+}
+
+/// Stores [`LevelAsset`] as well as their parent [`Entity`] if it is already spawned.
+#[derive(Debug)]
+pub struct LevelLoad {
+    pub handle: Handle<LevelAsset>,
+    pub parent: Option<Entity>,
+}
+
+impl LevelLoad {
+    pub fn new(handle: Handle<LevelAsset>) -> Self {
+        Self {
+            handle,
+            parent: None,
+        }
+    }
+
+    pub fn is_spawned(&self) -> bool {
+        self.parent.is_some()
+    }
+}
+
+#[derive(Resource, Default, Debug)]
+pub struct Levels(pub HashMap<&'static str, LevelLoad>);
+
+#[derive(Component)]
+pub struct LevelMarker;
+
+/// Load levels from json file.
+fn load_levels(asset_sever: Res<AssetServer>, mut levels: ResMut<Levels>) {
+    levels.0.insert(
+        "debug_level",
+        LevelLoad::new(asset_sever.load("levels/debug_level.json")),
+    );
+}
+
+/// Prespawn levels so that we can easily enable and disable them.
+fn prespawn_levels(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut levels: ResMut<Levels>,
+    level_assets: Res<Assets<LevelAsset>>,
+    tile_set: Res<TileSet>,
+) {
+    for (name, level) in levels.0.iter_mut() {
+        if level.is_spawned() {
+            continue;
+        }
+
+        let Some(load_state) = asset_server.get_load_state(&level.handle) else {
+            warn!("No load state for level: {:?}..", level.handle);
+            return;
+        };
+
+        if let LoadState::Loaded = load_state {
+            let debug_level = level_assets.get(&level.handle).unwrap();
+            info!("Loading level: {name}");
+
+            // TODO: Make this into a part of the level asset.
+            let start_translation = Vec3::new(0.0, 800.0, 0.0);
+            let mut children = Vec::new();
+
+            for (layer, tiles) in debug_level.tiles.iter().enumerate() {
+                for (i, tile) in tiles.iter().enumerate() {
+                    let x = (i % debug_level.size) as f32;
+                    let y = (i / debug_level.size) as f32;
+                    let translation =
+                        start_translation + tile_coord_translation(x, y, layer as f32);
+
+                    children.push(
+                        commands
+                            .spawn(SpriteBundle {
+                                texture: tile_set.get(tile),
+                                transform: Transform::from_translation(translation),
+                                ..default()
+                            })
+                            .id(),
+                    );
+                }
+            }
+
+            // Hidden by default, set to visible to "load" map
+            let parent = commands
+                .spawn((
+                    SpatialBundle {
+                        visibility: Visibility::Hidden,
+                        ..default()
+                    },
+                    LevelMarker,
+                ))
+                .push_children(&children)
+                .id();
+            level.parent = Some(parent);
+        }
+    }
+}
