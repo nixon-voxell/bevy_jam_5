@@ -749,6 +749,9 @@ dependencies = [
  "bimap",
  "log",
  "rand",
+ "serde",
+ "serde_json",
+ "thiserror",
 ]
 
 [[package]]

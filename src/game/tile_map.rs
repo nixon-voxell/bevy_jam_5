@@ -1,7 +1,14 @@
+use bevy::asset::LoadState;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 use bimap::BiHashMap;
 use bimap::Overwritten;
+
+use self::level_asset::LevelAsset;
+use self::level_asset::LevelPlugin;
+use self::level_asset::Levels;
+
+pub mod level_asset;
 
 /// Width of a tile.
 pub const TILE_SIZE: f32 = 256.0;
@@ -13,14 +20,24 @@ pub const DOWN_DIR: Vec2 = Vec2::new(-TILE_SIZE / 2.0, -TILE_SIZE / 4.0 - 26.0);
 /// Z-depth of a single layer.
 pub const LAYER_DEPTH: f32 = 10.0;
 
+/// Convert tile coordinate to world translation.
+pub fn tile_coord_translation(x: f32, y: f32, layer: f32) -> Vec3 {
+    let mut translation = RIGHT_DIR.xyy() * x;
+    translation += DOWN_DIR.xyy() * y;
+    translation.z *= -0.001 + layer * LAYER_DEPTH;
+
+    translation
+}
+
 pub struct TileMapPlugin;
 
 impl Plugin for TileMapPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<TileMap>()
+        app.add_plugins(LevelPlugin)
+            .init_resource::<TileMap>()
             .init_resource::<TileSet>()
-            .add_systems(Startup, load_tiles)
-            .add_systems(PostStartup, load_level);
+            .add_systems(PreStartup, load_tiles)
+            .add_systems(Update, load_debug_level);
     }
 }
 
@@ -87,22 +104,61 @@ fn load_tiles(asset_server: Res<AssetServer>, mut tile_set: ResMut<TileSet>) {
     tile_set.insert("block_orange", asset_server.load("tiles/block_orange.png"));
 }
 
-fn load_level(mut commands: Commands, tile_set: Res<TileSet>) {
-    let tile_size = 10;
-    let start_translation = Vec3::new(0.0, 1000.0, 0.0);
+fn load_debug_level(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    levels: Res<Levels>,
+    level_assets: Res<Assets<LevelAsset>>,
+    tile_set: Res<TileSet>,
+    mut loaded: Local<bool>,
+) {
+    if *loaded {
+        return;
+    }
 
-    for y in 0..tile_size {
-        for x in 0..tile_size {
-            let mut translation = start_translation;
-            translation += RIGHT_DIR.xyy() * x as f32;
-            translation += DOWN_DIR.xyy() * y as f32;
-            translation.z *= -0.001;
+    let Some(level_handle) = levels.0.get("debug_level") else {
+        warn!("No debug level found..");
+        return;
+    };
+    let Some(load_state) = asset_server.get_load_state(level_handle) else {
+        warn!("No load state for level: {level_handle:?}..");
+        return;
+    };
+
+    if let LoadState::Loaded = load_state {
+        let debug_level = level_assets.get(level_handle).unwrap();
+        println!("loading level: {}", debug_level.name);
+
+        let start_translation = Vec3::new(0.0, 1000.0, 0.0);
+
+        for (i, tile) in debug_level.tiles.iter().enumerate() {
+            let x = (i % debug_level.size) as f32;
+            let y = (i / debug_level.size) as f32;
+            let translation = start_translation + tile_coord_translation(x, y, 0.0);
 
             commands.spawn(SpriteBundle {
-                texture: tile_set.get("block_grey"),
+                texture: tile_set.get(tile),
                 transform: Transform::from_translation(translation),
                 ..default()
             });
         }
+        *loaded = true;
     }
 }
+
+// fn load_level(mut commands: Commands, tile_set: Res<TileSet>) {
+//     let tile_size = 10;
+//     let start_translation = Vec3::new(0.0, 1000.0, 0.0);
+
+//     for y in 0..tile_size {
+//         for x in 0..tile_size {
+//             let translation = start_translation + tile_coord_translation(x as f32, y as f32, 0.0);
+
+//             commands.spawn(SpriteBundle {
+//                 texture: tile_set.get("block_grey"),
+//                 transform: Transform::from_translation(translation),
+//                 ..default()
+//             });
+//         }
+//     }
+// }
