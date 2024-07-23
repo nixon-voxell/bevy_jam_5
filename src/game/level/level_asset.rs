@@ -67,19 +67,21 @@ pub enum LevelAssetLoaderError {
 #[derive(Debug)]
 pub struct LevelLoad {
     pub handle: Handle<LevelAsset>,
-    pub parent: Option<Entity>,
+    pub parent: Entity,
+    pub state: LoadState,
 }
 
 impl LevelLoad {
-    pub fn new(handle: Handle<LevelAsset>) -> Self {
+    pub fn new(handle: Handle<LevelAsset>, parent: Entity) -> Self {
         Self {
             handle,
-            parent: None,
+            parent,
+            state: LoadState::NotLoaded,
         }
     }
 
-    pub fn is_spawned(&self) -> bool {
-        self.parent.is_some()
+    pub fn is_loaded(&self) -> bool {
+        self.state == LoadState::Loaded
     }
 }
 
@@ -90,10 +92,22 @@ pub struct Levels(pub HashMap<&'static str, LevelLoad>);
 pub struct LevelMarker;
 
 /// Load levels from json file.
-fn load_levels(asset_sever: Res<AssetServer>, mut levels: ResMut<Levels>) {
+fn load_levels(mut commands: Commands, asset_sever: Res<AssetServer>, mut levels: ResMut<Levels>) {
     levels.0.insert(
         "debug_level",
-        LevelLoad::new(asset_sever.load("levels/debug_level.json")),
+        LevelLoad::new(
+            asset_sever.load("levels/debug_level.json"),
+            // Hidden by default, set to visible to "load" map
+            commands
+                .spawn((
+                    SpatialBundle {
+                        visibility: Visibility::Hidden,
+                        ..default()
+                    },
+                    LevelMarker,
+                ))
+                .id(),
+        ),
     );
 }
 
@@ -106,7 +120,7 @@ fn prespawn_levels(
     tile_set: Res<TileSet>,
 ) {
     for (name, level) in levels.0.iter_mut() {
-        if level.is_spawned() {
+        if level.is_loaded() {
             continue;
         }
 
@@ -120,7 +134,7 @@ fn prespawn_levels(
             info!("Loading level: {name}");
 
             // TODO: Make this into a part of the level asset.
-            let start_translation = Vec3::new(0.0, 800.0, 0.0);
+            let start_translation = Vec3::new(0.0, 1000.0, 0.0);
             let mut children = Vec::new();
 
             for (layer, tiles) in debug_level.tiles.iter().enumerate() {
@@ -142,18 +156,8 @@ fn prespawn_levels(
                 }
             }
 
-            // Hidden by default, set to visible to "load" map
-            let parent = commands
-                .spawn((
-                    SpatialBundle {
-                        visibility: Visibility::Hidden,
-                        ..default()
-                    },
-                    LevelMarker,
-                ))
-                .push_children(&children)
-                .id();
-            level.parent = Some(parent);
+            commands.entity(level.parent).push_children(&children);
         }
+        level.state = load_state.clone();
     }
 }

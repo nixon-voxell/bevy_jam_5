@@ -81,7 +81,7 @@ fn spawn_camera(mut commands: Commands) {
             projection: OrthographicProjection {
                 far: 1000.,
                 near: -1000.,
-                scale: 3.0,
+                scale: 3.2,
                 ..default()
             },
             ..default()
