@@ -2,10 +2,19 @@
   "name": "debug_level",
   "size": 5,
   "tiles": [
-    "block_grey", "block_grey", "block_grey", "block_grey", "block_grey",
-    "block_grey", "block_grey", "block_grey", "block_grey", "block_blue",
-    "block_grey", "block_grey", "block_grey", "block_grey", "block_grey",
-    "block_orange", "block_grey", "block_grey", "block_grey", "block_grey",
-    "block_grey", "block_grey", "block_green", "block_grey", "block_grey"
+    [
+      "block_grey", "block_grey", "block_grey", "block_grey", "block_grey",
+      "block_grey", "block_grey", "block_grey", "block_grey", "block_blue",
+      "block_grey", "block_grey", "block_grey", "block_grey", "block_grey",
+      "block_orange", "block_grey", "block_grey", "block_grey", "block_grey",
+      "block_grey", "block_grey", "block_green", "block_grey", "block_grey"
+    ],
+    [
+      "block_grey", "block_grey", "block_grey", "block_grey", "block_grey",
+      "block_grey", "block_grey", "block_grey", "block_grey", "block_blue",
+      "block_grey", "block_grey", "block_blue", "block_grey", "block_grey",
+      "block_orange", "block_grey", "block_grey", "block_grey", "block_grey",
+      "block_grey", "block_grey", "block_green", "block_grey", "block_grey"
+    ]
   ]
 }

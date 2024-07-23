@@ -22,9 +22,9 @@ pub const LAYER_DEPTH: f32 = 10.0;
 
 /// Convert tile coordinate to world translation.
 pub fn tile_coord_translation(x: f32, y: f32, layer: f32) -> Vec3 {
-    let mut translation = RIGHT_DIR.xyy() * x;
-    translation += DOWN_DIR.xyy() * y;
-    translation.z *= -0.001 + layer * LAYER_DEPTH;
+    let mut translation = Vec3::new(RIGHT_DIR.x, RIGHT_DIR.y, -RIGHT_DIR.y) * x;
+    translation += Vec3::new(DOWN_DIR.x, DOWN_DIR.y, -DOWN_DIR.y) * y;
+    translation.z += layer * LAYER_DEPTH;
 
     translation
 }
@@ -131,34 +131,19 @@ fn load_debug_level(
 
         let start_translation = Vec3::new(0.0, 1000.0, 0.0);
 
-        for (i, tile) in debug_level.tiles.iter().enumerate() {
-            let x = (i % debug_level.size) as f32;
-            let y = (i / debug_level.size) as f32;
-            let translation = start_translation + tile_coord_translation(x, y, 0.0);
+        for (layer, tiles) in debug_level.tiles.iter().enumerate() {
+            for (i, tile) in tiles.iter().enumerate() {
+                let x = (i % debug_level.size) as f32;
+                let y = (i / debug_level.size) as f32;
+                let translation = start_translation + tile_coord_translation(x, y, layer as f32);
 
-            commands.spawn(SpriteBundle {
-                texture: tile_set.get(tile),
-                transform: Transform::from_translation(translation),
-                ..default()
-            });
+                commands.spawn(SpriteBundle {
+                    texture: tile_set.get(tile),
+                    transform: Transform::from_translation(translation),
+                    ..default()
+                });
+            }
         }
         *loaded = true;
     }
 }
-
-// fn load_level(mut commands: Commands, tile_set: Res<TileSet>) {
-//     let tile_size = 10;
-//     let start_translation = Vec3::new(0.0, 1000.0, 0.0);
-
-//     for y in 0..tile_size {
-//         for x in 0..tile_size {
-//             let translation = start_translation + tile_coord_translation(x as f32, y as f32, 0.0);
-
-//             commands.spawn(SpriteBundle {
-//                 texture: tile_set.get("block_grey"),
-//                 transform: Transform::from_translation(translation),
-//                 ..default()
-//             });
-//         }
-//     }
-// }

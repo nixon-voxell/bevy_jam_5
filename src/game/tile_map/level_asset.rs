@@ -21,7 +21,7 @@ impl Plugin for LevelPlugin {
 pub struct LevelAsset {
     pub name: String,
     pub size: usize,
-    pub tiles: Vec<String>,
+    pub tiles: Vec<Vec<String>>,
 }
 
 #[derive(Default)]
