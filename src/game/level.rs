@@ -14,7 +14,7 @@ impl Plugin for LevelPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(LevelAssetPlugin)
             .add_systems(OnEnter(Screen::Playing), load_level)
-            .add_systems(OnEnter(Screen::Title), unload_all_level);
+            .add_systems(OnExit(Screen::Playing), unload_all_level);
     }
 }
 
