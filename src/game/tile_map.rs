@@ -1,14 +1,7 @@
-use bevy::asset::LoadState;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 use bimap::BiHashMap;
 use bimap::Overwritten;
-
-use self::level_asset::LevelAsset;
-use self::level_asset::LevelPlugin;
-use self::level_asset::Levels;
-
-pub mod level_asset;
 
 /// Width of a tile.
 pub const TILE_SIZE: f32 = 256.0;
@@ -33,11 +26,9 @@ pub struct TileMapPlugin;
 
 impl Plugin for TileMapPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(LevelPlugin)
-            .init_resource::<TileMap>()
+        app.init_resource::<TileMap>()
             .init_resource::<TileSet>()
-            .add_systems(PreStartup, load_tiles)
-            .add_systems(Update, load_debug_level);
+            .add_systems(PreStartup, load_tiles);
     }
 }
 
@@ -140,48 +131,4 @@ fn load_tiles(asset_server: Res<AssetServer>, mut tile_set: ResMut<TileSet>) {
     tile_set.insert("block_blue", asset_server.load("tiles/block_blue.png"));
     tile_set.insert("block_green", asset_server.load("tiles/block_green.png"));
     tile_set.insert("block_orange", asset_server.load("tiles/block_orange.png"));
-}
-
-fn load_debug_level(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    levels: Res<Levels>,
-    level_assets: Res<Assets<LevelAsset>>,
-    tile_set: Res<TileSet>,
-    mut loaded: Local<bool>,
-) {
-    if *loaded {
-        return;
-    }
-
-    let Some(level_handle) = levels.0.get("debug_level") else {
-        warn!("No debug level found..");
-        return;
-    };
-    let Some(load_state) = asset_server.get_load_state(level_handle) else {
-        warn!("No load state for level: {level_handle:?}..");
-        return;
-    };
-
-    if let LoadState::Loaded = load_state {
-        let debug_level = level_assets.get(level_handle).unwrap();
-        println!("loading level: {}", debug_level.name);
-
-        let start_translation = Vec3::new(0.0, 1000.0, 0.0);
-
-        for (layer, tiles) in debug_level.tiles.iter().enumerate() {
-            for (i, tile) in tiles.iter().enumerate() {
-                let x = (i % debug_level.size) as f32;
-                let y = (i / debug_level.size) as f32;
-                let translation = start_translation + tile_coord_translation(x, y, layer as f32);
-
-                commands.spawn(SpriteBundle {
-                    texture: tile_set.get(tile),
-                    transform: Transform::from_translation(translation),
-                    ..default()
-                });
-            }
-        }
-        *loaded = true;
-    }
 }
