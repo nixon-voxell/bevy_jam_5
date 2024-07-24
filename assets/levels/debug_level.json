@@ -4,20 +4,20 @@
   "tiles": [
     [
       "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock",
-      "grassblock", "grassblock", "grassblock", "grassblock", "block_blue", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock",
       "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock",
-      "block_orange", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock",
-      "grassblock", "grassblock", "block_green", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock",
       "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock",
-      "grassblock", "grassblock", "grassblock", "grassblock", "block_blue", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock",
       "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock",
-      "block_orange", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock",
-      "grassblock", "grassblock", "block_green", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock"
+      "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock",
+      "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock",
+      "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock",
+      "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock",
+      "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock",
+      "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock"
     ],
     [
       "werewolf", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty",
       "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty",
-      "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty",
+      "empty", "empty", "house1", "empty", "empty", "empty", "empty", "empty", "empty", "empty",
       "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty",
       "empty", "empty", "empty", "empty", "werewolf", "empty", "empty", "empty", "empty", "empty",
       "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty",

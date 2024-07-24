@@ -1,5 +1,3 @@
-use bevy::math::vec2;
-use bevy::math::FloatOrd;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 use bevy::window::PrimaryWindow;
@@ -27,8 +25,6 @@ pub fn tile_coord_translation(x: f32, y: f32, layer: f32) -> Vec3 {
     translation
 }
 
-
-
 pub struct TileMapPlugin;
 
 impl Plugin for TileMapPlugin {
@@ -37,7 +33,7 @@ impl Plugin for TileMapPlugin {
             .init_resource::<TileSet>()
             .init_resource::<PickedTile>()
             .init_resource::<PickedPoint>()
-            .add_systems(Update,( find_picked_point, pick_tile))
+            .add_systems(Update, (find_picked_point, pick_tile))
             .add_systems(PreStartup, load_tiles);
     }
 }
@@ -149,19 +145,20 @@ impl TileSet {
 }
 
 fn load_tiles(asset_server: Res<AssetServer>, mut tile_set: ResMut<TileSet>) {
-    tile_set.insert("block_grey", asset_server.load("tiles/block_grey.png"));
-    tile_set.insert("block_blue", asset_server.load("tiles/block_blue.png"));
-    tile_set.insert("block_green", asset_server.load("tiles/block_green.png"));
-    tile_set.insert("block_orange", asset_server.load("tiles/block_orange.png"));
-    tile_set.insert("grassblock", asset_server.load("tiles/grassblock.png"));
-    tile_set.insert("werewolf", asset_server.load("tiles/werewolf.png"));
-}
+    const TILES: &[&str] = &["grassblock", "werewolf", "house1"];
 
+    for &tile in TILES {
+        tile_set.insert(
+            tile,
+            asset_server.load(String::from("tiles/") + tile + ".png"),
+        );
+    }
+}
 
 #[derive(Resource, Default, Debug)]
 pub struct PickedTile(pub Vec<Entity>);
 
-#[derive (Resource, Default)]
+#[derive(Resource, Default)]
 pub struct PickedPoint(pub Option<Vec2>);
 
 pub fn find_picked_point(
@@ -172,7 +169,8 @@ pub fn find_picked_point(
     let (camera, camera_transform) = q_camera.single();
     let window = q_window.single();
 
-    if let Some(world_position) = window.cursor_position()
+    if let Some(world_position) = window
+        .cursor_position()
         .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
         .map(|ray| ray.origin.truncate())
     {
@@ -196,18 +194,24 @@ pub fn pick_tile(
     mut sprite_query: Query<&mut Sprite>,
 ) {
     for previous in picked_tile.0.drain(..) {
-        sprite_query.get_mut(previous).map(|mut sprite| sprite.color = Color::WHITE).ok();
+        sprite_query
+            .get_mut(previous)
+            .map(|mut sprite| sprite.color = Color::WHITE)
+            .ok();
     }
 
     if let Some(point) = picked_point.0 {
-        for (e, ..) in 
-        tiles_query.iter()
+        for (e, ..) in tiles_query
+            .iter()
             .map(|(e, t)| (e, (point - t.translation().xy()).abs(), t.translation().z))
-            .filter(|(_, r, _)| is_point_in_triangle(r.x, r.y,  0.5 * TILE_WIDTH, TILE_HALF_HEIGHT))
-            {
-                sprite_query.get_mut(e).map(|mut sprite| sprite.color = Color::srgb(1., 0., 0.)).ok();  
-                picked_tile.0.push(e);       
-            }
+            .filter(|(_, r, _)| is_point_in_triangle(r.x, r.y, 0.5 * TILE_WIDTH, TILE_HALF_HEIGHT))
+        {
+            sprite_query
+                .get_mut(e)
+                .map(|mut sprite| sprite.color = Color::srgb(1., 0., 0.))
+                .ok();
+            picked_tile.0.push(e);
+        }
     }
 }
 

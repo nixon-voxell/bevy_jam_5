@@ -1,14 +1,18 @@
 #[cfg(feature = "dev")]
 mod dev_tools;
 mod game;
+pub mod path_finding;
 mod screen;
 mod ui;
-pub mod path_finding;
+
+const BASE_APP_HEIGHT: f32 = 720.0;
+const BASE_CAM_SCALE: f32 = 3.2;
 
 use bevy::{
     asset::AssetMetaCheck,
     audio::{AudioPlugin, Volume},
     prelude::*,
+    window::PrimaryWindow,
 };
 
 pub struct AppPlugin;
@@ -54,7 +58,8 @@ impl Plugin for AppPlugin {
         );
 
         // Add other plugins.
-        app.add_plugins((game::plugin, screen::plugin, ui::plugin));
+        app.add_plugins((game::plugin, screen::plugin, ui::plugin))
+            .add_systems(Update, update_camera_scale);
 
         // Enable dev tools for dev builds.
         #[cfg(feature = "dev")]
@@ -95,4 +100,22 @@ fn spawn_camera(mut commands: Commands) {
         // for debugging. So it's good to have this here for future-proofing.
         IsDefaultUiCamera,
     ));
+}
+
+fn update_camera_scale(
+    windows: Query<&Window, (With<PrimaryWindow>, Changed<Window>)>,
+    mut projections: Query<&mut OrthographicProjection, With<IsDefaultUiCamera>>,
+) {
+    let (Ok(window), Ok(mut projection)) = (windows.get_single(), projections.get_single_mut())
+    else {
+        return;
+    };
+
+    let window_height = window.size().y;
+
+    if window_height > f32::EPSILON {
+        let scale = BASE_APP_HEIGHT / window_height * BASE_CAM_SCALE;
+        projection.scale = scale;
+    }
+    println!("{:?}", window.size());
 }
