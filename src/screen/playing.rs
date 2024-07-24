@@ -127,7 +127,7 @@ fn enter_playing(mut commands: Commands) {
                     .style()
                     .font_size(HEADER_SIZE);
 
-                ui.column(|_| {}).style().flex_grow(1.0).background_color(RED.into());
+                ui.column(|_| {}).style().flex_grow(1.0);
 
                 economy_status_layout(ui);
 
