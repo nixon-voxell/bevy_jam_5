@@ -1,11 +1,8 @@
 //! The screen state for the main game loop.
 
-use std::default;
-
-use bevy::color::palettes::css::{self, RED};
+use bevy::color::palettes::css;
 use bevy::{input::common_conditions::input_just_pressed, prelude::*};
 use sickle_ui::prelude::*;
-use sickle_ui::ui_builder;
 
 use super::Screen;
 use crate::game::cycle::EndTurn;
