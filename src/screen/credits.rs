@@ -31,10 +31,9 @@ fn enter_credits(mut commands: Commands) {
         .insert(StateScoped(Screen::Credits))
         .with_children(|children| {
             children.header("Made by");
-            children.label("@nixon-voxell - Programming");
-            children.label("@ickshonpe  - Design/Programming");
-            // TODO: get itch io username
-            children.label("BananaEatingLlama - Art");
+            children.label("nixon-voxell.itch.io - Design/Programming");
+            children.label("ickshonpe.itch.io  - Design/Programming");
+            children.label("alextan.itch.io - Art");
 
             children.header("Assets");
             children.label("Bevy logo - All rights reserved by the Bevy Foundation. Permission granted for splash screen use when unmodified.");

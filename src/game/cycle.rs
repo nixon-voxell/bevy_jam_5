@@ -24,15 +24,15 @@ impl Plugin for CyclePlugin {
             .add_event::<EndTurn>()
             .add_systems(OnEnter(Screen::Playing), reset_cycle)
             .add_systems(
-                OnEnter(Screen::Playing),
-                (season_label, turn_until_label).after(reset_cycle),
-            )
-            .add_systems(
                 Update,
                 (
                     end_turn,
-                    season_label.run_if(resource_changed::<Season>),
-                    turn_until_label.run_if(resource_changed::<Turn>),
+                    update_cycle.run_if(resource_changed::<Turn>),
+                    (
+                        season_label.run_if(resource_changed::<Season>),
+                        turn_until_label.run_if(resource_changed::<Turn>),
+                    )
+                        .after(update_cycle),
                 )
                     .run_if(in_state(Screen::Playing)),
             );
@@ -44,34 +44,35 @@ fn reset_cycle(mut season: ResMut<Season>, mut turn: ResMut<Turn>) {
     turn.0 = 0;
 }
 
-fn end_turn(
-    mut end_turn_evt: EventReader<EndTurn>,
-    mut turn: ResMut<Turn>,
+fn end_turn(mut end_turn_evt: EventReader<EndTurn>, mut turn: ResMut<Turn>) {
+    if end_turn_evt.is_empty() == false {
+        end_turn_evt.clear();
+        turn.0 += 1;
+    }
+}
+
+fn update_cycle(
+    turn: Res<Turn>,
     mut day_cycle: ResMut<DayCycle>,
     mut next_tod: ResMut<NextState<TimeOfDay>>,
     mut season: ResMut<Season>,
 ) {
-    if end_turn_evt.is_empty() == false {
-        end_turn_evt.clear();
-        turn.0 += 1;
+    // Season
+    let day = turn.0 / TURN_PER_DAY;
+    season.set_if_neq(match (day % DAY_PER_CYCLE) / DAY_PER_SEASON {
+        0 => Season::Summer,
+        1 => Season::Autumn,
+        2 => Season::Winter,
+        num => unreachable!("Season range is [0, 3) but given {num} instead!"),
+    });
 
-        // Season
-        let day = turn.0 / TURN_PER_DAY;
-        season.set_if_neq(match (day % DAY_PER_CYCLE) / DAY_PER_SEASON {
-            0 => Season::Summer,
-            1 => Season::Autumn,
-            2 => Season::Winter,
-            num => unreachable!("Season range is [0, 3) but given {num} instead!"),
-        });
+    // Day cycle
+    *day_cycle = DayCycle::from(*season);
 
-        // Day cycle
-        *day_cycle = DayCycle::from(*season);
-
-        // Time of day
-        match turn.0 % TURN_PER_DAY >= day_cycle.day {
-            true => next_tod.set(TimeOfDay::Night),
-            false => next_tod.set(TimeOfDay::Day),
-        }
+    // Time of day
+    match turn.0 % TURN_PER_DAY >= day_cycle.day {
+        true => next_tod.set(TimeOfDay::Night),
+        false => next_tod.set(TimeOfDay::Day),
     }
 }
 
@@ -92,6 +93,8 @@ fn turn_until_label(
     let Ok(mut text) = q_texts.get_single_mut() else {
         return;
     };
+
+    println!("{}, {:?}", turn.0, day_cycle);
 
     let turn_in_day = turn.0 % TURN_PER_DAY;
     let (turn_left, target_day) = match turn_in_day >= day_cycle.day {
