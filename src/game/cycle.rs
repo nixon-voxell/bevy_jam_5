@@ -11,6 +11,10 @@ pub const DAY_PER_SEASON: u32 = 2; // TODO: Determine a balanced number, set to 
 /// Number of days in a cycle which contains all 3 seasons.
 pub const DAY_PER_CYCLE: u32 = DAY_PER_SEASON * 3;
 
+const M: f32 = 0.4;
+pub const DAY_BACKGROUND: Color = Color::srgb(0.7 * M, 0.75 * M, 0.8 * M);
+pub const NIGHT_BACKGROUND: Color = Color::BLACK;
+
 pub struct CyclePlugin;
 
 impl Plugin for CyclePlugin {
@@ -21,21 +25,32 @@ impl Plugin for CyclePlugin {
             .init_resource::<Turn>()
             .add_event::<NextSeason>()
             .add_event::<EndTurn>()
-            .add_systems(OnEnter(Screen::Playing), reset_cycle)
+            .add_systems(OnEnter(Screen::Playing), (reset_cycle, update_background))
             .add_systems(
                 Update,
                 (
                     end_turn,
-                    update_cycle.run_if(resource_changed::<Turn>),
+                    update_cycle
+                        .run_if(resource_changed::<Turn>)
+                        .after(end_turn),
                     (
                         update_resource_label::<Season>(),
                         update_resource_label_system::<Turn>(turn_until_label.into_configs()),
-                    ),
+                    )
+                        .after(update_cycle),
+                    update_background.run_if(state_changed::<TimeOfDay>),
                 )
                     .chain()
                     .run_if(in_state(Screen::Playing)),
             );
     }
+}
+
+fn update_background(time_of_day: Res<State<TimeOfDay>>, mut clear_color: ResMut<ClearColor>) {
+    clear_color.0 = match time_of_day.get() {
+        TimeOfDay::Day => DAY_BACKGROUND,
+        TimeOfDay::Night => NIGHT_BACKGROUND,
+    };
 }
 
 fn reset_cycle(mut season: ResMut<Season>, mut turn: ResMut<Turn>) {

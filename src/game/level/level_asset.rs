@@ -1,13 +1,11 @@
 use bevy::{
-    asset::{io::Reader, AssetLoader, AsyncReadExt, LoadContext, LoadState},
-    prelude::*,
-    utils::HashMap,
+    asset::{io::Reader, AssetLoader, AsyncReadExt, LoadContext, LoadState}, math::vec2, prelude::*, utils::HashMap
 };
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 use crate::{
-    game::tile_map::{tile_coord_translation, TileSet, TILE_HALF_HEIGHT},
+    game::tile_map::{tile_coord_translation, PickableTile, TileSet, TILE_HALF_HEIGHT},
     screen::Screen,
 };
 
@@ -55,11 +53,20 @@ impl LevelAsset {
                     start_translation + tile_coord_translation(x, y, translation_layer);
 
                 commands
-                    .spawn(SpriteBundle {
+                    .spawn((SpriteBundle {
+                        sprite: Sprite {
+                            anchor: bevy::sprite::Anchor::Custom(vec2(0., 0.5 - 293. / 512.)),
+                            ..Default::default()
+                        },
                         texture: tile_set.get(name),
                         transform: Transform::from_translation(translation),
-                        ..default()
-                    })
+                        ..default()                    
+                    },
+                    PickableTile
+                )
+                    
+
+                )
                     .id()
             })
             .collect()

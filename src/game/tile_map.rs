@@ -1,5 +1,8 @@
+use bevy::math::vec2;
+use bevy::math::FloatOrd;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
+use bevy::window::PrimaryWindow;
 use bimap::BiHashMap;
 use bimap::Overwritten;
 
@@ -24,12 +27,17 @@ pub fn tile_coord_translation(x: f32, y: f32, layer: f32) -> Vec3 {
     translation
 }
 
+
+
 pub struct TileMapPlugin;
 
 impl Plugin for TileMapPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<TileMap>()
             .init_resource::<TileSet>()
+            .init_resource::<PickedTile>()
+            .init_resource::<PickedPoint>()
+            .add_systems(Update,( find_picked_point, pick_tile))
             .add_systems(PreStartup, load_tiles);
     }
 }
@@ -148,3 +156,60 @@ fn load_tiles(asset_server: Res<AssetServer>, mut tile_set: ResMut<TileSet>) {
     tile_set.insert("grassblock", asset_server.load("tiles/grassblock.png"));
     tile_set.insert("werewolf", asset_server.load("tiles/werewolf.png"));
 }
+
+
+#[derive(Resource, Default, Debug)]
+pub struct PickedTile(pub Vec<Entity>);
+
+#[derive (Resource, Default)]
+pub struct PickedPoint(pub Option<Vec2>);
+
+pub fn find_picked_point(
+    mut picked_point: ResMut<PickedPoint>,
+    q_window: Query<&Window, With<PrimaryWindow>>,
+    q_camera: Query<(&Camera, &GlobalTransform)>,
+) {
+    let (camera, camera_transform) = q_camera.single();
+    let window = q_window.single();
+
+    if let Some(world_position) = window.cursor_position()
+        .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
+        .map(|ray| ray.origin.truncate())
+    {
+        picked_point.0 = Some(world_position);
+    } else {
+        picked_point.0 = None;
+    }
+}
+
+fn is_point_in_triangle(x: f32, y: f32, w: f32, h: f32) -> bool {
+    if x < 0.0 || y < 0.0 {
+        return false;
+    }
+    y <= h - (h / w) * x
+}
+
+pub fn pick_tile(
+    picked_point: Res<PickedPoint>,
+    mut picked_tile: ResMut<PickedTile>,
+    tiles_query: Query<(Entity, &GlobalTransform), With<PickableTile>>,
+    mut sprite_query: Query<&mut Sprite>,
+) {
+    for previous in picked_tile.0.drain(..) {
+        sprite_query.get_mut(previous).map(|mut sprite| sprite.color = Color::WHITE).ok();
+    }
+
+    if let Some(point) = picked_point.0 {
+        for (e, ..) in 
+        tiles_query.iter()
+            .map(|(e, t)| (e, (point - t.translation().xy()).abs(), t.translation().z))
+            .filter(|(_, r, _)| is_point_in_triangle(r.x, r.y,  0.5 * TILE_WIDTH, TILE_HALF_HEIGHT))
+            {
+                sprite_query.get_mut(e).map(|mut sprite| sprite.color = Color::srgb(1., 0., 0.)).ok();  
+                picked_tile.0.push(e);       
+            }
+    }
+}
+
+#[derive(Component)]
+pub struct PickableTile;
