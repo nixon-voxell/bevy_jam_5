@@ -1,8 +1,9 @@
 //! The screen state for the main game loop.
 
-use bevy::color::palettes::css;
+use bevy::color::palettes::css::{self, RED};
 use bevy::{input::common_conditions::input_just_pressed, prelude::*};
 use sickle_ui::prelude::*;
+use sickle_ui::ui_builder;
 
 use super::Screen;
 use crate::game::cycle::EndTurn;
@@ -71,6 +72,39 @@ pub struct GoldLabel;
 #[derive(Component)]
 pub struct PopulationLabel;
 
+fn economy_status_layout(ui: &mut UiBuilder<Entity>) {
+    ui.column(|ui| {
+        ui.style().justify_content(JustifyContent::Center);
+        ui.row(|ui| {
+            ui.style().column_gap(Val::Px(40.));
+            ui.row(|ui| {
+                ui.style().column_gap(Val::Px(4.));
+                ui.icon("icons/gold-coins.png")
+                    .style()
+                    .width(Val::Px(32.0))
+                    .height(Val::Px(32.0));
+
+                ui.label(LabelConfig::from("0"))
+                    .insert(GoldLabel)
+                    .style()
+                    .font_size(LABEL_SIZE);
+            });
+
+            ui.row(|ui| {
+                ui.style().column_gap(Val::Px(4.));
+                ui.icon("icons/population.png")
+                    .style()
+                    .width(Val::Px(32.0))
+                    .height(Val::Px(32.0));
+
+                ui.label(LabelConfig::from("0"))
+                    .style()
+                    .font_size(LABEL_SIZE);
+            });
+        });
+    });
+}
+
 fn enter_playing(mut commands: Commands) {
     commands.trigger(PlaySoundtrack::Key(SoundtrackKey::Gameplay));
     commands
@@ -81,29 +115,21 @@ fn enter_playing(mut commands: Commands) {
                 .height(Val::Percent(100.0))
                 .padding(UiRect::all(Val::Px(60.0)));
 
-            // Top panel
+            // Top pane
             ui.row(|ui| {
                 ui.style()
                     .justify_content(JustifyContent::SpaceBetween)
-                    .align_items(AlignItems::Center);
+                    .align_items(AlignItems::Center)
+                    .column_gap(Val::Px(40.));
 
                 ui.label(LabelConfig::from("Season"))
                     .insert(SeasonLabel)
                     .style()
                     .font_size(HEADER_SIZE);
 
-                ui.column(|_| {}).style().flex_grow(1.0);
+                ui.column(|_| {}).style().flex_grow(1.0).background_color(RED.into());
 
-                ui.label(LabelConfig::from("Gold"))
-                    .insert(GoldLabel)
-                    .style()
-                    .font_size(LABEL_SIZE)
-                    .margin(UiRect::right(Val::Px(40.0)));
-
-                ui.label(LabelConfig::from("Population"))
-                    .style()
-                    .font_size(LABEL_SIZE)
-                    .margin(UiRect::right(Val::Px(40.0)));
+                economy_status_layout(ui);
 
                 ui.column(|_| {}).style().width(Val::Px(20.0));
 
