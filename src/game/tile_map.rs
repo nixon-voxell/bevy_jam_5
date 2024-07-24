@@ -148,10 +148,7 @@ fn load_tiles(asset_server: Res<AssetServer>, mut tile_set: ResMut<TileSet>) {
     const TILES: &[&str] = &["grassblock", "werewolf", "house1"];
 
     for &tile in TILES {
-        tile_set.insert(
-            tile,
-            asset_server.load(String::from("tiles/") + tile + ".png"),
-        );
+        tile_set.insert(tile, asset_server.load(format!("tiles/{}.png", tile)));
     }
 }
 

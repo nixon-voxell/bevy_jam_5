@@ -1,5 +1,7 @@
 use bevy::{
-    asset::{io::Reader, AssetLoader, AsyncReadExt, LoadContext, LoadState}, math::vec2, prelude::*, utils::HashMap
+    asset::{io::Reader, AssetLoader, AsyncReadExt, LoadContext, LoadState},
+    math::vec2,
+    prelude::*,
 };
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -16,9 +18,7 @@ impl Plugin for LevelAssetPlugin {
         app.init_asset::<LevelAsset>()
             .init_asset_loader::<LevelAssetLoader>()
             .init_resource::<Levels>()
-            .add_systems(PreStartup, load_levels)
-            .add_systems(Update, prespawn_levels)
-            .add_systems(OnExit(Screen::Playing), reset_levels);
+            .add_systems(PreStartup, load_levels);
     }
 }
 
@@ -53,20 +53,18 @@ impl LevelAsset {
                     start_translation + tile_coord_translation(x, y, translation_layer);
 
                 commands
-                    .spawn((SpriteBundle {
-                        sprite: Sprite {
-                            anchor: bevy::sprite::Anchor::Custom(vec2(0., 0.5 - 293. / 512.)),
-                            ..Default::default()
+                    .spawn((
+                        SpriteBundle {
+                            sprite: Sprite {
+                                anchor: bevy::sprite::Anchor::Custom(vec2(0., 0.5 - 293. / 512.)),
+                                ..Default::default()
+                            },
+                            texture: tile_set.get(name),
+                            transform: Transform::from_translation(translation),
+                            ..default()
                         },
-                        texture: tile_set.get(name),
-                        transform: Transform::from_translation(translation),
-                        ..default()                    
-                    },
-                    PickableTile
-                )
-                    
-
-                )
+                        PickableTile,
+                    ))
                     .id()
             })
             .collect()
@@ -130,88 +128,29 @@ pub enum LevelAssetLoaderError {
 /// Stores [`LevelAsset`] as well as their parent [`Entity`] if it is already spawned.
 #[derive(Debug)]
 pub struct LevelLoad {
+    pub name: String,
     pub handle: Handle<LevelAsset>,
-    pub parent: Entity,
-    pub state: LoadState,
 }
 
 impl LevelLoad {
-    pub fn new(handle: Handle<LevelAsset>, parent: Entity) -> Self {
-        Self {
-            handle,
-            parent,
-            state: LoadState::NotLoaded,
-        }
-    }
-
-    pub fn is_loaded(&self) -> bool {
-        self.state == LoadState::Loaded
+    pub fn new(name: String, handle: Handle<LevelAsset>) -> Self {
+        Self { name, handle }
     }
 }
 
 #[derive(Resource, Default, Debug)]
-pub struct Levels(pub HashMap<&'static str, LevelLoad>);
-
-#[derive(Component)]
-pub struct LevelMarker;
+pub struct Levels(pub Vec<LevelLoad>);
 
 /// Load levels from json file.
-fn load_levels(mut commands: Commands, asset_sever: Res<AssetServer>, mut levels: ResMut<Levels>) {
+fn load_levels(asset_sever: Res<AssetServer>, mut levels: ResMut<Levels>) {
     info!("Loading levels from json...");
-    levels.0.insert(
-        "debug_level",
-        LevelLoad::new(
-            asset_sever.load("levels/debug_level.json"),
-            // Hidden by default, set to visible to "load" map
-            commands
-                .spawn((
-                    SpatialBundle {
-                        visibility: Visibility::Hidden,
-                        ..default()
-                    },
-                    LevelMarker,
-                ))
-                .id(),
-        ),
-    );
-}
 
-/// Prespawn levels so that we can easily load/unload them by changing the parent's visibility.
-fn prespawn_levels(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut levels: ResMut<Levels>,
-    level_assets: Res<Assets<LevelAsset>>,
-    tile_set: Res<TileSet>,
-) {
-    for (name, level) in levels.0.iter_mut() {
-        if level.is_loaded() {
-            continue;
-        }
+    const LEVELS: &[&str] = &["debug_level"];
 
-        let Some(load_state) = asset_server.get_load_state(&level.handle) else {
-            warn!("No load state for level: {:?}..", level.handle);
-            return;
-        };
-
-        if let LoadState::Loaded = load_state {
-            let debug_level = level_assets.get(&level.handle).unwrap();
-            info!("Loading level: {name}");
-
-            let ground_tiles = debug_level.create_ground_entities(&mut commands, &tile_set);
-            let object_tiles = debug_level.create_object_entities(&mut commands, &tile_set);
-
-            commands.entity(level.parent).despawn_descendants();
-            commands.entity(level.parent).push_children(&ground_tiles);
-            commands.entity(level.parent).push_children(&object_tiles);
-        }
-        level.state = load_state.clone();
-    }
-}
-
-/// Reset level load state so that [`prespawn_levels`] can kick in.
-fn reset_levels(mut levels: ResMut<Levels>) {
-    for level in levels.0.values_mut() {
-        level.state = LoadState::Loading;
+    for &level in LEVELS {
+        levels.0.push(LevelLoad::new(
+            String::from(level),
+            asset_sever.load(format!("levels/{}.json", level)),
+        ));
     }
 }

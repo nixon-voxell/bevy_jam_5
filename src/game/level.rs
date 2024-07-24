@@ -4,7 +4,9 @@ use bevy::prelude::*;
 
 use crate::screen::Screen;
 
-use self::level_asset::{LevelAssetPlugin, LevelMarker, Levels};
+use self::level_asset::{LevelAsset, LevelAssetPlugin, Levels};
+
+use super::tile_map::TileSet;
 
 pub mod level_asset;
 
@@ -13,31 +15,29 @@ pub struct LevelPlugin;
 impl Plugin for LevelPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(LevelAssetPlugin)
-            .add_systems(OnEnter(Screen::Playing), load_level)
-            .add_systems(OnExit(Screen::Playing), unload_all_level);
+            .add_systems(OnEnter(Screen::Playing), load_level);
     }
 }
 
-fn load_level(mut q_visbilities: Query<&mut Visibility, With<LevelMarker>>, levels: Res<Levels>) {
-    let Some(debug_level) = levels.0.get("debug_level") else {
-        warn!("No debug level found..");
+fn load_level(
+    mut commands: Commands,
+    mut levels: ResMut<Levels>,
+    level_assets: Res<Assets<LevelAsset>>,
+    tile_set: Res<TileSet>,
+) {
+    let level_index = rand::random::<usize>() % levels.0.len();
+    let level = &mut levels.0[level_index];
+
+    let Some(level_asset) = level_assets.get(&level.handle) else {
+        error!("Unable to load level: {}", level.name);
         return;
     };
 
-    if let Ok(mut vis) = q_visbilities.get_mut(debug_level.parent) {
-        *vis = Visibility::Visible;
-    }
-}
+    let ground_tiles = level_asset.create_ground_entities(&mut commands, &tile_set);
+    let object_tiles = level_asset.create_object_entities(&mut commands, &tile_set);
 
-fn unload_all_level(
-    mut q_visbilities: Query<&mut Visibility, With<LevelMarker>>,
-    levels: Res<Levels>,
-) {
-    for (name, level) in levels.0.iter() {
-        info!("Unloading level: {name}");
-
-        if let Ok(mut vis) = q_visbilities.get_mut(level.parent) {
-            *vis = Visibility::Hidden;
-        }
-    }
+    commands
+        .spawn((StateScoped(Screen::Playing), SpatialBundle::default()))
+        .push_children(&ground_tiles)
+        .push_children(&object_tiles);
 }
