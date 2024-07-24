@@ -26,7 +26,10 @@ impl Plugin for CyclePlugin {
             .init_resource::<Turn>()
             .add_event::<NextSeason>()
             .add_event::<EndTurn>()
-            .add_systems(OnEnter(Screen::Playing), reset_cycle)
+            .add_systems(OnEnter(Screen::Playing), (
+                reset_cycle,
+                update_background
+            ))
             .add_systems(
                 Update,
                 (
