@@ -117,5 +117,4 @@ fn update_camera_scale(
         let scale = BASE_APP_HEIGHT / window_height * BASE_CAM_SCALE;
         projection.scale = scale;
     }
-    println!("{:?}", window.size());
 }
