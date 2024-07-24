@@ -40,7 +40,6 @@ impl Plugin for CyclePlugin {
                         .after(update_cycle),
                     update_background.run_if(state_changed::<TimeOfDay>),
                 )
-                    .chain()
                     .run_if(in_state(Screen::Playing)),
             );
     }
