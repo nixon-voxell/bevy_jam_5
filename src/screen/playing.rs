@@ -7,6 +7,7 @@ use sickle_ui::ui_builder;
 
 use super::Screen;
 use crate::game::cycle::EndTurn;
+use crate::game::economy::{PlayerGold, VillagePopulation};
 use crate::game::{assets::SoundtrackKey, audio::soundtrack::PlaySoundtrack};
 use crate::ui::{palette::*, prelude::*};
 
@@ -67,6 +68,18 @@ pub struct TurnUntilLabel;
 /// Label that shows the number of gold left.
 #[derive(Component)]
 pub struct GoldLabel;
+
+pub trait ResLabel: Component {
+    type WatchedRes: Resource + ToString;
+}
+
+impl ResLabel for GoldLabel {
+    type WatchedRes = PlayerGold;
+}
+
+impl ResLabel for PopulationLabel {
+    type WatchedRes = VillagePopulation;
+}
 
 /// Label that shows the number of population left.
 #[derive(Component)]
