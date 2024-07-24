@@ -1,9 +1,8 @@
 use bevy::prelude::*;
 
-use crate::screen::{
-    playing::{SeasonLabel, TurnUntilLabel},
-    Screen,
-};
+use crate::screen::Screen;
+
+use super::{update_resource_label, update_resource_label_system, WatchRes};
 
 /// Number of turns in a day.
 pub const TURN_PER_DAY: u32 = 10;
@@ -29,11 +28,11 @@ impl Plugin for CyclePlugin {
                     end_turn,
                     update_cycle.run_if(resource_changed::<Turn>),
                     (
-                        season_label.run_if(resource_changed::<Season>),
-                        turn_until_label.run_if(resource_changed::<Turn>),
-                    )
-                        .after(update_cycle),
+                        update_resource_label::<Season>(),
+                        update_resource_label_system::<Turn>(turn_until_label.into_configs()),
+                    ),
                 )
+                    .chain()
                     .run_if(in_state(Screen::Playing)),
             );
     }
@@ -76,17 +75,8 @@ fn update_cycle(
     }
 }
 
-fn season_label(mut q_texts: Query<&mut Text, With<SeasonLabel>>, season: Res<Season>) {
-    let Ok(mut text) = q_texts.get_single_mut() else {
-        return;
-    };
-
-    let section = &mut text.sections[0];
-    section.value = season.label().to_string();
-}
-
 fn turn_until_label(
-    mut q_texts: Query<&mut Text, With<TurnUntilLabel>>,
+    mut q_texts: Query<&mut Text, With<WatchRes<Turn>>>,
     turn: Res<Turn>,
     day_cycle: Res<DayCycle>,
 ) {
@@ -119,12 +109,12 @@ pub enum Season {
     Winter,
 }
 
-impl Season {
-    pub fn label(&self) -> &'static str {
+impl std::fmt::Display for Season {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Season::Summer => "Summer",
-            Season::Autumn => "Autumn",
-            Season::Winter => "Winter",
+            Season::Summer => "Summer".fmt(f),
+            Season::Autumn => "Autumn".fmt(f),
+            Season::Winter => "Winter".fmt(f),
         }
     }
 }

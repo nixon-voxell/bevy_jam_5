@@ -5,8 +5,9 @@ use bevy::{input::common_conditions::input_just_pressed, prelude::*};
 use sickle_ui::prelude::*;
 
 use super::Screen;
-use crate::game::cycle::EndTurn;
-use crate::game::economy::{PlayerGold, VillagePopulation, WatchRes};
+use crate::game::cycle::{EndTurn, Season, Turn};
+use crate::game::economy::{PlayerGold, VillagePopulation};
+use crate::game::WatchRes;
 use crate::game::{assets::SoundtrackKey, audio::soundtrack::PlaySoundtrack};
 use crate::ui::{palette::*, prelude::*};
 
@@ -51,18 +52,6 @@ pub struct ExitButton;
 
 #[derive(Component)]
 pub struct EndTurnButton;
-
-/// Label that shows the current [`Season`][Season].
-///
-/// [Season]: crate::game::cycle::Season
-#[derive(Component)]
-pub struct SeasonLabel;
-
-/// Label that shows how many turns until [`TimeOfDay`][TimeOfDay].
-///
-/// [TimeOfDay]: crate::game::cycle::TimeOfDay
-#[derive(Component)]
-pub struct TurnUntilLabel;
 
 fn economy_status_layout(ui: &mut UiBuilder<Entity>) {
     ui.column(|ui| {
@@ -116,7 +105,7 @@ fn enter_playing(mut commands: Commands) {
                     .column_gap(Val::Px(40.));
 
                 ui.label(LabelConfig::from("Season"))
-                    .insert(SeasonLabel)
+                    .insert(WatchRes::<Season>::default())
                     .style()
                     .font_size(HEADER_SIZE);
 
@@ -149,7 +138,7 @@ fn enter_playing(mut commands: Commands) {
             // Bottom panel
             ui.row(|ui| {
                 ui.label(LabelConfig::from("Turn Until"))
-                    .insert(TurnUntilLabel)
+                    .insert(WatchRes::<Turn>::default())
                     .style()
                     .font_size(LABEL_SIZE);
 

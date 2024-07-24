@@ -1,7 +1,8 @@
-use std::marker::PhantomData;
-
-use bevy::ecs::schedule::SystemConfigs;
 use bevy::prelude::*;
+
+use crate::screen::Screen;
+
+use super::update_resource_label;
 
 pub struct EconomyPlugin;
 
@@ -14,7 +15,8 @@ impl Plugin for EconomyPlugin {
                 (
                     update_resource_label::<PlayerGold>(),
                     update_resource_label::<VillagePopulation>(),
-                ),
+                )
+                    .run_if(in_state(Screen::Playing)),
             );
     }
 }
@@ -22,35 +24,17 @@ impl Plugin for EconomyPlugin {
 #[derive(Resource, Debug, Copy, Clone, PartialEq, Default)]
 pub struct PlayerGold(pub u32);
 
-impl ToString for PlayerGold {
-    fn to_string(&self) -> String {
-        self.0.to_string()
+impl std::fmt::Display for PlayerGold {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.fmt(f)
     }
 }
 
 #[derive(Resource, Debug, Copy, Clone, PartialEq, Default)]
 pub struct VillagePopulation(pub u32);
 
-impl ToString for VillagePopulation {
-    fn to_string(&self) -> String {
-        self.0.to_string()
+impl std::fmt::Display for VillagePopulation {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.fmt(f)
     }
-}
-
-fn update_resource_label<R: Resource + ToString>() -> SystemConfigs {
-    set_resource_label::<R>.run_if(resource_changed::<R>)
-}
-
-fn set_resource_label<R: Resource + ToString>(
-    mut q_texts: Query<&mut Text, With<WatchRes<R>>>, value: Res<R>
-) {
-    for mut text in q_texts.iter_mut() {
-        text.sections[0].value = value.to_string();
-    }
-}
-
-
-#[derive(Component, Default)]
-pub struct WatchRes<R: Resource + ToString> {
-    phantom: PhantomData<R>
 }
