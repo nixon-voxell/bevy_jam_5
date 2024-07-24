@@ -6,6 +6,7 @@ pub mod assets;
 pub mod audio;
 pub mod components;
 pub mod cycle;
+pub mod economy;
 pub mod level;
 pub mod resources;
 pub mod systems;

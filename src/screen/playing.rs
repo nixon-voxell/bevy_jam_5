@@ -5,7 +5,7 @@ use bevy::{input::common_conditions::input_just_pressed, prelude::*};
 use sickle_ui::prelude::*;
 
 use super::Screen;
-use crate::game::cycle::{NextTurn, Season};
+use crate::game::cycle::EndTurn;
 use crate::game::{assets::SoundtrackKey, audio::soundtrack::PlaySoundtrack};
 use crate::ui::{palette::*, prelude::*};
 
@@ -22,7 +22,7 @@ pub(super) fn plugin(app: &mut App) {
             pause_btn_interaction,
             resume_btn_interaction,
             exit_btn_interaction,
-            next_turn_btn_interaction,
+            end_turn_btn_interaction,
         ),
     )
     .add_systems(
@@ -51,7 +51,27 @@ pub struct ExitButton;
 #[derive(Component)]
 pub struct EndTurnButton;
 
-fn enter_playing(mut commands: Commands, season: Res<State<Season>>) {
+/// Label that shows the current [`Season`][Season].
+///
+/// [Season]: crate::game::cycle::Season
+#[derive(Component)]
+pub struct SeasonLabel;
+
+/// Label that shows how many turns until [`TimeOfDay`][TimeOfDay].
+///
+/// [TimeOfDay]: crate::game::cycle::TimeOfDay
+#[derive(Component)]
+pub struct TurnUntilLabel;
+
+/// Label that shows the number of gold left.
+#[derive(Component)]
+pub struct GoldLabel;
+
+/// Label that shows the number of population left.
+#[derive(Component)]
+pub struct PopulationLabel;
+
+fn enter_playing(mut commands: Commands) {
     commands.trigger(PlaySoundtrack::Key(SoundtrackKey::Gameplay));
     commands
         .ui_builder(UiRoot)
@@ -67,20 +87,23 @@ fn enter_playing(mut commands: Commands, season: Res<State<Season>>) {
                     .justify_content(JustifyContent::SpaceBetween)
                     .align_items(AlignItems::Center);
 
-                let season = season.label();
-                ui.label(LabelConfig::from(season))
+                ui.label(LabelConfig::from("Season"))
+                    .insert(SeasonLabel)
                     .style()
                     .font_size(HEADER_SIZE);
 
                 ui.column(|_| {}).style().flex_grow(1.0);
 
-                ui.label(LabelConfig::from("Currency: "))
+                ui.label(LabelConfig::from("Gold"))
+                    .insert(GoldLabel)
                     .style()
-                    .font_size(LABEL_SIZE);
+                    .font_size(LABEL_SIZE)
+                    .margin(UiRect::right(Val::Px(40.0)));
 
-                ui.label(LabelConfig::from("Population: "))
+                ui.label(LabelConfig::from("Population"))
                     .style()
-                    .font_size(LABEL_SIZE);
+                    .font_size(LABEL_SIZE)
+                    .margin(UiRect::right(Val::Px(40.0)));
 
                 ui.column(|_| {}).style().width(Val::Px(20.0));
 
@@ -106,7 +129,8 @@ fn enter_playing(mut commands: Commands, season: Res<State<Season>>) {
             ui.row(|_ui| {}).style().flex_grow(1.0);
             // Bottom panel
             ui.row(|ui| {
-                ui.label(LabelConfig::from("Turns until x: "))
+                ui.label(LabelConfig::from("Turn Until"))
+                    .insert(TurnUntilLabel)
                     .style()
                     .font_size(LABEL_SIZE);
 
@@ -238,13 +262,13 @@ fn exit_btn_interaction(
     }
 }
 
-fn next_turn_btn_interaction(
-    q_interactions: Query<&Interaction, (Changed<Interaction>, With<ExitButton>)>,
-    mut next_turn_evt: EventWriter<NextTurn>,
+fn end_turn_btn_interaction(
+    q_interactions: Query<&Interaction, (Changed<Interaction>, With<EndTurnButton>)>,
+    mut next_turn_evt: EventWriter<EndTurn>,
 ) {
     for interaction in q_interactions.iter() {
         if let Interaction::Pressed = interaction {
-            next_turn_evt.send(NextTurn);
+            next_turn_evt.send(EndTurn);
         }
     }
 }

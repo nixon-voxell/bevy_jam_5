@@ -1,8 +1,9 @@
 //! The game's main screen states and transitions between them.
 
+pub mod playing;
+
 mod credits;
 mod loading;
-mod playing;
 mod splash;
 mod title;
 

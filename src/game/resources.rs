@@ -10,12 +10,6 @@ pub enum TurnPhase {
     Enemy,
 }
 
-#[derive(Resource, Debug, Copy, Clone, PartialEq, Default)]
-pub struct PlayerGold(pub u32);
-
-#[derive(Resource, Debug, Copy, Clone, PartialEq, Default)]
-pub struct VillagePopulation(pub u32);
-
 #[derive(Resource)]
 pub struct VillageMap {
     size: UVec2,
