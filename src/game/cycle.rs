@@ -47,7 +47,7 @@ fn reset_cycle(mut season: ResMut<Season>, mut turn: ResMut<Turn>) {
 fn end_turn(
     mut end_turn_evt: EventReader<EndTurn>,
     mut turn: ResMut<Turn>,
-    day_cycle: Res<DayCycle>,
+    mut day_cycle: ResMut<DayCycle>,
     mut next_tod: ResMut<NextState<TimeOfDay>>,
     mut season: ResMut<Season>,
 ) {
@@ -55,11 +55,7 @@ fn end_turn(
         end_turn_evt.clear();
         turn.0 += 1;
 
-        match turn.0 % TURN_PER_DAY >= day_cycle.day {
-            true => next_tod.set(TimeOfDay::Night),
-            false => next_tod.set(TimeOfDay::Day),
-        }
-
+        // Season
         let day = turn.0 / TURN_PER_DAY;
         season.set_if_neq(match (day % DAY_PER_CYCLE) / DAY_PER_SEASON {
             0 => Season::Summer,
@@ -67,6 +63,15 @@ fn end_turn(
             2 => Season::Winter,
             num => unreachable!("Season range is [0, 3) but given {num} instead!"),
         });
+
+        // Day cycle
+        *day_cycle = DayCycle::from(*season);
+
+        // Time of day
+        match turn.0 % TURN_PER_DAY >= day_cycle.day {
+            true => next_tod.set(TimeOfDay::Night),
+            false => next_tod.set(TimeOfDay::Day),
+        }
     }
 }
 
