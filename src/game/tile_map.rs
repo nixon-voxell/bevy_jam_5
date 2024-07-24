@@ -24,12 +24,15 @@ pub fn tile_coord_translation(x: f32, y: f32, layer: f32) -> Vec3 {
     translation
 }
 
+
+
 pub struct TileMapPlugin;
 
 impl Plugin for TileMapPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<TileMap>()
             .init_resource::<TileSet>()
+            .init_resource::<PickedTile>()
             .add_systems(PreStartup, load_tiles);
     }
 }
@@ -148,3 +151,7 @@ fn load_tiles(asset_server: Res<AssetServer>, mut tile_set: ResMut<TileSet>) {
     tile_set.insert("grassblock", asset_server.load("tiles/grassblock.png"));
     tile_set.insert("werewolf", asset_server.load("tiles/werewolf.png"));
 }
+
+
+#[derive(Resource, Default, Debug)]
+pub struct PickedTile(pub Option<IVec2>);
