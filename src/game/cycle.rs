@@ -94,8 +94,6 @@ fn turn_until_label(
         return;
     };
 
-    println!("{}, {:?}", turn.0, day_cycle);
-
     let turn_in_day = turn.0 % TURN_PER_DAY;
     let (turn_left, target_day) = match turn_in_day >= day_cycle.day {
         true => (TURN_PER_DAY - turn_in_day, "day"),
