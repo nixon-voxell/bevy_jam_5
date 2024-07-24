@@ -1,5 +1,7 @@
 //! The screen state for the main game loop.
 
+use std::default;
+
 use bevy::color::palettes::css::{self, RED};
 use bevy::{input::common_conditions::input_just_pressed, prelude::*};
 use sickle_ui::prelude::*;
@@ -7,7 +9,7 @@ use sickle_ui::ui_builder;
 
 use super::Screen;
 use crate::game::cycle::EndTurn;
-use crate::game::economy::{PlayerGold, VillagePopulation};
+use crate::game::economy::{PlayerGold, VillagePopulation, WatchRes};
 use crate::game::{assets::SoundtrackKey, audio::soundtrack::PlaySoundtrack};
 use crate::ui::{palette::*, prelude::*};
 
@@ -65,26 +67,6 @@ pub struct SeasonLabel;
 #[derive(Component)]
 pub struct TurnUntilLabel;
 
-/// Label that shows the number of gold left.
-#[derive(Component)]
-pub struct GoldLabel;
-
-pub trait ResLabel: Component {
-    type WatchedRes: Resource + ToString;
-}
-
-impl ResLabel for GoldLabel {
-    type WatchedRes = PlayerGold;
-}
-
-impl ResLabel for PopulationLabel {
-    type WatchedRes = VillagePopulation;
-}
-
-/// Label that shows the number of population left.
-#[derive(Component)]
-pub struct PopulationLabel;
-
 fn economy_status_layout(ui: &mut UiBuilder<Entity>) {
     ui.column(|ui| {
         ui.style().justify_content(JustifyContent::Center);
@@ -98,7 +80,7 @@ fn economy_status_layout(ui: &mut UiBuilder<Entity>) {
                     .height(Val::Px(32.0));
 
                 ui.label(LabelConfig::from("0"))
-                    .insert(GoldLabel)
+                    .insert(WatchRes::<PlayerGold>::default())
                     .style()
                     .font_size(LABEL_SIZE);
             });
@@ -111,6 +93,7 @@ fn economy_status_layout(ui: &mut UiBuilder<Entity>) {
                     .height(Val::Px(32.0));
 
                 ui.label(LabelConfig::from("0"))
+                    .insert(WatchRes::<VillagePopulation>::default())
                     .style()
                     .font_size(LABEL_SIZE);
             });
