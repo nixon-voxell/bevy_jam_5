@@ -10,6 +10,7 @@ pub mod components;
 pub mod cycle;
 pub mod economy;
 pub mod level;
+pub mod map;
 pub mod resources;
 pub mod systems;
 pub mod tile_map;
