@@ -19,5 +19,6 @@ pub(super) fn plugin(app: &mut App) {
         cycle::CyclePlugin,
         tile_map::TileMapPlugin,
         level::LevelPlugin,
+        economy::EconomyPlugin
     ));
 }

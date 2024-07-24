@@ -1,6 +1,7 @@
-use bevy::prelude::*;
+use std::marker::PhantomData;
 
-use crate::screen::playing::{GoldLabel, PopulationLabel};
+use bevy::ecs::schedule::SystemConfigs;
+use bevy::prelude::*;
 
 pub struct EconomyPlugin;
 
@@ -11,8 +12,8 @@ impl Plugin for EconomyPlugin {
             .add_systems(
                 Update,
                 (
-                    gold_label.run_if(resource_changed::<PlayerGold>),
-                    population_label.run_if(resource_changed::<VillagePopulation>),
+                    update_resource_label::<PlayerGold>(),
+                    update_resource_label::<VillagePopulation>(),
                 ),
             );
     }
@@ -21,26 +22,35 @@ impl Plugin for EconomyPlugin {
 #[derive(Resource, Debug, Copy, Clone, PartialEq, Default)]
 pub struct PlayerGold(pub u32);
 
+impl ToString for PlayerGold {
+    fn to_string(&self) -> String {
+        self.0.to_string()
+    }
+}
+
 #[derive(Resource, Debug, Copy, Clone, PartialEq, Default)]
 pub struct VillagePopulation(pub u32);
 
-fn gold_label(mut q_texts: Query<&mut Text, With<GoldLabel>>, gold: Res<PlayerGold>) {
-    let Ok(mut text) = q_texts.get_single_mut() else {
-        return;
-    };
-
-    let section = &mut text.sections[0];
-    section.value = gold.0.to_string();
+impl ToString for VillagePopulation {
+    fn to_string(&self) -> String {
+        self.0.to_string()
+    }
 }
 
-fn population_label(
-    mut q_texts: Query<&mut Text, With<PopulationLabel>>,
-    population: Res<VillagePopulation>,
-) {
-    let Ok(mut text) = q_texts.get_single_mut() else {
-        return;
-    };
+fn update_resource_label<R: Resource + ToString>() -> SystemConfigs {
+    set_resource_label::<R>.run_if(resource_changed::<R>)
+}
 
-    let section = &mut text.sections[0];
-    section.value = population.0.to_string();
+fn set_resource_label<R: Resource + ToString>(
+    mut q_texts: Query<&mut Text, With<WatchRes<R>>>, value: Res<R>
+) {
+    for mut text in q_texts.iter_mut() {
+        text.sections[0].value = value.to_string();
+    }
+}
+
+
+#[derive(Component, Default)]
+pub struct WatchRes<R: Resource + ToString> {
+    phantom: PhantomData<R>
 }

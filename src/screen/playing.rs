@@ -6,6 +6,7 @@ use sickle_ui::prelude::*;
 
 use super::Screen;
 use crate::game::cycle::EndTurn;
+use crate::game::economy::{PlayerGold, VillagePopulation, WatchRes};
 use crate::game::{assets::SoundtrackKey, audio::soundtrack::PlaySoundtrack};
 use crate::ui::{palette::*, prelude::*};
 
@@ -63,13 +64,39 @@ pub struct SeasonLabel;
 #[derive(Component)]
 pub struct TurnUntilLabel;
 
-/// Label that shows the number of gold left.
-#[derive(Component)]
-pub struct GoldLabel;
+fn economy_status_layout(ui: &mut UiBuilder<Entity>) {
+    ui.column(|ui| {
+        ui.style().justify_content(JustifyContent::Center);
+        ui.row(|ui| {
+            ui.style().column_gap(Val::Px(40.));
+            ui.row(|ui| {
+                ui.style().column_gap(Val::Px(4.));
+                ui.icon("icons/gold-coins.png")
+                    .style()
+                    .width(Val::Px(32.0))
+                    .height(Val::Px(32.0));
 
-/// Label that shows the number of population left.
-#[derive(Component)]
-pub struct PopulationLabel;
+                ui.label(LabelConfig::from("0"))
+                    .insert(WatchRes::<PlayerGold>::default())
+                    .style()
+                    .font_size(LABEL_SIZE);
+            });
+
+            ui.row(|ui| {
+                ui.style().column_gap(Val::Px(4.));
+                ui.icon("icons/population.png")
+                    .style()
+                    .width(Val::Px(32.0))
+                    .height(Val::Px(32.0));
+
+                ui.label(LabelConfig::from("0"))
+                    .insert(WatchRes::<VillagePopulation>::default())
+                    .style()
+                    .font_size(LABEL_SIZE);
+            });
+        });
+    });
+}
 
 fn enter_playing(mut commands: Commands) {
     commands.trigger(PlaySoundtrack::Key(SoundtrackKey::Gameplay));
@@ -81,11 +108,12 @@ fn enter_playing(mut commands: Commands) {
                 .height(Val::Percent(100.0))
                 .padding(UiRect::all(Val::Px(60.0)));
 
-            // Top panel
+            // Top pane
             ui.row(|ui| {
                 ui.style()
                     .justify_content(JustifyContent::SpaceBetween)
-                    .align_items(AlignItems::Center);
+                    .align_items(AlignItems::Center)
+                    .column_gap(Val::Px(40.));
 
                 ui.label(LabelConfig::from("Season"))
                     .insert(SeasonLabel)
@@ -94,16 +122,7 @@ fn enter_playing(mut commands: Commands) {
 
                 ui.column(|_| {}).style().flex_grow(1.0);
 
-                ui.label(LabelConfig::from("Gold"))
-                    .insert(GoldLabel)
-                    .style()
-                    .font_size(LABEL_SIZE)
-                    .margin(UiRect::right(Val::Px(40.0)));
-
-                ui.label(LabelConfig::from("Population"))
-                    .style()
-                    .font_size(LABEL_SIZE)
-                    .margin(UiRect::right(Val::Px(40.0)));
+                economy_status_layout(ui);
 
                 ui.column(|_| {}).style().width(Val::Px(20.0));
 
