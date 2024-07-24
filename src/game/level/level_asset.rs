@@ -6,7 +6,10 @@ use bevy::{
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use crate::game::tile_map::{tile_coord_translation, TileSet, TILE_HALF_HEIGHT};
+use crate::{
+    game::tile_map::{tile_coord_translation, TileSet, TILE_HALF_HEIGHT},
+    screen::Screen,
+};
 
 pub struct LevelAssetPlugin;
 
@@ -16,7 +19,8 @@ impl Plugin for LevelAssetPlugin {
             .init_asset_loader::<LevelAssetLoader>()
             .init_resource::<Levels>()
             .add_systems(PreStartup, load_levels)
-            .add_systems(Update, prespawn_levels);
+            .add_systems(Update, prespawn_levels)
+            .add_systems(OnExit(Screen::Playing), reset_levels);
     }
 }
 
@@ -24,7 +28,60 @@ impl Plugin for LevelAssetPlugin {
 pub struct LevelAsset {
     pub name: String,
     pub size: usize,
-    pub tiles: Vec<Vec<String>>,
+    pub tiles: [Vec<String>; 2],
+}
+
+impl LevelAsset {
+    fn create_tile_entities(
+        &self,
+        commands: &mut Commands,
+        tile_set: &TileSet,
+        layer: usize,
+        translation_layer: f32,
+    ) -> Vec<Entity> {
+        let start_translation = Vec3::new(
+            0.0,
+            TILE_HALF_HEIGHT * self.size as f32 - TILE_HALF_HEIGHT,
+            0.0,
+        );
+        self.tiles[layer]
+            .iter()
+            .enumerate()
+            .filter(|(_, name)| *name != "empty")
+            .map(|(i, name)| {
+                let x = (i % self.size) as f32;
+                let y = (i / self.size) as f32;
+                let translation =
+                    start_translation + tile_coord_translation(x, y, translation_layer);
+
+                commands
+                    .spawn(SpriteBundle {
+                        texture: tile_set.get(name),
+                        transform: Transform::from_translation(translation),
+                        ..default()
+                    })
+                    .id()
+            })
+            .collect()
+    }
+
+    pub fn create_ground_entities(
+        &self,
+        commands: &mut Commands,
+        tile_set: &TileSet,
+    ) -> Vec<Entity> {
+        self.create_tile_entities(commands, tile_set, 0, 0.0)
+    }
+
+    pub fn create_object_entities(
+        &self,
+        commands: &mut Commands,
+        tile_set: &TileSet,
+    ) -> Vec<Entity> {
+        // 1 layer higher because we want a middle layer to place
+        // interaction tiles (on hover, on click, etc.).
+        self.create_tile_entities(commands, tile_set, 1, 2.0)
+    }
 }
 
 #[derive(Default)]
@@ -112,7 +169,7 @@ fn load_levels(mut commands: Commands, asset_sever: Res<AssetServer>, mut levels
     );
 }
 
-/// Prespawn levels so that we can easily enable and disable them.
+/// Prespawn levels so that we can easily load/unload them by changing the parent's visibility.
 fn prespawn_levels(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
@@ -134,35 +191,20 @@ fn prespawn_levels(
             let debug_level = level_assets.get(&level.handle).unwrap();
             info!("Loading level: {name}");
 
-            // TODO: Make this into a part of the level asset.
-            let start_translation = Vec3::new(0.0, TILE_HALF_HEIGHT * debug_level.size as f32, 0.0);
-            let mut children = Vec::new();
+            let ground_tiles = debug_level.create_ground_entities(&mut commands, &tile_set);
+            let object_tiles = debug_level.create_object_entities(&mut commands, &tile_set);
 
-            for (layer, tiles) in debug_level.tiles.iter().enumerate() {
-                let layer = layer as f32;
-                for (i, tile_name) in tiles.iter().enumerate() {
-                    if tile_name == "empty" {
-                        continue;
-                    }
-
-                    let x = (i % debug_level.size) as f32;
-                    let y = (i / debug_level.size) as f32;
-                    let translation = start_translation + tile_coord_translation(x, y, layer);
-
-                    children.push(
-                        commands
-                            .spawn(SpriteBundle {
-                                texture: tile_set.get(tile_name),
-                                transform: Transform::from_translation(translation),
-                                ..default()
-                            })
-                            .id(),
-                    );
-                }
-            }
-
-            commands.entity(level.parent).push_children(&children);
+            commands.entity(level.parent).despawn_descendants();
+            commands.entity(level.parent).push_children(&ground_tiles);
+            commands.entity(level.parent).push_children(&object_tiles);
         }
         level.state = load_state.clone();
+    }
+}
+
+/// Reset level load state so that [`prespawn_levels`] can kick in.
+fn reset_levels(mut levels: ResMut<Levels>) {
+    for level in levels.0.values_mut() {
+        level.state = LoadState::Loading;
     }
 }
