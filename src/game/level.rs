@@ -1,10 +1,17 @@
 //! Spawn the main level by triggering other observers.
 
+
+
+
 use bevy::prelude::*;
+
 
 use crate::screen::Screen;
 
 use self::level_asset::{LevelAssetPlugin, LevelMarker, Levels};
+
+
+
 
 pub mod level_asset;
 
@@ -13,8 +20,10 @@ pub struct LevelPlugin;
 impl Plugin for LevelPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(LevelAssetPlugin)
+            
             .add_systems(OnEnter(Screen::Playing), load_level)
-            .add_systems(OnExit(Screen::Playing), unload_all_level);
+            .add_systems(OnExit(Screen::Playing), unload_all_level)
+         ;
     }
 }
 

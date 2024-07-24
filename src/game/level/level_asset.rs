@@ -51,7 +51,7 @@ impl LevelAsset {
                 let y = (i / self.size) as f32;
                 let translation =
                     start_translation + tile_coord_translation(x, y, translation_layer);
-
+                
                 commands
                     .spawn((SpriteBundle {
                         sprite: Sprite {
@@ -89,7 +89,51 @@ impl LevelAsset {
         // interaction tiles (on hover, on click, etc.).
         self.create_tile_entities(commands, tile_set, 1, 2.0)
     }
-}
+
+    pub fn create_edges(
+        &self,
+        commands: &mut Commands,
+        tile_set: &TileSet,
+    ) {
+       
+            let start_translation = Vec3::new(
+                0.0,
+                TILE_HALF_HEIGHT * self.size as f32 - TILE_HALF_HEIGHT,
+                0.0,
+            );
+            for i in 0..self.tiles[0].len() {
+                
+                let x = (i % self.size) as f32;
+                let y = (i / self.size) as f32;
+                let translation =
+                    start_translation + tile_coord_translation(x, y, 1.);
+                
+                for s in [
+                    Vec2::ONE,
+                    vec2(1., -1.),
+                    -Vec2::ONE,
+                    vec2(-1., 1.)
+                ] {
+
+                    commands
+                    .spawn(SpriteBundle {
+                        sprite: Sprite {
+                            anchor: bevy::sprite::Anchor::Custom(vec2(0., 0.5 - 293. / 512.)),
+                            ..Default::default()
+                        },
+                        texture: tile_set.get("edge"),
+                        transform: Transform { translation, scale: s.extend(1.), ..Default::default() },
+                        visibility: Visibility::Hidden,
+                        ..default()                    
+                    }
+                    
+
+                );
+                }
+            }
+        }
+    }
+
 
 #[derive(Default)]
 pub struct LevelAssetLoader;
@@ -200,6 +244,7 @@ fn prespawn_levels(
 
             let ground_tiles = debug_level.create_ground_entities(&mut commands, &tile_set);
             let object_tiles = debug_level.create_object_entities(&mut commands, &tile_set);
+            debug_level.create_edges(&mut commands, &tile_set);
 
             commands.entity(level.parent).despawn_descendants();
             commands.entity(level.parent).push_children(&ground_tiles);
