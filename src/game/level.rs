@@ -42,6 +42,7 @@ fn load_level(
 
     let ground_tiles = level_asset.create_ground_entities(&mut commands, &tile_set);
     let object_tiles = level_asset.create_object_entities(&mut commands, &tile_set);
+    level_asset.create_edges(&mut commands, &tile_set);
 
     commands
         .spawn((StateScoped(Screen::Playing), SpatialBundle::default()))
