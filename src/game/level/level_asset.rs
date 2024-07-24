@@ -1,7 +1,5 @@
 use bevy::{
-    asset::{io::Reader, AssetLoader, AsyncReadExt, LoadContext, LoadState},
-    prelude::*,
-    utils::HashMap,
+    asset::{io::Reader, AssetLoader, AsyncReadExt, LoadContext, LoadState}, math::vec2, prelude::*, utils::HashMap
 };
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -56,6 +54,10 @@ impl LevelAsset {
 
                 commands
                     .spawn(SpriteBundle {
+                        sprite: Sprite {
+                            anchor: bevy::sprite::Anchor::Custom(vec2(0., 0.5 - 293. / 512.)),
+                            ..Default::default()
+                        },
                         texture: tile_set.get(name),
                         transform: Transform::from_translation(translation),
                         ..default()
