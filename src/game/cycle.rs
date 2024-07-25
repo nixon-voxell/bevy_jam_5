@@ -12,8 +12,10 @@ pub const DAY_PER_SEASON: u32 = 2; // TODO: Determine a balanced number, set to 
 pub const DAY_PER_CYCLE: u32 = DAY_PER_SEASON * 3;
 
 const M: f32 = 0.4;
-pub const DAY_BACKGROUND: Color = Color::srgb(0.7 * M, 0.75 * M, 0.8 * M);
-pub const NIGHT_BACKGROUND: Color = Color::BLACK;
+pub const CLEAR_BACKGROUND: Color = Color::srgb(0.7 * M, 0.75 * M, 0.8 * M);
+pub const SUMMER_BACKGROUND: Color = Color::srgb(0.16 * M, 0.67 * M, 0.29 * M);
+pub const AUTUMN_BACKGROUND: Color = Color::srgb(0.98 * M, 0.69 * M, 0.23 * M);
+pub const WINTER_BACKGROUND: Color = Color::srgb(0.65 * M, 0.82 * M, 0.95 * M);
 
 pub struct CyclePlugin;
 
@@ -26,6 +28,7 @@ impl Plugin for CyclePlugin {
             .add_event::<NextSeason>()
             .add_event::<EndTurn>()
             .add_systems(OnEnter(Screen::Playing), (reset_cycle, update_background))
+            .add_systems(OnExit(Screen::Playing), reset_background)
             .add_systems(
                 Update,
                 (
@@ -45,11 +48,24 @@ impl Plugin for CyclePlugin {
     }
 }
 
-fn update_background(time_of_day: Res<State<TimeOfDay>>, mut clear_color: ResMut<ClearColor>) {
-    clear_color.0 = match time_of_day.get() {
-        TimeOfDay::Day => DAY_BACKGROUND,
-        TimeOfDay::Night => NIGHT_BACKGROUND,
+fn update_background(
+    time_of_day: Res<State<TimeOfDay>>,
+    season: Res<Season>,
+    mut clear_color: ResMut<ClearColor>,
+) {
+    let color = match *season {
+        Season::Summer => SUMMER_BACKGROUND,
+        Season::Autumn => AUTUMN_BACKGROUND,
+        Season::Winter => WINTER_BACKGROUND,
     };
+    clear_color.0 = match time_of_day.get() {
+        TimeOfDay::Day => color,
+        TimeOfDay::Night => color.mix(&Color::BLACK, 0.5),
+    };
+}
+
+fn reset_background(mut clear_color: ResMut<ClearColor>) {
+    clear_color.0 = CLEAR_BACKGROUND;
 }
 
 fn reset_cycle(mut season: ResMut<Season>, mut turn: ResMut<Turn>) {
