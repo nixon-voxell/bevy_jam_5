@@ -17,6 +17,7 @@ pub mod resources;
 pub mod systems;
 pub mod tile_set;
 pub mod unit;
+pub mod unit_list;
 
 pub(super) fn plugin(app: &mut App) {
     app.add_plugins((
@@ -52,3 +53,5 @@ fn set_resource_label<R: Resource + ToString>(
         text.sections[0].value = value.to_string();
     }
 }
+
+pub const INVENTORY_CAPACITY: usize = 5;

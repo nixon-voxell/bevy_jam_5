@@ -154,7 +154,6 @@ pub fn pick_tile(
             if let Some(tile) = village_map.ground.locate(e) {
                 picked_tile.0 = Some(tile);
                 picked_set = true;
-                println!("picked = {tile}");
             }
         }
     }
