@@ -13,14 +13,14 @@ pub mod level;
 pub mod map;
 pub mod resources;
 pub mod systems;
-pub mod tile_map;
+pub mod tile_set;
 
 pub(super) fn plugin(app: &mut App) {
     app.add_plugins((
         audio::plugin,
         assets::plugin,
         cycle::CyclePlugin,
-        tile_map::TileMapPlugin,
+        tile_set::TileSetPlugin,
         level::LevelPlugin,
         economy::EconomyPlugin,
     ));

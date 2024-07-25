@@ -7,7 +7,9 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 use crate::{
-    game::tile_map::{tile_coord_translation, PickableTile, TileSet, TILE_HALF_HEIGHT},
+    game::tile_set::{
+        tile_coord_translation, PickableTile, TileSet, TILE_ANCHOR, TILE_HALF_HEIGHT,
+    },
     screen::Screen,
 };
 
@@ -51,12 +53,12 @@ impl LevelAsset {
                 let y = (i / self.size) as f32;
                 let translation =
                     start_translation + tile_coord_translation(x, y, translation_layer);
-                
+
                 commands
                     .spawn((
                         SpriteBundle {
                             sprite: Sprite {
-                                anchor: bevy::sprite::Anchor::Custom(vec2(0., 0.5 - 293. / 512.)),
+                                anchor: TILE_ANCHOR,
                                 ..Default::default()
                             },
                             texture: tile_set.get(name),
@@ -88,50 +90,36 @@ impl LevelAsset {
         self.create_tile_entities(commands, tile_set, 1, 2.0)
     }
 
-    pub fn create_edges(
-        &self,
-        commands: &mut Commands,
-        tile_set: &TileSet,
-    ) {
-       
-            let start_translation = Vec3::new(
-                0.0,
-                TILE_HALF_HEIGHT * self.size as f32 - TILE_HALF_HEIGHT,
-                0.0,
-            );
-            for i in 0..self.tiles[0].len() {
-                
-                let x = (i % self.size) as f32;
-                let y = (i / self.size) as f32;
-                let translation =
-                    start_translation + tile_coord_translation(x, y, 1.);
-                
-                for s in [
-                    Vec2::ONE,
-                    vec2(1., -1.),
-                    -Vec2::ONE,
-                    vec2(-1., 1.)
-                ] {
+    pub fn create_edges(&self, commands: &mut Commands, tile_set: &TileSet) {
+        let start_translation = Vec3::new(
+            0.0,
+            TILE_HALF_HEIGHT * self.size as f32 - TILE_HALF_HEIGHT,
+            0.0,
+        );
+        for i in 0..self.tiles[0].len() {
+            let x = (i % self.size) as f32;
+            let y = (i / self.size) as f32;
+            let translation = start_translation + tile_coord_translation(x, y, 1.);
 
-                    commands
-                    .spawn(SpriteBundle {
-                        sprite: Sprite {
-                            anchor: bevy::sprite::Anchor::Custom(vec2(0., 0.5 - 293. / 512.)),
-                            ..Default::default()
-                        },
-                        texture: tile_set.get("edge"),
-                        transform: Transform { translation, scale: s.extend(1.), ..Default::default() },
-                        visibility: Visibility::Hidden,
-                        ..default()                    
-                    }
-                    
-
-                );
-                }
+            for s in [Vec2::ONE, vec2(1., -1.), -Vec2::ONE, vec2(-1., 1.)] {
+                commands.spawn(SpriteBundle {
+                    sprite: Sprite {
+                        anchor: TILE_ANCHOR,
+                        ..Default::default()
+                    },
+                    texture: tile_set.get("edge"),
+                    transform: Transform {
+                        translation,
+                        scale: s.extend(1.),
+                        ..Default::default()
+                    },
+                    visibility: Visibility::Hidden,
+                    ..default()
+                });
             }
         }
     }
-
+}
 
 #[derive(Default)]
 pub struct LevelAssetLoader;
@@ -187,11 +175,11 @@ pub struct Levels(pub Vec<LevelLoad>);
 
 /// Load levels from json file.
 fn load_levels(asset_sever: Res<AssetServer>, mut levels: ResMut<Levels>) {
-    info!("Loading levels from json...");
-
     const LEVELS: &[&str] = &["debug_level"];
 
     for &level in LEVELS {
+        info!("Loading level: {}", level);
+
         levels.0.push(LevelLoad::new(
             String::from(level),
             asset_sever.load(format!("levels/{}.json", level)),
