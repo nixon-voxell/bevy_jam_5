@@ -134,7 +134,6 @@ pub fn exit_mechant_btn_interaction(
 ) {
     for interaction in q_interactions.iter() {
         if let Interaction::Pressed = interaction {
-            println!("watch it!");
             // Resumed is default state that is needed
             // when we go back into the game later.
             next_game_state.set(GameState::Resumed);
