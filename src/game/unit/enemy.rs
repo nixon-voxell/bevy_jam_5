@@ -69,7 +69,7 @@ fn spawn_enemies(
     for enemy in enemies {
         let mut tile_coord = IVec2::ZERO;
         for _ in 0..SPAWN_TRIAL {
-            tile_coord = random_spawn_tile_coord(width).as_ivec2();
+            tile_coord = random_border_tile_coord(width, ENEMY_SPAWN_RANGE).as_ivec2();
 
             // There is something blocking the spawning location
             if village_map.object.get(tile_coord).is_some() {
@@ -115,16 +115,17 @@ fn spawn_enemies(
     }
 }
 
-fn random_spawn_tile_coord(width: u32) -> UVec2 {
+/// Get a random coordinate that is at the border of the grid.
+pub fn random_border_tile_coord(width: u32, range: u32) -> UVec2 {
     let max_index = width - 1;
     let side = rand::random::<u32>() % 4;
     // |---------------| -> width
-    //             |---| -> ENEMY_SPAWN_RANGE
+    //             |---| -> range
     // == == == == .. ..
     // == == == == .. ..
     let side_coord = uvec2(
-        rand::random::<u32>() % (width - ENEMY_SPAWN_RANGE),
-        rand::random::<u32>() % ENEMY_SPAWN_RANGE,
+        rand::random::<u32>() % (width - range),
+        rand::random::<u32>() % range,
     );
 
     // Convert side coordinate into tile coordinate by performing 2d rotations based on side.
