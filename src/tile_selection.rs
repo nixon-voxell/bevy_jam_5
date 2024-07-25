@@ -22,6 +22,12 @@ impl Plugin for TileSelectionPlugin {
     }
 }
 
+/// Current selected unit, can be Player controlled, enemy or a building
+#[derive(Resource, Default)]
+pub struct SelectedUnit {
+    pub entity: Option<Entity>,
+}
+
 #[derive(Resource, Default)]
 pub struct SelectedTiles {
     pub color: Color,
