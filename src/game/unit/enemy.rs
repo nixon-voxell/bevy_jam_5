@@ -71,13 +71,8 @@ fn spawn_enemies(
 
     for enemy in enemies {
         let mut tile_coord = IVec2::ZERO;
-        for i in 0..SPAWN_TRIAL {
-            println!("{i}");
+        for _ in 0..SPAWN_TRIAL {
             tile_coord = random_spawn_tile_coord(width).as_ivec2();
-            // Airborne enemy can be on top of anything, even units/structures
-            if enemy.is_airborne {
-                break;
-            }
 
             // There is something blocking the spawning location
             if village_map.object.get(tile_coord).is_some() {
@@ -96,7 +91,9 @@ fn spawn_enemies(
             match terrain {
                 Terrain::Grass => break,
                 Terrain::Gravel => break,
-                Terrain::Water => continue,
+                // Airborne enemy can be on top of anything water
+                Terrain::Water if enemy.is_airborne => break,
+                _ => continue,
             }
         }
 
