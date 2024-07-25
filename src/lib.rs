@@ -14,6 +14,7 @@ use bevy::{
     prelude::*,
     window::PrimaryWindow,
 };
+use game::tile_set::TILE_HALF_HEIGHT;
 
 pub struct AppPlugin;
 
@@ -80,8 +81,11 @@ enum AppSet {
     Update,
 }
 
+#[derive(Component)]
+pub struct VillageCamera;
+
 fn spawn_camera(mut commands: Commands) {
-    commands.spawn((
+    commands.spawn((VillageCamera,
         Name::new("Camera"),
         Camera2dBundle {
             projection: OrthographicProjection {

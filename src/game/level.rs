@@ -2,7 +2,7 @@
 
 use bevy::{math::vec2, prelude::*};
 
-use crate::screen::Screen;
+use crate::{screen::Screen, VillageCamera};
 
 use self::level_asset::{LevelAsset, LevelAssetPlugin, Levels};
 
@@ -27,6 +27,7 @@ fn load_level(
     mut levels: ResMut<Levels>,
     level_assets: Res<Assets<LevelAsset>>,
     tile_set: Res<TileSet>,
+    mut village_camera_query: Query<&mut Transform, With<VillageCamera>>,
 ) {
     // Choose a random level
     let level_index = rand::random::<usize>() % levels.0.len();
@@ -37,13 +38,20 @@ fn load_level(
         return;
     };
 
+    
+
     let mut village_map = VillageMap::new(UVec2::splat(level_asset.size as u32));
 
-    let start_translation = Vec3::new(
+    let camera_translation = Vec3::new(
         0.0,
-        TILE_HALF_HEIGHT * level_asset.size as f32 - TILE_HALF_HEIGHT,
+        -TILE_HALF_HEIGHT * level_asset.size as f32 + TILE_HALF_HEIGHT,
         0.0,
     );
+
+    for mut transform in village_camera_query.iter_mut() {
+        transform.translation = camera_translation;
+    }
+
     for y in 0..level_asset.size {
         for x in 0..level_asset.size {
             let index = x + y * level_asset.size;
@@ -52,9 +60,9 @@ fn load_level(
             let object_tile_name = &level_asset.tiles[1][index];
 
             let (xf, yf) = (x as f32, y as f32);
-            let ground_translation = start_translation + tile_coord_translation(xf, yf, 0.0);
-            let edge_translation = start_translation + tile_coord_translation(xf, yf, 1.0);
-            let object_translation = start_translation + tile_coord_translation(xf, yf, 2.0);
+            let ground_translation =  tile_coord_translation(xf, yf, 0.0);
+            let edge_translation = tile_coord_translation(xf, yf, 1.0);
+            let object_translation = tile_coord_translation(xf, yf, 2.0);
 
             let (xi, yi) = (x as i32, y as i32);
             village_map.ground.set(
