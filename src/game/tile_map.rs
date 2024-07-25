@@ -19,6 +19,11 @@ pub const DOWN_DIR: Vec2 = Vec2::new(-TILE_WIDTH / 2.0, -TILE_HALF_HEIGHT);
 /// Z-depth of a single layer.
 pub const LAYER_DEPTH: f32 = 10.0;
 
+pub const TILE_ANCHOR: Vec2 = Vec2 {
+    x: 0.,
+    y: 0.5 - 293. / 512.,
+};
+
 /// Convert tile coordinate to world translation.
 pub fn tile_coord_translation(x: f32, y: f32, layer: f32) -> Vec3 {
     let mut translation = RIGHT_DIR.xyy() * x;
@@ -153,6 +158,7 @@ impl TileSet {
 
 fn load_tiles(asset_server: Res<AssetServer>, mut tile_set: ResMut<TileSet>) {
     const TILES: &[&str] = &[
+        "edge",
         "grassblock",
         "gravelblock",
         "waterblock",
