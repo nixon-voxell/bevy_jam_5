@@ -1,17 +1,9 @@
 use bevy::{
-    asset::{io::Reader, AssetLoader, AsyncReadExt, LoadContext, LoadState},
-    math::vec2,
+    asset::{io::Reader, AssetLoader, AsyncReadExt, LoadContext},
     prelude::*,
 };
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
-
-use crate::{
-    game::tile_set::{
-        tile_coord_translation, PickableTile, TileSet, TILE_ANCHOR, TILE_HALF_HEIGHT,
-    },
-    screen::Screen,
-};
 
 pub struct LevelAssetPlugin;
 
@@ -29,96 +21,6 @@ pub struct LevelAsset {
     pub name: String,
     pub size: usize,
     pub tiles: [Vec<String>; 2],
-}
-
-impl LevelAsset {
-    fn create_tile_entities(
-        &self,
-        commands: &mut Commands,
-        tile_set: &TileSet,
-        layer: usize,
-        translation_layer: f32,
-    ) -> Vec<Entity> {
-        let start_translation = Vec3::new(
-            0.0,
-            TILE_HALF_HEIGHT * self.size as f32 - TILE_HALF_HEIGHT,
-            0.0,
-        );
-        self.tiles[layer]
-            .iter()
-            .enumerate()
-            .filter(|(_, name)| *name != "empty")
-            .map(|(i, name)| {
-                let x = (i % self.size) as f32;
-                let y = (i / self.size) as f32;
-                let translation =
-                    start_translation + tile_coord_translation(x, y, translation_layer);
-
-                commands
-                    .spawn((
-                        SpriteBundle {
-                            sprite: Sprite {
-                                anchor: TILE_ANCHOR,
-                                ..Default::default()
-                            },
-                            texture: tile_set.get(name),
-                            transform: Transform::from_translation(translation),
-                            ..default()
-                        },
-                        PickableTile,
-                    ))
-                    .id()
-            })
-            .collect()
-    }
-
-    pub fn create_ground_entities(
-        &self,
-        commands: &mut Commands,
-        tile_set: &TileSet,
-    ) -> Vec<Entity> {
-        self.create_tile_entities(commands, tile_set, 0, 0.0)
-    }
-
-    pub fn create_object_entities(
-        &self,
-        commands: &mut Commands,
-        tile_set: &TileSet,
-    ) -> Vec<Entity> {
-        // 1 layer higher because we want a middle layer to place
-        // interaction tiles (on hover, on click, etc.).
-        self.create_tile_entities(commands, tile_set, 1, 2.0)
-    }
-
-    pub fn create_edges(&self, commands: &mut Commands, tile_set: &TileSet) {
-        let start_translation = Vec3::new(
-            0.0,
-            TILE_HALF_HEIGHT * self.size as f32 - TILE_HALF_HEIGHT,
-            0.0,
-        );
-        for i in 0..self.tiles[0].len() {
-            let x = (i % self.size) as f32;
-            let y = (i / self.size) as f32;
-            let translation = start_translation + tile_coord_translation(x, y, 1.);
-
-            for s in [Vec2::ONE, vec2(1., -1.), -Vec2::ONE, vec2(-1., 1.)] {
-                commands.spawn(SpriteBundle {
-                    sprite: Sprite {
-                        anchor: TILE_ANCHOR,
-                        ..Default::default()
-                    },
-                    texture: tile_set.get("edge"),
-                    transform: Transform {
-                        translation,
-                        scale: s.extend(1.),
-                        ..Default::default()
-                    },
-                    visibility: Visibility::Hidden,
-                    ..default()
-                });
-            }
-        }
-    }
 }
 
 #[derive(Default)]
