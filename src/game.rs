@@ -16,6 +16,7 @@ pub mod map;
 pub mod resources;
 pub mod systems;
 pub mod tile_set;
+pub mod unit_list;
 
 pub(super) fn plugin(app: &mut App) {
     app.add_plugins((
