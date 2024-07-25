@@ -51,3 +51,5 @@ fn set_resource_label<R: Resource + ToString>(
         text.sections[0].value = value.to_string();
     }
 }
+
+pub const INVENTORY_CAPACITY: usize = 5;
