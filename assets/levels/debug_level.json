@@ -8,11 +8,11 @@
       "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock",
       "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock",
       "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock",
-      "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock",
-      "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock",
-      "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock",
-      "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock",
-      "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock"
+      "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "gravelblock", "gravelblock",
+      "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "gravelblock", "gravelblock", "waterblock",
+      "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "gravelblock", "waterblock", "waterblock",
+      "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "gravelblock", "gravelblock", "waterblock", "waterblock",
+      "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "gravelblock", "waterblock", "waterblock", "waterblock"
     ],
     [
       "werewolf", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty",

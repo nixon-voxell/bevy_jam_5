@@ -4,6 +4,9 @@ use bevy::window::PrimaryWindow;
 use bimap::BiHashMap;
 use bimap::Overwritten;
 
+use crate::screen::playing::GameState;
+use crate::screen::Screen;
+
 /// Width of a tile.
 pub const TILE_WIDTH: f32 = 256.0;
 /// Half height of a tile surface.
@@ -33,8 +36,12 @@ impl Plugin for TileMapPlugin {
             .init_resource::<TileSet>()
             .init_resource::<PickedTile>()
             .init_resource::<PickedPoint>()
-            .add_systems(Update, (find_picked_point, pick_tile))
-            .add_systems(PreStartup, load_tiles);
+            .add_systems(PreStartup, load_tiles)
+            .add_systems(
+                Update,
+                (find_picked_point, pick_tile)
+                    .run_if(in_state(Screen::Playing).and_then(in_state(GameState::Resumed))),
+            );
     }
 }
 
@@ -145,9 +152,17 @@ impl TileSet {
 }
 
 fn load_tiles(asset_server: Res<AssetServer>, mut tile_set: ResMut<TileSet>) {
-    const TILES: &[&str] = &["grassblock", "werewolf", "house1"];
+    const TILES: &[&str] = &[
+        "grassblock",
+        "gravelblock",
+        "waterblock",
+        "house1",
+        "werewolf",
+        "human",
+    ];
 
     for &tile in TILES {
+        info!("Loading tile: {}", tile);
         tile_set.insert(tile, asset_server.load(format!("tiles/{}.png", tile)));
     }
 }
