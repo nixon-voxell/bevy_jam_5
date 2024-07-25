@@ -2,7 +2,7 @@
 
 use bevy::{math::vec2, prelude::*};
 
-use crate::screen::Screen;
+use crate::{screen::Screen, tile_selection::{SelectionEdge, SelectionMap}, VillageCamera};
 
 use self::level_asset::{LevelAsset, LevelAssetPlugin, Levels};
 
@@ -27,6 +27,7 @@ fn load_level(
     mut levels: ResMut<Levels>,
     level_assets: Res<Assets<LevelAsset>>,
     tile_set: Res<TileSet>,
+    mut village_camera_query: Query<&mut Transform, With<VillageCamera>>,
 ) {
     // Choose a random level
     let level_index = rand::random::<usize>() % levels.0.len();
@@ -37,13 +38,19 @@ fn load_level(
         return;
     };
 
+    let mut selection_map = SelectionMap::default();
     let mut village_map = VillageMap::new(UVec2::splat(level_asset.size as u32));
 
-    let start_translation = Vec3::new(
+    let camera_translation = Vec3::new(
         0.0,
-        TILE_HALF_HEIGHT * level_asset.size as f32 - TILE_HALF_HEIGHT,
+        -TILE_HALF_HEIGHT * level_asset.size as f32 + TILE_HALF_HEIGHT,
         0.0,
     );
+
+    for mut transform in village_camera_query.iter_mut() {
+        transform.translation = camera_translation;
+    }
+
     for y in 0..level_asset.size {
         for x in 0..level_asset.size {
             let index = x + y * level_asset.size;
@@ -52,9 +59,9 @@ fn load_level(
             let object_tile_name = &level_asset.tiles[1][index];
 
             let (xf, yf) = (x as f32, y as f32);
-            let ground_translation = start_translation + tile_coord_translation(xf, yf, 0.0);
-            let edge_translation = start_translation + tile_coord_translation(xf, yf, 1.0);
-            let object_translation = start_translation + tile_coord_translation(xf, yf, 2.0);
+            let ground_translation =  tile_coord_translation(xf, yf, 0.0);
+            let edge_translation = tile_coord_translation(xf, yf, 1.0);
+            let object_translation = tile_coord_translation(xf, yf, 2.0);
 
             let (xi, yi) = (x as i32, y as i32);
             village_map.ground.set(
@@ -76,25 +83,30 @@ fn load_level(
                     .id(),
             );
 
-            for s in [Vec2::ONE, vec2(1., -1.), -Vec2::ONE, vec2(-1., 1.)] {
-                commands.spawn((
-                    SpriteBundle {
-                        sprite: Sprite {
-                            anchor: TILE_ANCHOR,
-                            ..Default::default()
+            let mut ids = [Entity::PLACEHOLDER; 4];
+            for (i, edge) in SelectionEdge::ALL.into_iter().enumerate() {
+                let id =
+                    commands.spawn((
+                        SpriteBundle {
+                            sprite: Sprite {
+                                anchor: TILE_ANCHOR,
+                                ..Default::default()
+                            },
+                            texture: tile_set.get("edge"),
+                            transform: Transform {
+                                translation: edge_translation,
+                                scale: edge.get_scalar().extend(1.),
+                                ..Default::default()
+                            },
+                            visibility: Visibility::Hidden,
+                            ..default()
                         },
-                        texture: tile_set.get("edge"),
-                        transform: Transform {
-                            translation: edge_translation,
-                            scale: s.extend(1.),
-                            ..Default::default()
-                        },
-                        visibility: Visibility::Hidden,
-                        ..default()
-                    },
-                    StateScoped(Screen::Playing),
-                ));
+                        StateScoped(Screen::Playing),
+                        edge,
+                    )).id();
+                ids[i] = id;
             }
+            selection_map.tiles.insert(IVec2{ x: xi, y: yi }, ids);
 
             if object_tile_name != "empty" {
                 village_map.object.set(
@@ -118,7 +130,7 @@ fn load_level(
             }
         }
     }
-    // level_asset.create_edges(&mut commands, &tile_set);
 
     commands.insert_resource(village_map);
+    commands.insert_resource(selection_map)
 }

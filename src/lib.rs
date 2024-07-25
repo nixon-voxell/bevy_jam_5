@@ -4,6 +4,7 @@ mod game;
 pub mod path_finding;
 mod screen;
 mod ui;
+pub mod tile_selection;
 
 const BASE_APP_HEIGHT: f32 = 720.0;
 const BASE_CAM_SCALE: f32 = 3.2;
@@ -14,6 +15,7 @@ use bevy::{
     prelude::*,
     window::PrimaryWindow,
 };
+use game::tile_set::TILE_HALF_HEIGHT;
 
 pub struct AppPlugin;
 
@@ -80,8 +82,11 @@ enum AppSet {
     Update,
 }
 
+#[derive(Component)]
+pub struct VillageCamera;
+
 fn spawn_camera(mut commands: Commands) {
-    commands.spawn((
+    commands.spawn((VillageCamera,
         Name::new("Camera"),
         Camera2dBundle {
             projection: OrthographicProjection {
