@@ -63,7 +63,7 @@ pub struct UnitBundle<T: Component> {
     pub health_icons: HealthIcons,
     pub movement: Movement,
     pub turn_state: UnitTurnState,
-    pub player: T,
+    pub unit: T,
     // pub abilities: Abilities,
 }
 
@@ -79,7 +79,7 @@ where
             health_icons: HealthIcons::default(),
             movement: Movement(2),
             turn_state: UnitTurnState::default(),
-            player: T::default(),
+            unit: T::default(),
         }
     }
 }
