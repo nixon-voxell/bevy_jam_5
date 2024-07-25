@@ -1,45 +1,14 @@
 use bevy::prelude::*;
 use bevy::utils::HashSet;
 
-/// Amount of damage a unit can take before dying
-#[derive(Component, Copy, Clone, Debug, Deref, DerefMut, PartialEq)]
-pub struct HitPoints(pub u32);
-
-/// Number of tiles a unit can move per turn
-#[derive(Component, Copy, Clone, Debug, Deref, DerefMut, PartialEq)]
-pub struct Movement(pub u32);
-
-/// Name of the unit
-#[derive(Component)]
-pub struct UnitName(pub String);
-
-/// Marker component for Player controlled units
-#[derive(Component, Copy, Clone, Debug)]
-pub struct PlayerUnit;
-
-/// Marker component for Enemy units
-#[derive(Component, Copy, Clone, Debug)]
-pub struct EnemyUnit;
-
-/// Has unit moved or performed an action yet
-/// Needs to be reset to default after each turn (Not good?)
-#[derive(Component, Default, Debug)]
-pub struct UnitTurnState {
-    pub used_move: bool,
-    pub used_action: bool,
-}
-
-impl UnitTurnState {
-    pub fn reset(&mut self) {
-        *self = Self::default();
-    }
-}
-
 #[derive(Component, Default, Debug, Copy, Clone)]
 pub enum Terrain {
     #[default]
-    /// Tile is grassland or road,
-    Clear,
+    /// Tile is grassland.
+    Grass,
+    /// Tile is gravel.
+    Gravel,
+    /// Tile is water (land units cannot be on top of this tile).
     Water,
 }
 
@@ -77,23 +46,3 @@ pub struct Abilities(pub HashSet<Ability>);
 /// Marker component for a building
 #[derive(Component)]
 pub struct Structure;
-
-#[derive(Bundle)]
-pub struct PlayerUnitBundle {
-    name: UnitName,
-    hit_points: HitPoints,
-    movement: Movement,
-    abilities: Abilities,
-    turn_state: UnitTurnState,
-    player: PlayerUnit,
-}
-
-#[derive(Bundle)]
-pub struct EnemyUnitBundle {
-    name: UnitName,
-    hit_points: HitPoints,
-    movement: Movement,
-    abilities: Abilities,
-    turn_state: UnitTurnState,
-    player: PlayerUnit,
-}

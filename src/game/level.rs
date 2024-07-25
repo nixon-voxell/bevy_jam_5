@@ -1,14 +1,20 @@
 //! Spawn the main level by triggering other observers.
 
-use bevy::{math::vec2, prelude::*};
+use bevy::prelude::*;
 
-use crate::{screen::Screen, tile_selection::{SelectionEdge, SelectionMap}, VillageCamera};
+use crate::{
+    screen::Screen,
+    tile_selection::{SelectionEdge, SelectionMap},
+    VillageCamera,
+};
 
 use self::level_asset::{LevelAsset, LevelAssetPlugin, Levels};
 
 use super::{
+    components::Structure,
     map::VillageMap,
     tile_set::{tile_coord_translation, PickableTile, TileSet, TILE_ANCHOR, TILE_HALF_HEIGHT},
+    unit::{EnemyUnit, PlayerUnit, UnitBundle},
 };
 
 pub mod level_asset;
@@ -59,7 +65,7 @@ fn load_level(
             let object_tile_name = &level_asset.tiles[1][index];
 
             let (xf, yf) = (x as f32, y as f32);
-            let ground_translation =  tile_coord_translation(xf, yf, 0.0);
+            let ground_translation = tile_coord_translation(xf, yf, 0.0);
             let edge_translation = tile_coord_translation(xf, yf, 1.0);
             let object_translation = tile_coord_translation(xf, yf, 2.0);
 
@@ -85,8 +91,8 @@ fn load_level(
 
             let mut ids = [Entity::PLACEHOLDER; 4];
             for (i, edge) in SelectionEdge::ALL.into_iter().enumerate() {
-                let id =
-                    commands.spawn((
+                let id = commands
+                    .spawn((
                         SpriteBundle {
                             sprite: Sprite {
                                 anchor: TILE_ANCHOR,
@@ -103,30 +109,38 @@ fn load_level(
                         },
                         StateScoped(Screen::Playing),
                         edge,
-                    )).id();
+                    ))
+                    .id();
                 ids[i] = id;
             }
-            selection_map.tiles.insert(IVec2{ x: xi, y: yi }, ids);
+            selection_map.tiles.insert(IVec2 { x: xi, y: yi }, ids);
 
             if object_tile_name != "empty" {
-                village_map.object.set(
-                    IVec2::new(xi, yi),
-                    commands
-                        .spawn((
-                            SpriteBundle {
-                                sprite: Sprite {
-                                    anchor: TILE_ANCHOR,
-                                    ..Default::default()
-                                },
-                                texture: tile_set.get(object_tile_name),
-                                transform: Transform::from_translation(object_translation),
-                                ..default()
-                            },
-                            PickableTile,
-                            StateScoped(Screen::Playing),
-                        ))
-                        .id(),
-                );
+                let mut entity_commands = commands.spawn((
+                    SpriteBundle {
+                        sprite: Sprite {
+                            anchor: TILE_ANCHOR,
+                            ..Default::default()
+                        },
+                        texture: tile_set.get(object_tile_name),
+                        transform: Transform::from_translation(object_translation),
+                        ..default()
+                    },
+                    PickableTile,
+                    StateScoped(Screen::Playing),
+                ));
+
+                if object_tile_name.starts_with("player") {
+                    entity_commands.insert(UnitBundle::<PlayerUnit>::new(object_tile_name));
+                } else if object_tile_name.starts_with("enemy") {
+                    entity_commands.insert(UnitBundle::<EnemyUnit>::new(object_tile_name));
+                } else {
+                    entity_commands.insert(Structure);
+                }
+
+                village_map
+                    .object
+                    .set(IVec2::new(xi, yi), entity_commands.id());
             }
         }
     }

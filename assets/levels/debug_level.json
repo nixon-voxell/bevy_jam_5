@@ -15,16 +15,16 @@
       "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "grassblock", "gravelblock", "waterblock", "waterblock", "waterblock"
     ],
     [
-      "werewolf", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty",
       "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty",
-      "empty", "empty", "house1", "human", "empty", "empty", "empty", "empty", "empty", "empty",
       "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty",
-      "empty", "empty", "empty", "empty", "werewolf", "empty", "empty", "empty", "empty", "empty",
+      "empty", "empty", "house1", "player_human", "empty", "empty", "empty", "empty", "empty", "empty",
       "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty",
-      "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "werewolf",
-      "empty", "werewolf", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty",
       "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty",
-      "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "werewolf"
+      "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty",
+      "empty", "empty", "empty", "empty", "empty", "empty", "enemy_werewolf", "empty", "empty", "empty",
+      "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty",
+      "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty",
+      "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty"
     ]
   ]
 }
