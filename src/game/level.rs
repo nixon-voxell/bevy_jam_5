@@ -53,8 +53,7 @@ fn load_level(
 
             let (xf, yf) = (x as f32, y as f32);
             let ground_translation = start_translation + tile_coord_translation(xf, yf, 0.0);
-            // 1 layer higher because we want a middle layer to place
-            // interaction tiles (on hover, on click, etc.).
+            let edge_translation = start_translation + tile_coord_translation(xf, yf, 1.0);
             let object_translation = start_translation + tile_coord_translation(xf, yf, 2.0);
 
             let (xi, yi) = (x as i32, y as i32);
@@ -76,6 +75,26 @@ fn load_level(
                     ))
                     .id(),
             );
+
+            for s in [Vec2::ONE, vec2(1., -1.), -Vec2::ONE, vec2(-1., 1.)] {
+                commands.spawn((
+                    SpriteBundle {
+                        sprite: Sprite {
+                            anchor: TILE_ANCHOR,
+                            ..Default::default()
+                        },
+                        texture: tile_set.get("edge"),
+                        transform: Transform {
+                            translation: edge_translation,
+                            scale: s.extend(1.),
+                            ..Default::default()
+                        },
+                        visibility: Visibility::Hidden,
+                        ..default()
+                    },
+                    StateScoped(Screen::Playing),
+                ));
+            }
 
             if object_tile_name != "empty" {
                 village_map.object.set(
