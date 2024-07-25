@@ -42,7 +42,3 @@ pub enum Ability {
 /// seems more manageable.
 #[derive(Component, Default, Debug, Clone)]
 pub struct Abilities(pub HashSet<Ability>);
-
-/// Marker component for a building
-#[derive(Component)]
-pub struct Structure;

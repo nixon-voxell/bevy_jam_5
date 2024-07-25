@@ -11,10 +11,9 @@ use crate::{
 use self::level_asset::{LevelAsset, LevelAssetPlugin, Levels};
 
 use super::{
-    components::Structure,
     map::VillageMap,
     tile_set::{tile_coord_translation, PickableTile, TileSet, TILE_ANCHOR, TILE_HALF_HEIGHT},
-    unit::{EnemyUnit, PlayerUnit, UnitBundle},
+    unit::{EnemyUnit, PlayerUnit, Structure, UnitBundle},
 };
 
 pub mod level_asset;

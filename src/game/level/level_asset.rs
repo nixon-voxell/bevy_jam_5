@@ -16,6 +16,20 @@ impl Plugin for LevelAssetPlugin {
     }
 }
 
+/// Load levels from json file.
+fn load_levels(asset_sever: Res<AssetServer>, mut levels: ResMut<Levels>) {
+    const LEVELS: &[&str] = &["debug_level"];
+
+    for &level in LEVELS {
+        info!("Loading level: {}", level);
+
+        levels.0.push(LevelLoad::new(
+            String::from(level),
+            asset_sever.load(format!("levels/{}.json", level)),
+        ));
+    }
+}
+
 #[derive(Asset, TypePath, Serialize, Deserialize)]
 pub struct LevelAsset {
     pub name: String,
@@ -74,17 +88,3 @@ impl LevelLoad {
 
 #[derive(Resource, Default, Debug)]
 pub struct Levels(pub Vec<LevelLoad>);
-
-/// Load levels from json file.
-fn load_levels(asset_sever: Res<AssetServer>, mut levels: ResMut<Levels>) {
-    const LEVELS: &[&str] = &["debug_level"];
-
-    for &level in LEVELS {
-        info!("Loading level: {}", level);
-
-        levels.0.push(LevelLoad::new(
-            String::from(level),
-            asset_sever.load(format!("levels/{}.json", level)),
-        ));
-    }
-}

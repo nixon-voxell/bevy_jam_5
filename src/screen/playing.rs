@@ -34,26 +34,6 @@ pub(super) fn plugin(app: &mut App) {
     );
 }
 
-/// Pause or resumed.
-#[derive(States, Debug, Hash, PartialEq, Eq, Clone, Copy, Default)]
-pub enum GameState {
-    #[default]
-    Resumed,
-    Paused,
-}
-
-#[derive(Component)]
-pub struct ResumeButton;
-
-#[derive(Component)]
-pub struct PauseButton;
-
-#[derive(Component)]
-pub struct ExitButton;
-
-#[derive(Component)]
-pub struct EndTurnButton;
-
 fn economy_status_layout(ui: &mut UiBuilder<Entity>) {
     ui.column(|ui| {
         ui.style().justify_content(JustifyContent::Center);
@@ -142,7 +122,7 @@ fn enter_playing(mut commands: Commands) {
             .style()
             .flex_grow(1.0);
             // Bottom panel
-            ui.row(|ui| inventory_list_layout(ui));
+            ui.row(inventory_list_layout);
             ui.row(|ui| {
                 ui.label(LabelConfig::from("Turn Until"))
                     .insert(WatchRes::<Turn>::default())
@@ -292,3 +272,23 @@ fn exit_playing(mut commands: Commands) {
     // We could use [`StateScoped`] on the sound playing entites instead.
     commands.trigger(PlaySoundtrack::Disable);
 }
+
+/// Pause or resumed.
+#[derive(States, Debug, Hash, PartialEq, Eq, Clone, Copy, Default)]
+pub enum GameState {
+    #[default]
+    Resumed,
+    Paused,
+}
+
+#[derive(Component)]
+pub struct ResumeButton;
+
+#[derive(Component)]
+pub struct PauseButton;
+
+#[derive(Component)]
+pub struct ExitButton;
+
+#[derive(Component)]
+pub struct EndTurnButton;

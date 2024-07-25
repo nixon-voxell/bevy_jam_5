@@ -1,6 +1,5 @@
+use bevy::math::UVec2;
 use bevy::prelude::*;
-use bevy::utils::HashSet;
-use bevy::{math::UVec2, utils::HashMap};
 use bimap::{BiHashMap, Overwritten};
 
 // On screen 0,0 is top middle tile,
@@ -40,8 +39,8 @@ impl VillageMap {
 
 #[derive(Debug, Default)]
 pub struct TileMap {
-    map: BiHashMap<IVec2, Entity>,
     size: IVec2,
+    map: BiHashMap<IVec2, Entity>,
 }
 
 impl TileMap {
