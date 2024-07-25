@@ -15,7 +15,6 @@ use bevy::{
     prelude::*,
     window::PrimaryWindow,
 };
-use game::tile_set::TILE_HALF_HEIGHT;
 
 pub struct AppPlugin;
 
