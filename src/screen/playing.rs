@@ -16,10 +16,8 @@ use crate::ui::{palette::*, prelude::*};
 pub(super) fn plugin(app: &mut App) {
     app.init_state::<GameState>()
         .enable_state_scoped_entities::<GameState>()
-        .add_systems(
-            OnEnter(Screen::Playing),
-            (enter_playing, merchant_modal_layout.after(enter_playing)),
-        )
+        .add_systems(OnEnter(Screen::Playing), enter_playing)
+        .add_systems(OnEnter(GameState::Merchant), merchant_modal_layout)
         .add_systems(OnExit(Screen::Playing), exit_playing)
         .add_systems(OnEnter(GameState::Paused), enter_pause);
 
@@ -281,10 +279,11 @@ fn exit_playing(mut commands: Commands) {
 /// Pause or resumed.
 #[derive(States, Debug, Hash, PartialEq, Eq, Clone, Copy, Default)]
 pub enum GameState {
-    #[default]
     Resumed,
     Paused,
     Merchant,
+    #[default]
+    Inactive,
 }
 
 #[derive(Component)]

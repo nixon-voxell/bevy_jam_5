@@ -1,5 +1,6 @@
 use bevy::color::palettes::css;
 use bevy::prelude::*;
+use bevy::ui::FocusPolicy;
 use sickle_ui::prelude::*;
 
 use crate::game::MERCHANT_ITEMS;
@@ -21,13 +22,6 @@ pub fn merchant_modal_layout(mut commands: Commands) {
     commands
         .ui_builder(UiRoot)
         .column(|ui| {
-            ui.style()
-                .z_index(ZIndex::Global(MERCHANT_Z_LAYER))
-                .width(Val::Percent(100.))
-                .height(Val::Percent(100.))
-                .background_color(Color::srgba(0.25, 0.25, 0.25, 0.25))
-                .justify_content(JustifyContent::Center)
-                .align_items(AlignItems::Center);
             ui.row(|ui| {
                 ui.style()
                     .padding(UiRect::all(Val::Px(25.)))
@@ -123,7 +117,15 @@ pub fn merchant_modal_layout(mut commands: Commands) {
                 });
             });
         })
-        .insert(StateScoped(GameState::Merchant));
+        .insert(StateScoped(GameState::Merchant))
+        .style()
+        .focus_policy(FocusPolicy::Block)
+        .z_index(ZIndex::Global(MERCHANT_Z_LAYER))
+        .width(Val::Percent(100.))
+        .height(Val::Percent(100.))
+        .background_color(Color::srgba(0.25, 0.25, 0.25, 0.75))
+        .justify_content(JustifyContent::Center)
+        .align_items(AlignItems::Center);
 }
 
 pub fn exit_merchant() {}
