@@ -55,3 +55,6 @@ fn set_resource_label<R: Resource + ToString>(
 }
 
 pub const INVENTORY_CAPACITY: usize = 5;
+pub const MERCHANT_ITEMS: usize = 3;
+
+pub const MERCHANT_Z_LAYER: i32 = 100;

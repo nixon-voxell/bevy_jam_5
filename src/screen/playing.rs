@@ -10,12 +10,16 @@ use crate::game::economy::{PlayerGold, VillagePopulation};
 use crate::game::unit_list::{inventory_list_layout, unit_list_layout};
 use crate::game::WatchRes;
 use crate::game::{assets::SoundtrackKey, audio::soundtrack::PlaySoundtrack};
+use crate::modals::merchant::{exit_mechant_btn_interaction, merchant_modal_layout};
 use crate::ui::{palette::*, prelude::*};
 
 pub(super) fn plugin(app: &mut App) {
     app.init_state::<GameState>()
         .enable_state_scoped_entities::<GameState>()
-        .add_systems(OnEnter(Screen::Playing), enter_playing)
+        .add_systems(
+            OnEnter(Screen::Playing),
+            (enter_playing, merchant_modal_layout.after(enter_playing)),
+        )
         .add_systems(OnExit(Screen::Playing), exit_playing)
         .add_systems(OnEnter(GameState::Paused), enter_pause);
 
@@ -26,6 +30,7 @@ pub(super) fn plugin(app: &mut App) {
             resume_btn_interaction,
             exit_btn_interaction,
             end_turn_btn_interaction,
+            exit_mechant_btn_interaction,
         ),
     )
     .add_systems(
@@ -279,6 +284,7 @@ pub enum GameState {
     #[default]
     Resumed,
     Paused,
+    Merchant,
 }
 
 #[derive(Component)]

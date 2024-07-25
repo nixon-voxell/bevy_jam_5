@@ -1,6 +1,7 @@
 #[cfg(feature = "dev")]
 mod dev_tools;
 mod game;
+pub mod modals;
 pub mod path_finding;
 mod screen;
 pub mod tile_selection;
