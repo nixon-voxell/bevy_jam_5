@@ -1,7 +1,4 @@
-use bevy::{
-    math::{uvec2, vec2},
-    prelude::*,
-};
+use bevy::{math::uvec2, prelude::*};
 
 use crate::{
     game::{
