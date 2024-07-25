@@ -29,7 +29,7 @@ pub fn unit_list_layout(ui: &mut UiBuilder<Entity>) {
                         .align_items(AlignItems::Center)
                         .justify_content(JustifyContent::SpaceBetween);
 
-                    ui.icon("tiles/player_human.png")
+                    ui.icon("tiles/human.png")
                         .style()
                         .width(Val::Px(64.))
                         .height(Val::Px(64.));

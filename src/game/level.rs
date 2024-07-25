@@ -69,24 +69,35 @@ fn load_level(
             let object_translation = tile_coord_translation(xf, yf, 2.0);
 
             let (xi, yi) = (x as i32, y as i32);
-            village_map.ground.set(
-                IVec2::new(xi, yi),
-                commands
-                    .spawn((
-                        SpriteBundle {
-                            sprite: Sprite {
-                                anchor: TILE_ANCHOR,
-                                ..Default::default()
-                            },
-                            texture: tile_set.get(ground_tile_name),
-                            transform: Transform::from_translation(ground_translation),
-                            ..default()
-                        },
-                        PickableTile,
-                        StateScoped(Screen::Playing),
-                    ))
-                    .id(),
-            );
+            let mut ground_entity = commands.spawn((
+                SpriteBundle {
+                    sprite: Sprite {
+                        anchor: TILE_ANCHOR,
+                        ..Default::default()
+                    },
+                    texture: tile_set.get(ground_tile_name),
+                    transform: Transform::from_translation(ground_translation),
+                    ..default()
+                },
+                PickableTile,
+                StateScoped(Screen::Playing),
+            ));
+            match ground_tile_name.as_str() {
+                "grassblock" => {
+                    ground_entity.insert(Terrain::Grass);
+                }
+                "gravelblock" => {
+                    ground_entity.insert(Terrain::Gravel);
+                }
+                "waterblock" => {
+                    ground_entity.insert(Terrain::Water);
+                }
+                _ => warn!("Spawning unknown tile: {}", ground_tile_name),
+            };
+
+            village_map
+                .ground
+                .set(IVec2::new(xi, yi), ground_entity.id());
 
             let mut ids = [Entity::PLACEHOLDER; 4];
             for (i, edge) in SelectionEdge::ALL.into_iter().enumerate() {
@@ -112,10 +123,10 @@ fn load_level(
                     .id();
                 ids[i] = id;
             }
-            selection_map.tiles.insert(IVec2 { x: xi, y: yi }, ids);
+            selection_map.tiles.insert(IVec2::new(xi, yi), ids);
 
             if object_tile_name != "empty" {
-                let mut entity_commands = commands.spawn((
+                let object_entity = commands.spawn((
                     SpriteBundle {
                         sprite: Sprite {
                             anchor: TILE_ANCHOR,
@@ -125,25 +136,29 @@ fn load_level(
                         transform: Transform::from_translation(object_translation),
                         ..default()
                     },
-                    PickableTile,
+                    // IMPORTANT: There must only be structure in the map asset
+                    Structure,
                     StateScoped(Screen::Playing),
                 ));
 
-                if object_tile_name.starts_with("player") {
-                    entity_commands.insert(UnitBundle::<PlayerUnit>::new(object_tile_name));
-                } else if object_tile_name.starts_with("enemy") {
-                    entity_commands.insert(UnitBundle::<EnemyUnit>::new(object_tile_name));
-                } else {
-                    entity_commands.insert(Structure);
-                }
-
                 village_map
                     .object
-                    .set(IVec2::new(xi, yi), entity_commands.id());
+                    .set(IVec2::new(xi, yi), object_entity.id());
             }
         }
     }
 
     commands.insert_resource(village_map);
     commands.insert_resource(selection_map)
+}
+
+#[derive(Component, Default, Debug, Copy, Clone)]
+pub enum Terrain {
+    #[default]
+    /// Tile is grassland.
+    Grass,
+    /// Tile is gravel.
+    Gravel,
+    /// Tile is water (land units cannot be on top of this tile).
+    Water,
 }

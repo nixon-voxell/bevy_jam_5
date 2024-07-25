@@ -2,6 +2,10 @@ use bevy::prelude::*;
 
 use crate::screen::Screen;
 
+use self::enemy::EnemyUnitPlugin;
+
+pub mod enemy;
+
 const HIT_POINT_SIZE: Vec2 = Vec2::new(40.0, 40.0);
 const HIT_POINT_GAP: f32 = 10.0;
 
@@ -9,7 +13,8 @@ pub struct UnitPlugin;
 
 impl Plugin for UnitPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, health_ui.run_if(in_state(Screen::Playing)));
+        app.add_plugins(EnemyUnitPlugin)
+            .add_systems(Update, health_ui.run_if(in_state(Screen::Playing)));
     }
 }
 

@@ -78,8 +78,10 @@ fn load_tiles(asset_server: Res<AssetServer>, mut tile_set: ResMut<TileSet>) {
         "gravelblock",
         "waterblock",
         "house1",
-        "enemy_werewolf",
-        "player_human",
+        "human",
+        "werewolf",
+        "slime",
+        "bat",
     ];
 
     for &tile in TILES {

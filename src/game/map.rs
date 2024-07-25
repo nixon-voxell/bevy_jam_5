@@ -24,6 +24,7 @@ pub const KING_MOVES: [IVec2; 8] = [
 
 #[derive(Resource, Default)]
 pub struct VillageMap {
+    pub size: UVec2,
     pub ground: TileMap,
     pub object: TileMap,
 }
@@ -31,6 +32,7 @@ pub struct VillageMap {
 impl VillageMap {
     pub fn new(size: UVec2) -> VillageMap {
         VillageMap {
+            size,
             ground: TileMap::new(size.as_ivec2()),
             object: TileMap::new(size.as_ivec2()),
         }

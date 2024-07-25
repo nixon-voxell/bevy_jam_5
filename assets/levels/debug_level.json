@@ -17,11 +17,11 @@
     [
       "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty",
       "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty",
-      "empty", "empty", "house1", "player_human", "empty", "empty", "empty", "empty", "empty", "empty",
+      "empty", "empty", "house1", "empty", "empty", "empty", "empty", "empty", "empty", "empty",
       "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty",
+      "empty", "house1", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty",
+      "empty", "empty", "empty", "empty", "house1", "empty", "empty", "empty", "empty", "empty",
       "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty",
-      "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty",
-      "empty", "empty", "empty", "empty", "empty", "empty", "enemy_werewolf", "empty", "empty", "empty",
       "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty",
       "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty",
       "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty"

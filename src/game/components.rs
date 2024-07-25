@@ -1,17 +1,6 @@
 use bevy::prelude::*;
 use bevy::utils::HashSet;
 
-#[derive(Component, Default, Debug, Copy, Clone)]
-pub enum Terrain {
-    #[default]
-    /// Tile is grassland.
-    Grass,
-    /// Tile is gravel.
-    Gravel,
-    /// Tile is water (land units cannot be on top of this tile).
-    Water,
-}
-
 #[derive(Debug, Copy, Clone)]
 pub enum Ability {
     /// Intagible units can move through all other units, walls and buildings.
