@@ -3,19 +3,22 @@ use bevy::prelude::*;
 use bevy::utils::HashMap;
 use bevy::utils::HashSet;
 
-
 use crate::game::map::ROOK_MOVES;
 use crate::game::tile_set::PickedTile;
-
 
 pub struct TileSelectionPlugin;
 
 impl Plugin for TileSelectionPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<SelectedTiles>()
-        .init_resource::<SelectionMap>()
-            .add_systems(PostUpdate, (show_selected_tiles.run_if(resource_changed::<SelectedTiles>), add_selection))
-        ;
+            .init_resource::<SelectionMap>()
+            .add_systems(
+                PostUpdate,
+                (
+                    show_selected_tiles.run_if(resource_changed::<SelectedTiles>),
+                    add_selection,
+                ),
+            );
     }
 }
 
@@ -51,19 +54,22 @@ impl SelectionEdge {
     }
 }
 
-
 pub fn show_selected_tiles(
     selected_tiles: Res<SelectedTiles>,
     tile_ids: Res<SelectionMap>,
-    mut query: Query<(&mut Sprite, &mut Visibility), With<SelectionEdge>>
+    mut query: Query<(&mut Sprite, &mut Visibility), With<SelectionEdge>>,
 ) {
     for (_, mut vis) in query.iter_mut() {
         vis.set_if_neq(Visibility::Hidden);
     }
 
     for &tile in selected_tiles.tiles.iter() {
-        let Some(s) = tile_ids.tiles.get(&tile) else { continue };
-        let neighbours = ROOK_MOVES.map(|m| tile + m).map(|n| selected_tiles.tiles.contains(&n));
+        let Some(s) = tile_ids.tiles.get(&tile) else {
+            continue;
+        };
+        let neighbours = ROOK_MOVES
+            .map(|m| tile + m)
+            .map(|n| selected_tiles.tiles.contains(&n));
         for (i, a) in neighbours.into_iter().enumerate() {
             if !a {
                 if let Ok((mut sprite, mut vis)) = query.get_mut(s[i]) {
@@ -75,10 +81,7 @@ pub fn show_selected_tiles(
     }
 }
 
-pub fn add_selection(
-    mut selected_tiles: ResMut<SelectedTiles>,
-    picked_tile: Res<PickedTile>,
-) {
+pub fn add_selection(mut selected_tiles: ResMut<SelectedTiles>, picked_tile: Res<PickedTile>) {
     if let Some(picked_tile) = picked_tile.0 {
         selected_tiles.tiles.insert(picked_tile);
     }
