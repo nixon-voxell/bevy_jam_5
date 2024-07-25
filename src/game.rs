@@ -4,6 +4,8 @@ use std::marker::PhantomData;
 
 use bevy::{ecs::schedule::SystemConfigs, prelude::*};
 
+use crate::tile_selection;
+
 pub mod assets;
 pub mod audio;
 pub mod components;
@@ -23,6 +25,7 @@ pub(super) fn plugin(app: &mut App) {
         tile_set::TileSetPlugin,
         level::LevelPlugin,
         economy::EconomyPlugin,
+        tile_selection::TileSelectionPlugin,
     ));
 }
 

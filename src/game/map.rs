@@ -1,11 +1,14 @@
-use bevy::math::UVec2;
+use bevy::utils::HashSet;
+use bevy::{math::UVec2, utils::HashMap};
 use bevy::prelude::*;
 use bimap::{BiHashMap, Overwritten};
 
+// On screen 0,0 is top middle tile,
+// y increases left-down, x increases right-down
 // Movement directions on tilemap
-pub const NORTH: IVec2 = IVec2::Y;
+pub const NORTH: IVec2 = IVec2 { y: -1, x: 0 };
 pub const EAST: IVec2 = IVec2::X;
-pub const SOUTH: IVec2 = IVec2 { y: -1, x: 0 };
+pub const SOUTH: IVec2 = IVec2::Y;
 pub const WEST: IVec2 = IVec2 { x: -1, y: 0 };
 pub const NORTHEAST: IVec2 = NORTH.wrapping_add(EAST);
 pub const SOUTHEAST: IVec2 = SOUTH.wrapping_add(EAST);
@@ -37,8 +40,8 @@ impl VillageMap {
 
 #[derive(Debug, Default)]
 pub struct TileMap {
-    size: IVec2,
     map: BiHashMap<IVec2, Entity>,
+    size: IVec2,
 }
 
 impl TileMap {

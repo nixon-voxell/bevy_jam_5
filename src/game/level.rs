@@ -2,7 +2,7 @@
 
 use bevy::{math::vec2, prelude::*};
 
-use crate::{screen::Screen, VillageCamera};
+use crate::{screen::Screen, tile_selection::{SelectionEdge, SelectionMap}, VillageCamera};
 
 use self::level_asset::{LevelAsset, LevelAssetPlugin, Levels};
 
@@ -38,8 +38,7 @@ fn load_level(
         return;
     };
 
-    
-
+    let mut selection_map = SelectionMap::default();
     let mut village_map = VillageMap::new(UVec2::splat(level_asset.size as u32));
 
     let camera_translation = Vec3::new(
@@ -84,25 +83,30 @@ fn load_level(
                     .id(),
             );
 
-            for s in [Vec2::ONE, vec2(1., -1.), -Vec2::ONE, vec2(-1., 1.)] {
-                commands.spawn((
-                    SpriteBundle {
-                        sprite: Sprite {
-                            anchor: TILE_ANCHOR,
-                            ..Default::default()
+            let mut ids = [Entity::PLACEHOLDER; 4];
+            for (i, edge) in SelectionEdge::ALL.into_iter().enumerate() {
+                let id =
+                    commands.spawn((
+                        SpriteBundle {
+                            sprite: Sprite {
+                                anchor: TILE_ANCHOR,
+                                ..Default::default()
+                            },
+                            texture: tile_set.get("edge"),
+                            transform: Transform {
+                                translation: edge_translation,
+                                scale: edge.get_scalar().extend(1.),
+                                ..Default::default()
+                            },
+                            visibility: Visibility::Hidden,
+                            ..default()
                         },
-                        texture: tile_set.get("edge"),
-                        transform: Transform {
-                            translation: edge_translation,
-                            scale: s.extend(1.),
-                            ..Default::default()
-                        },
-                        visibility: Visibility::Hidden,
-                        ..default()
-                    },
-                    StateScoped(Screen::Playing),
-                ));
+                        StateScoped(Screen::Playing),
+                        edge,
+                    )).id();
+                ids[i] = id;
             }
+            selection_map.tiles.insert(IVec2{ x: xi, y: yi }, ids);
 
             if object_tile_name != "empty" {
                 village_map.object.set(
@@ -126,7 +130,7 @@ fn load_level(
             }
         }
     }
-    // level_asset.create_edges(&mut commands, &tile_set);
 
     commands.insert_resource(village_map);
+    commands.insert_resource(selection_map)
 }

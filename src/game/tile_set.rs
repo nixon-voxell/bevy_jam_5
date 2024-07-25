@@ -6,6 +6,8 @@ use bevy::window::PrimaryWindow;
 use crate::screen::playing::GameState;
 use crate::screen::Screen;
 
+use super::map::VillageMap;
+
 /// Width of a tile.
 pub const TILE_WIDTH: f32 = 256.0;
 /// Half height of a tile surface.
@@ -39,6 +41,7 @@ pub struct TileSetPlugin;
 impl Plugin for TileSetPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<TileSet>()
+            .init_resource::<PickedTileEntities>()
             .init_resource::<PickedTile>()
             .init_resource::<PickedPoint>()
             .add_systems(PreStartup, load_tiles)
@@ -86,7 +89,10 @@ fn load_tiles(asset_server: Res<AssetServer>, mut tile_set: ResMut<TileSet>) {
 }
 
 #[derive(Resource, Default, Debug)]
-pub struct PickedTile(pub Vec<Entity>);
+pub struct PickedTileEntities(pub Vec<Entity>);
+
+#[derive(Resource, Default, Debug)]
+pub struct PickedTile(pub Option<IVec2>);
 
 #[derive(Resource, Default)]
 pub struct PickedPoint(pub Option<Vec2>);
@@ -119,11 +125,14 @@ fn is_point_in_triangle(x: f32, y: f32, w: f32, h: f32) -> bool {
 
 pub fn pick_tile(
     picked_point: Res<PickedPoint>,
+    mut picked_tile_entity: ResMut<PickedTileEntities>,
     mut picked_tile: ResMut<PickedTile>,
+    mut village_map: ResMut<VillageMap>,
     tiles_query: Query<(Entity, &GlobalTransform), With<PickableTile>>,
     mut sprite_query: Query<&mut Sprite>,
 ) {
-    for previous in picked_tile.0.drain(..) {
+    let mut picked_set = false;
+    for previous in picked_tile_entity.0.drain(..) {
         sprite_query
             .get_mut(previous)
             .map(|mut sprite| sprite.color = Color::WHITE)
@@ -140,8 +149,18 @@ pub fn pick_tile(
                 .get_mut(e)
                 .map(|mut sprite| sprite.color = Color::srgb(1., 0., 0.))
                 .ok();
-            picked_tile.0.push(e);
+            picked_tile_entity.0.push(e);
+
+            if let Some(tile) = village_map.ground.locate(e) {
+                picked_tile.0 = Some(tile);
+                picked_set = true;
+                println!("picked = {tile}");
+            }
         }
+    }
+
+    if !picked_set {
+        picked_tile.0 = None;
     }
 }
 
