@@ -4,10 +4,13 @@ use bevy::math::IVec2;
 use bevy::utils::HashSet;
 use priority_queue::PriorityQueue;
 
-
 // find all tiles that are within a certain distance of a given tile
-pub fn find_all_within_distance<N, I>(start: IVec2, max_distance: u64, navigator: N) -> HashSet<IVec2>
-where 
+pub fn find_all_within_distance<N, I>(
+    start: IVec2,
+    max_distance: u64,
+    navigator: N,
+) -> HashSet<IVec2>
+where
     N: Fn(IVec2) -> I,
     I: IntoIterator<Item = (IVec2, u64)>,
 {
@@ -30,14 +33,16 @@ where
 }
 
 // find all tiles that are within a certain distance of a given tile, all moves have the same cost
-pub fn find_all_within_distance_unweighted<N, I>(start: IVec2, max_distance: u64, navigator: N) -> HashSet<IVec2>
-where 
+pub fn find_all_within_distance_unweighted<N, I>(
+    start: IVec2,
+    max_distance: u64,
+    navigator: N,
+) -> HashSet<IVec2>
+where
     N: Fn(IVec2) -> I,
     I: IntoIterator<Item = IVec2>,
 {
-    find_all_within_distance(
-        start,
-        max_distance,
-        |position| navigator(position).into_iter().map(|target| (target, 1))
-    )
+    find_all_within_distance(start, max_distance, |position| {
+        navigator(position).into_iter().map(|target| (target, 1))
+    })
 }

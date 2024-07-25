@@ -1,6 +1,6 @@
+use bevy::prelude::*;
 use bevy::utils::HashSet;
 use bevy::{math::UVec2, utils::HashMap};
-use bevy::prelude::*;
 use bimap::{BiHashMap, Overwritten};
 
 // On screen 0,0 is top middle tile,

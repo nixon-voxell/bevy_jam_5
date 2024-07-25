@@ -15,7 +15,7 @@ use crate::ui::{palette::*, prelude::*};
 pub(super) fn plugin(app: &mut App) {
     app.init_state::<GameState>()
         .enable_state_scoped_entities::<GameState>()
-        .add_systems(OnEnter(Screen::Playing), enter_playing)        
+        .add_systems(OnEnter(Screen::Playing), enter_playing)
         .add_systems(OnExit(Screen::Playing), exit_playing)
         .add_systems(OnEnter(GameState::Paused), enter_pause);
 
@@ -138,11 +138,11 @@ fn enter_playing(mut commands: Commands) {
             ui.row(|ui| {
                 ui.style().align_items(AlignItems::Center);
                 unit_list_layout(ui);
-            }).style().flex_grow(1.0);
+            })
+            .style()
+            .flex_grow(1.0);
             // Bottom panel
-            ui.row(|ui| {
-                inventory_list_layout(ui)
-            });
+            ui.row(|ui| inventory_list_layout(ui));
             ui.row(|ui| {
                 ui.label(LabelConfig::from("Turn Until"))
                     .insert(WatchRes::<Turn>::default())
