@@ -19,6 +19,7 @@ impl Plugin for PickingPlugin {
             .add_systems(
                 Update,
                 (find_picked_point, pick_tile)
+                    .chain()
                     .run_if(in_state(Screen::Playing).and_then(in_state(GameState::Resumed))),
             );
     }

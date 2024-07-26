@@ -4,7 +4,10 @@ use bevy::utils::HashMap;
 use bevy::utils::HashSet;
 
 use crate::game::map::ROOK_MOVES;
+use crate::screen::playing::GameState;
+use crate::screen::Screen;
 
+use super::map::VillageMap;
 use super::picking::PickedTile;
 
 pub struct SelectionPlugin;
@@ -13,11 +16,16 @@ impl Plugin for SelectionPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<SelectedTiles>()
             .init_resource::<SelectionMap>()
+            .init_resource::<SelectedUnit>()
+            .add_event::<SelectionEvent>()
             .add_systems(
                 PostUpdate,
                 (
                     show_selected_tiles.run_if(resource_changed::<SelectedTiles>),
                     add_selection,
+                    set_selected_unit
+                        .run_if(in_state(Screen::Playing).and_then(in_state(GameState::Resumed))),
+                    on_selection.after(set_selected_unit),
                 ),
             );
     }
@@ -91,5 +99,77 @@ pub fn show_selected_tiles(
 pub fn add_selection(mut selected_tiles: ResMut<SelectedTiles>, picked_tile: Res<PickedTile>) {
     if let Some(picked_tile) = picked_tile.0 {
         selected_tiles.tiles.insert(picked_tile);
+    }
+}
+
+#[derive(Event, Debug)]
+pub enum SelectionEvent {
+    Selected(Entity),
+    Deselected(Entity),
+}
+
+#[derive(Event)]
+pub struct DeselectedUnitEvent(pub Entity);
+
+pub fn set_selected_unit(
+    mouse_button: Res<ButtonInput<MouseButton>>,
+    picked_tile: Res<PickedTile>,
+    village_map: Res<VillageMap>,
+    mut selected_unit: ResMut<SelectedUnit>,
+    mut selection_event: EventWriter<SelectionEvent>,
+) {
+    if mouse_button.just_pressed(MouseButton::Left) {
+        if let Some(tile) = picked_tile.0 {
+            if let Some(new_selection) = village_map.object.get(tile) {
+                if let Some(previous_selection) = selected_unit.entity {
+                    if new_selection == previous_selection {
+                        return;
+                    }
+                    selection_event.send(SelectionEvent::Deselected(previous_selection));
+                }
+                selection_event.send(SelectionEvent::Selected(new_selection));
+                selected_unit.entity = Some(new_selection);
+            }
+        }
+    }
+}
+
+#[derive(Component)]
+pub struct SelectionMarkerSprite;
+
+pub fn on_selection(
+    mut commands: Commands,
+    mut selection_events: EventReader<SelectionEvent>,
+    query: Query<Entity, With<SelectionMarkerSprite>>,
+    asset_server: Res<AssetServer>,
+) {
+    for selection_event in selection_events.read() {
+        match selection_event {
+            SelectionEvent::Selected(entity) => {
+                if let Some(mut entity_commands) = commands.get_entity(*entity) {
+                    entity_commands.with_children(|builder| {
+                        builder.spawn((
+                            SpriteBundle {
+                                sprite: Sprite {
+                                    anchor: bevy::sprite::Anchor::BottomCenter,
+                                    color: Color::WHITE,
+                                    custom_size: Some(Vec2::splat(64.)),
+                                    ..Default::default()
+                                },
+                                texture: asset_server.load("icons/selection_arrow.png"),
+                                transform: Transform::from_xyz(0., 100., 0.1),
+                                ..Default::default()
+                            },
+                            SelectionMarkerSprite,
+                        ));
+                    });
+                }
+            }
+            SelectionEvent::Deselected(_) => {
+                for entity in query.iter() {
+                    commands.entity(entity).despawn();
+                }
+            }
+        }
     }
 }
