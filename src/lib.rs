@@ -1,10 +1,9 @@
 #[cfg(feature = "dev")]
 mod dev_tools;
 mod game;
-pub mod modals;
-pub mod path_finding;
+mod modals;
+mod path_finding;
 mod screen;
-pub mod tile_selection;
 mod ui;
 
 const BASE_APP_HEIGHT: f32 = 720.0;

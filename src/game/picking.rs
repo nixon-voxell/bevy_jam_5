@@ -6,9 +6,9 @@ use bevy::utils::HashSet;
 use crate::game::map::ROOK_MOVES;
 use crate::game::tile_set::PickedTile;
 
-pub struct TileSelectionPlugin;
+pub struct TilePickingPlugin;
 
-impl Plugin for TileSelectionPlugin {
+impl Plugin for TilePickingPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<SelectedTiles>()
             .init_resource::<SelectionMap>()
