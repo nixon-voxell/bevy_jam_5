@@ -8,6 +8,7 @@ pub mod assets;
 pub mod audio;
 pub mod components;
 pub mod cycle;
+pub mod deployment;
 pub mod economy;
 pub mod inventory;
 pub mod level;

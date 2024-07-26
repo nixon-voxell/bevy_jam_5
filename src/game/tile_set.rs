@@ -1,12 +1,6 @@
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
 use bevy::utils::HashMap;
-use bevy::window::PrimaryWindow;
-
-use crate::screen::playing::GameState;
-use crate::screen::Screen;
-
-use super::map::VillageMap;
 
 /// Width of a tile.
 pub const TILE_WIDTH: f32 = 256.0;
