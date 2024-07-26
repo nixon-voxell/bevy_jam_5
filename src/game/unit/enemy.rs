@@ -2,14 +2,16 @@ use bevy::{math::uvec2, prelude::*};
 
 use crate::{
     game::{
-        cycle::{Season, TimeOfDay},
+        cycle::{EndTurn, Season, TimeOfDay},
         level::Terrain,
         map::{VillageMap, ROOK_MOVES},
         tile_set::{tile_coord_translation, TileSet, TILE_ANCHOR},
-        unit::{EnemyUnit, UnitBundle},
+        unit::{EnemyUnit, IsAirborne, UnitBundle},
     },
-    screen::Screen,
+    screen::{playing::GameState, Screen},
 };
+
+use super::Movement;
 
 /// Distance from border that the enemy will spawn in.
 pub const ENEMY_SPAWN_RANGE: u32 = 2;
@@ -19,7 +21,58 @@ pub struct EnemyUnitPlugin;
 
 impl Plugin for EnemyUnitPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(TimeOfDay::Night), spawn_enemies);
+        app.add_systems(OnEnter(TimeOfDay::Night), spawn_enemies)
+            .add_systems(
+                Update,
+                move_enemies
+                    .run_if(in_state(Screen::Playing).and_then(in_state(GameState::Resumed))),
+            );
+    }
+}
+
+fn move_enemies(
+    q_terrains: Query<&Terrain>,
+    mut q_enemy_units: Query<
+        (Entity, &Movement, Option<&IsAirborne>, &mut Transform),
+        With<EnemyUnit>,
+    >,
+    mut end_turn_evt: EventReader<EndTurn>,
+    mut village_map: ResMut<VillageMap>,
+) {
+    if end_turn_evt.is_empty() == false {
+        end_turn_evt.clear();
+        for (entity, movement, airborne, mut transform) in q_enemy_units.iter_mut() {
+            let Some(tile_coord) = village_map.object.locate(entity) else {
+                continue;
+            };
+
+            let is_airborne = airborne.is_some();
+            let Some(best_tile) = village_map.get_best_tile(
+                tile_coord,
+                movement.0,
+                &ROOK_MOVES,
+                is_airborne,
+                &q_terrains,
+            ) else {
+                continue;
+            };
+
+            let Some(path) = village_map.pathfind(
+                &tile_coord,
+                &best_tile,
+                &ROOK_MOVES,
+                is_airborne,
+                &q_terrains,
+            ) else {
+                continue;
+            };
+
+            village_map.object.remove(tile_coord);
+            village_map.object.set(best_tile, entity);
+
+            transform.translation =
+                tile_coord_translation(best_tile.x as f32, best_tile.y as f32, 2.0);
+        }
     }
 }
 
@@ -93,7 +146,7 @@ fn spawn_enemies(
         }
 
         let translation = tile_coord_translation(tile_coord.x as f32, tile_coord.y as f32, 2.0);
-        let enemy_entity = commands.spawn((
+        let mut enemy_entity = commands.spawn((
             SpriteBundle {
                 sprite: Sprite {
                     anchor: TILE_ANCHOR,
@@ -109,6 +162,9 @@ fn spawn_enemies(
                 .with_movement(enemy.movement),
             StateScoped(Screen::Playing),
         ));
+        if enemy.is_airborne {
+            enemy_entity.insert(IsAirborne);
+        }
         village_map.object.set(tile_coord, enemy_entity.id());
 
         if let Some(best_tile) = village_map.get_best_tile(

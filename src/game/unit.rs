@@ -98,6 +98,10 @@ pub struct PlayerUnit;
 #[derive(Component, Default, Copy, Clone, Debug)]
 pub struct EnemyUnit;
 
+/// Marker component for airborne units.
+#[derive(Component, Default, Copy, Clone, Debug)]
+pub struct IsAirborne;
+
 /// Has unit moved or performed an action yet.
 /// Needs to be reset to default after each turn (Not good?).
 #[derive(Component, Default, Debug)]
