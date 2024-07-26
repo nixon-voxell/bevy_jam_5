@@ -28,7 +28,7 @@ pub fn pick_tile(
     picked_point: Res<PickedPoint>,
     mut picked_tile_entity: ResMut<PickedTileEntities>,
     mut picked_tile: ResMut<PickedTile>,
-    mut village_map: ResMut<VillageMap>,
+    village_map: Res<VillageMap>,
     tiles_query: Query<(Entity, &GlobalTransform), With<PickableTile>>,
     mut sprite_query: Query<&mut Sprite>,
 ) {
