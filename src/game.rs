@@ -11,6 +11,7 @@ pub mod audio;
 pub mod components;
 pub mod cycle;
 pub mod economy;
+pub mod inventory;
 pub mod level;
 pub mod map;
 pub mod resources;
