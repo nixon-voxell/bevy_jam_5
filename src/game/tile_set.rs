@@ -27,39 +27,12 @@ pub const TILE_ANCHOR_VEC: Vec2 = Vec2 {
 
 pub const TILE_ANCHOR: Anchor = Anchor::Custom(TILE_ANCHOR_VEC);
 
-/// Convert tile coordinate to world translation.
-pub fn tile_coord_translation(x: f32, y: f32, layer: f32) -> Vec3 {
-    let mut translation = RIGHT_DIR.xyy() * x;
-    translation += DOWN_DIR.xyy() * y;
-    translation.z = translation.z * -0.001 + layer * LAYER_DEPTH;
-
-    translation
-}
-
 pub struct TileSetPlugin;
 
 impl Plugin for TileSetPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<TileSet>()
             .add_systems(PreStartup, load_tiles);
-    }
-}
-
-#[derive(Resource, Default, Debug)]
-pub struct TileSet(HashMap<&'static str, Handle<Image>>);
-
-impl TileSet {
-    pub fn insert(&mut self, name: &'static str, handle: Handle<Image>) -> Option<Handle<Image>> {
-        self.0.insert(name, handle)
-    }
-
-    /// Get cloned image handle.
-    ///
-    /// # Panic
-    ///
-    /// For ease of use, unwrap is used to panic if value does not exists for certain key.
-    pub fn get(&self, name: &str) -> Handle<Image> {
-        self.0.get(name).unwrap().clone()
     }
 }
 
@@ -79,5 +52,32 @@ fn load_tiles(asset_server: Res<AssetServer>, mut tile_set: ResMut<TileSet>) {
     for &tile in TILES {
         info!("Loading tile: {}", tile);
         tile_set.insert(tile, asset_server.load(format!("tiles/{}.png", tile)));
+    }
+}
+
+/// Convert tile coordinate to world translation.
+pub fn tile_coord_translation(x: f32, y: f32, layer: f32) -> Vec3 {
+    let mut translation = RIGHT_DIR.xyy() * x;
+    translation += DOWN_DIR.xyy() * y;
+    translation.z = translation.z * -0.001 + layer * LAYER_DEPTH;
+
+    translation
+}
+
+#[derive(Resource, Default, Debug)]
+pub struct TileSet(HashMap<&'static str, Handle<Image>>);
+
+impl TileSet {
+    pub fn insert(&mut self, name: &'static str, handle: Handle<Image>) -> Option<Handle<Image>> {
+        self.0.insert(name, handle)
+    }
+
+    /// Get cloned image handle.
+    ///
+    /// # Panic
+    ///
+    /// For ease of use, unwrap is used to panic if value does not exists for certain key.
+    pub fn get(&self, name: &str) -> Handle<Image> {
+        self.0.get(name).unwrap().clone()
     }
 }

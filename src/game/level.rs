@@ -150,6 +150,8 @@ fn load_level(
         }
     }
 
+    village_map.generate_heat_map();
+    println!("{:?}", village_map.heat_map);
     commands.insert_resource(village_map);
     commands.insert_resource(selection_map)
 }

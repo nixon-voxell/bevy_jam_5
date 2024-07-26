@@ -1,4 +1,4 @@
-use std::ops::Sub;
+use std::collections::VecDeque;
 
 use bevy::math::UVec2;
 use bevy::prelude::*;
@@ -30,6 +30,7 @@ pub const KING_MOVES: [IVec2; 8] = [
 #[derive(Resource, Default)]
 pub struct VillageMap {
     pub size: UVec2,
+    pub heat_map: Vec<u32>,
     pub ground: TileMap,
     pub object: TileMap,
 }
@@ -38,6 +39,7 @@ impl VillageMap {
     pub fn new(size: UVec2) -> VillageMap {
         VillageMap {
             size,
+            heat_map: Vec::new(),
             ground: TileMap::new(size.as_ivec2()),
             object: TileMap::new(size.as_ivec2()),
         }
@@ -45,6 +47,10 @@ impl VillageMap {
 
     pub fn isize(&self) -> IVec2 {
         self.size.as_ivec2()
+    }
+
+    pub fn is_out_of_bounds(&self, coord: IVec2) -> bool {
+        coord.cmplt(IVec2::ZERO).any() || coord.cmpge(self.isize()).any()
     }
 
     /// Create a path from start to target while avoiding obstacles.
@@ -65,8 +71,7 @@ impl VillageMap {
                     let final_coord = tile_coord + *m;
 
                     let output = Some((final_coord, 1));
-                    if final_coord.cmplt(IVec2::ZERO).all() || final_coord.cmpge(self.isize()).all()
-                    {
+                    if self.is_out_of_bounds(final_coord) {
                         return None;
                     }
 
@@ -91,10 +96,46 @@ impl VillageMap {
                 })
             },
             // heuristic
-            |tile_coord: &IVec2| IVec2::length_squared(target.sub(*tile_coord)),
+            |tile_coord: &IVec2| IVec2::length_squared(target.wrapping_sub(*tile_coord)),
             // sucess
             |tile_coord: &IVec2| tile_coord == target,
         )
+    }
+
+    /// Generate heat map based on [`Self::object`].
+    pub fn generate_heat_map(&mut self) {
+        // Mark max as unvisted
+        self.heat_map = vec![u32::MAX; (self.size.x * self.size.y) as usize];
+        let mut stack = VecDeque::new();
+
+        for tile_coord in self.object.map.left_values() {
+            let index = (tile_coord.x + tile_coord.y * self.size.x as i32) as usize;
+            self.heat_map[index] = 0;
+
+            stack.push_back(*tile_coord);
+        }
+
+        while let Some(tile_coord) = stack.pop_front() {
+            let index = (tile_coord.x + tile_coord.y * self.size.x as i32) as usize;
+            let curr_heat = self.heat_map[index];
+
+            for offset in KING_MOVES.iter() {
+                let flood_coord = tile_coord.wrapping_add(*offset);
+                if self.is_out_of_bounds(flood_coord) {
+                    continue;
+                }
+
+                let index = (flood_coord.x + flood_coord.y * self.size.x as i32) as usize;
+
+                // Has been visited
+                if self.heat_map[index] != u32::MAX {
+                    continue;
+                }
+
+                self.heat_map[index] = curr_heat + 1;
+                stack.push_back(flood_coord);
+            }
+        }
     }
 }
 

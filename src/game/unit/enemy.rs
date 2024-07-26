@@ -118,9 +118,9 @@ fn spawn_enemies(
                 &IVec2::ZERO,
                 &ROOK_MOVES,
                 enemy.is_airborne,
-                &q_terrains
+                &q_terrains,
             )
-        )
+        );
     }
 
     // find_all_within_distance(, , )
