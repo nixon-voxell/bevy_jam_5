@@ -4,13 +4,16 @@ use bevy::prelude::*;
 
 use crate::{screen::Screen, VillageCamera};
 
-use super::picking::{SelectionEdge, SelectionMap};
+use super::{
+    picking::PickableTile,
+    selection::{SelectionEdge, SelectionMap},
+};
 
 use self::level_asset::{LevelAsset, LevelAssetPlugin, Levels};
 
 use super::{
     map::VillageMap,
-    tile_set::{tile_coord_translation, PickableTile, TileSet, TILE_ANCHOR, TILE_HALF_HEIGHT},
+    tile_set::{tile_coord_translation, TileSet, TILE_ANCHOR, TILE_HALF_HEIGHT},
     unit::Structure,
 };
 

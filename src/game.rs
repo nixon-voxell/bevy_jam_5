@@ -12,8 +12,9 @@ pub mod economy;
 pub mod inventory;
 pub mod level;
 pub mod map;
-pub mod picking;
+mod picking;
 pub mod resources;
+pub mod selection;
 pub mod systems;
 pub mod tile_set;
 pub mod unit;
@@ -27,7 +28,8 @@ pub(super) fn plugin(app: &mut App) {
         tile_set::TileSetPlugin,
         level::LevelPlugin,
         economy::EconomyPlugin,
-        picking::TilePickingPlugin,
+        selection::SelectionPlugin,
+        picking::PickingPlugin,
         unit::UnitPlugin,
     ));
 }

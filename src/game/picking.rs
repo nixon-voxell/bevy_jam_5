@@ -1,94 +1,103 @@
-use bevy::math::vec2;
+use bevy::app::Plugin;
 use bevy::prelude::*;
-use bevy::utils::HashMap;
-use bevy::utils::HashSet;
+use bevy::window::PrimaryWindow;
 
-use crate::game::map::ROOK_MOVES;
-use crate::game::tile_set::PickedTile;
+use crate::screen::playing::GameState;
+use crate::screen::Screen;
 
-pub struct TilePickingPlugin;
+use super::map::VillageMap;
+use super::tile_set::TILE_HALF_HEIGHT;
+use super::tile_set::TILE_WIDTH;
 
-impl Plugin for TilePickingPlugin {
+pub struct PickingPlugin;
+
+impl Plugin for PickingPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<SelectedTiles>()
-            .init_resource::<SelectionMap>()
+        app.init_resource::<PickedTileEntities>()
+            .init_resource::<PickedTile>()
+            .init_resource::<PickedPoint>()
             .add_systems(
-                PostUpdate,
-                (
-                    show_selected_tiles.run_if(resource_changed::<SelectedTiles>),
-                    add_selection,
-                ),
+                Update,
+                (find_picked_point, pick_tile)
+                    .run_if(in_state(Screen::Playing).and_then(in_state(GameState::Resumed))),
             );
     }
 }
 
-/// Current selected unit, can be Player controlled, enemy or a building
-#[derive(Resource, Default)]
-pub struct SelectedUnit {
-    pub entity: Option<Entity>,
-}
-
-#[derive(Resource, Default)]
-pub struct SelectedTiles {
-    pub color: Color,
-    pub tiles: HashSet<IVec2>,
-}
-
-#[derive(Resource, Default)]
-pub struct SelectionMap {
-    pub tiles: HashMap<IVec2, [Entity; 4]>,
-}
-
-#[derive(Component, Copy, Clone, Debug)]
-pub enum SelectionEdge {
-    North,
-    East,
-    South,
-    West,
-}
-
-impl SelectionEdge {
-    pub const ALL: [Self; 4] = [Self::North, Self::East, Self::South, Self::West];
-
-    pub fn get_scalar(&self) -> Vec2 {
-        match self {
-            SelectionEdge::North => Vec2::ONE,
-            SelectionEdge::East => vec2(1., -1.),
-            SelectionEdge::South => -Vec2::ONE,
-            SelectionEdge::West => vec2(-1., 1.),
-        }
-    }
-}
-
-pub fn show_selected_tiles(
-    selected_tiles: Res<SelectedTiles>,
-    tile_ids: Res<SelectionMap>,
-    mut query: Query<(&mut Sprite, &mut Visibility), With<SelectionEdge>>,
+pub fn pick_tile(
+    picked_point: Res<PickedPoint>,
+    mut picked_tile_entity: ResMut<PickedTileEntities>,
+    mut picked_tile: ResMut<PickedTile>,
+    mut village_map: ResMut<VillageMap>,
+    tiles_query: Query<(Entity, &GlobalTransform), With<PickableTile>>,
+    mut sprite_query: Query<&mut Sprite>,
 ) {
-    for (_, mut vis) in query.iter_mut() {
-        vis.set_if_neq(Visibility::Hidden);
+    let mut picked_set = false;
+    for previous in picked_tile_entity.0.drain(..) {
+        sprite_query
+            .get_mut(previous)
+            .map(|mut sprite| sprite.color = Color::WHITE)
+            .ok();
     }
 
-    for &tile in selected_tiles.tiles.iter() {
-        let Some(s) = tile_ids.tiles.get(&tile) else {
-            continue;
-        };
-        let neighbours = ROOK_MOVES
-            .map(|m| tile + m)
-            .map(|n| selected_tiles.tiles.contains(&n));
-        for (i, a) in neighbours.into_iter().enumerate() {
-            if !a {
-                if let Ok((mut sprite, mut vis)) = query.get_mut(s[i]) {
-                    sprite.color = selected_tiles.color;
-                    *vis = Visibility::Visible;
-                }
+    if let Some(point) = picked_point.0 {
+        for (e, ..) in tiles_query
+            .iter()
+            .map(|(e, t)| (e, (point - t.translation().xy()).abs(), t.translation().z))
+            .filter(|(_, r, _)| is_point_in_triangle(r.x, r.y, 0.5 * TILE_WIDTH, TILE_HALF_HEIGHT))
+        {
+            sprite_query
+                .get_mut(e)
+                .map(|mut sprite| sprite.color = Color::srgb(1., 0., 0.))
+                .ok();
+            picked_tile_entity.0.push(e);
+
+            if let Some(tile) = village_map.ground.locate(e) {
+                picked_tile.0 = Some(tile);
+                picked_set = true;
             }
         }
     }
+
+    if !picked_set {
+        picked_tile.0 = None;
+    }
 }
 
-pub fn add_selection(mut selected_tiles: ResMut<SelectedTiles>, picked_tile: Res<PickedTile>) {
-    if let Some(picked_tile) = picked_tile.0 {
-        selected_tiles.tiles.insert(picked_tile);
+#[derive(Component)]
+pub struct PickableTile;
+
+#[derive(Resource, Default, Debug)]
+pub struct PickedTileEntities(pub Vec<Entity>);
+
+#[derive(Resource, Default, Debug)]
+pub struct PickedTile(pub Option<IVec2>);
+
+#[derive(Resource, Default)]
+pub struct PickedPoint(pub Option<Vec2>);
+
+pub fn find_picked_point(
+    mut picked_point: ResMut<PickedPoint>,
+    q_window: Query<&Window, With<PrimaryWindow>>,
+    q_camera: Query<(&Camera, &GlobalTransform)>,
+) {
+    let (camera, camera_transform) = q_camera.single();
+    let window = q_window.single();
+
+    if let Some(world_position) = window
+        .cursor_position()
+        .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
+        .map(|ray| ray.origin.truncate())
+    {
+        picked_point.0 = Some(world_position);
+    } else {
+        picked_point.0 = None;
     }
+}
+
+fn is_point_in_triangle(x: f32, y: f32, w: f32, h: f32) -> bool {
+    if x < 0.0 || y < 0.0 {
+        return false;
+    }
+    y <= h - (h / w) * x
 }
