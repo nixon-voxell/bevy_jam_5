@@ -4,6 +4,8 @@ use bevy::utils::HashMap;
 use bevy::utils::HashSet;
 
 use crate::game::map::ROOK_MOVES;
+use crate::path_finding::find_all_within_distance;
+use crate::path_finding::find_all_within_distance_unweighted;
 use crate::screen::playing::GameState;
 use crate::screen::Screen;
 
@@ -22,11 +24,12 @@ impl Plugin for SelectionPlugin {
                 PostUpdate,
                 (
                     show_selected_tiles.run_if(resource_changed::<SelectedTiles>),
-                    add_selection,
                     set_selected_unit
                         .run_if(in_state(Screen::Playing).and_then(in_state(GameState::Resumed))),
                     on_selection.after(set_selected_unit),
-                ),
+                    show_movement_range.after(on_selection),
+                )
+                    .run_if(in_state(Screen::Playing)),
             );
     }
 }
@@ -96,9 +99,18 @@ pub fn show_selected_tiles(
     }
 }
 
-pub fn add_selection(mut selected_tiles: ResMut<SelectedTiles>, picked_tile: Res<PickedTile>) {
-    if let Some(picked_tile) = picked_tile.0 {
-        selected_tiles.tiles.insert(picked_tile);
+pub fn show_movement_range(
+    selected_unit: Res<SelectedUnit>,
+    mut selected_tiles: ResMut<SelectedTiles>,
+    village_map: Res<VillageMap>,
+) {
+    if let Some(entity) = selected_unit.entity {
+        if let Some(tile) = village_map.object.locate(entity) {
+            let tiles = find_all_within_distance_unweighted(tile, 4, |t| {
+                village_map.object.get_neighbouring_positions_rook(t)
+            });
+            selected_tiles.tiles = tiles;
+        }
     }
 }
 
