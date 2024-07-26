@@ -137,9 +137,10 @@ fn load_level(
                         transform: Transform::from_translation(object_translation),
                         ..default()
                     },
+                    PickableTile,
+                    StateScoped(Screen::Playing),
                     // IMPORTANT: There must only be structure in the map asset
                     Structure,
-                    StateScoped(Screen::Playing),
                 ));
 
                 village_map
@@ -153,7 +154,7 @@ fn load_level(
     commands.insert_resource(selection_map)
 }
 
-#[derive(Component, Default, Debug, Copy, Clone)]
+#[derive(Component, Default, Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum Terrain {
     #[default]
     /// Tile is grassland.

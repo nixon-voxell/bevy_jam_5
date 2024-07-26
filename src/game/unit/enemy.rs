@@ -4,7 +4,7 @@ use crate::{
     game::{
         cycle::{Season, TimeOfDay},
         level::Terrain,
-        map::VillageMap,
+        map::{VillageMap, ROOK_MOVES},
         tile_set::{tile_coord_translation, TileSet, TILE_ANCHOR},
         unit::{EnemyUnit, UnitBundle},
     },
@@ -86,11 +86,9 @@ fn spawn_enemies(
             };
 
             match terrain {
-                Terrain::Grass => break,
-                Terrain::Gravel => break,
                 // Airborne enemy can be on top of anything water
-                Terrain::Water if enemy.is_airborne => break,
-                _ => continue,
+                Terrain::Water if enemy.is_airborne == false => continue,
+                _ => break,
             }
         }
 
@@ -112,7 +110,20 @@ fn spawn_enemies(
             StateScoped(Screen::Playing),
         ));
         village_map.object.set(tile_coord, enemy_entity.id());
+
+        println!(
+            "{:?}",
+            village_map.pathfind(
+                &tile_coord,
+                &IVec2::ZERO,
+                &ROOK_MOVES,
+                enemy.is_airborne,
+                &q_terrains
+            )
+        )
     }
+
+    // find_all_within_distance(, , )
 }
 
 /// Get a random coordinate that is at the border of the grid.
@@ -134,7 +145,7 @@ pub fn random_border_tile_coord(width: u32, range: u32) -> UVec2 {
         1 => uvec2(max_index - side_coord.y, side_coord.x),
         2 => uvec2(max_index - side_coord.x, max_index - side_coord.y),
         3 => uvec2(side_coord.y, max_index - side_coord.x),
-        _ => unreachable!("Side should be within 0..4"),
+        _ => unreachable!("Side should be within [0, 4)"),
     }
 }
 

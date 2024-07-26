@@ -1,6 +1,11 @@
+use std::ops::Sub;
+
 use bevy::math::UVec2;
 use bevy::prelude::*;
 use bimap::{BiHashMap, Overwritten};
+use pathfinding::directed::astar::astar;
+
+use super::level::Terrain;
 
 // On screen 0,0 is top middle tile,
 // y increases left-down, x increases right-down
@@ -37,6 +42,60 @@ impl VillageMap {
             object: TileMap::new(size.as_ivec2()),
         }
     }
+
+    pub fn isize(&self) -> IVec2 {
+        self.size.as_ivec2()
+    }
+
+    /// Create a path from start to target while avoiding obstacles.
+    pub fn pathfind(
+        &self,
+        start: &IVec2,
+        target: &IVec2,
+        directions: &[IVec2],
+        is_airborne: bool,
+        q_terrains: &Query<&Terrain>,
+    ) -> Option<(Vec<IVec2>, i32)> {
+        astar(
+            start,
+            // successors
+            |tile_coord: &IVec2| {
+                let tile_coord = *tile_coord;
+                directions.iter().filter_map(move |m| {
+                    let final_coord = tile_coord + *m;
+
+                    let output = Some((final_coord, 1));
+                    if final_coord.cmplt(IVec2::ZERO).all() || final_coord.cmpge(self.isize()).all()
+                    {
+                        return None;
+                    }
+
+                    // There is an obstacle blocking it
+                    if self.object.get(final_coord).is_some() {
+                        return None;
+                    }
+
+                    // Check eligibility of moving on top of water tile
+                    if let Some(terrain) = self
+                        .ground
+                        .get(final_coord)
+                        .and_then(|e| q_terrains.get(e).ok())
+                    {
+                        match terrain {
+                            Terrain::Water if is_airborne == false => return None,
+                            _ => return output,
+                        }
+                    }
+
+                    None
+                })
+            },
+            // heuristic
+            |tile_coord: &IVec2| IVec2::length_squared(target.sub(*tile_coord)),
+            // sucess
+            |tile_coord: &IVec2| tile_coord == target,
+        )
+    }
 }
 
 #[derive(Debug, Default)]
@@ -52,6 +111,10 @@ impl TileMap {
             size,
             map: BiHashMap::default(),
         }
+    }
+
+    pub fn size(&self) -> IVec2 {
+        self.size
     }
 
     pub fn bounds(&self) -> IRect {
@@ -86,10 +149,10 @@ impl TileMap {
             .map(|(position, _)| position)
     }
 
-    pub fn get_neighbouring_positions_rook<'a>(
-        &'a self,
+    pub fn get_neighbouring_positions_rook(
+        &self,
         position: IVec2,
-    ) -> impl Iterator<Item = IVec2> + 'a {
+    ) -> impl Iterator<Item = IVec2> + '_ {
         ROOK_MOVES
             .iter()
             .copied()
@@ -97,10 +160,10 @@ impl TileMap {
             .filter(|target| self.bounds().contains(*target))
     }
 
-    pub fn get_neighbouring_positions_king<'a>(
-        &'a self,
+    pub fn get_neighbouring_positions_king(
+        &self,
         position: IVec2,
-    ) -> impl Iterator<Item = IVec2> + 'a {
+    ) -> impl Iterator<Item = IVec2> + '_ {
         KING_MOVES
             .iter()
             .copied()
