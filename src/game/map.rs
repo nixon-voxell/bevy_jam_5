@@ -5,6 +5,8 @@ use bevy::prelude::*;
 use bimap::{BiHashMap, Overwritten};
 use pathfinding::directed::astar::astar;
 
+use crate::path_finding::find_all_within_distance_unweighted;
+
 use super::level::Terrain;
 
 // On screen 0,0 is top middle tile,
@@ -67,10 +69,9 @@ impl VillageMap {
             // successors
             |tile_coord: &IVec2| {
                 let tile_coord = *tile_coord;
-                directions.iter().filter_map(move |m| {
-                    let final_coord = tile_coord + *m;
+                directions.iter().filter_map(move |dir| {
+                    let final_coord = tile_coord + *dir;
 
-                    let output = Some((final_coord, 1));
                     if self.is_out_of_bounds(final_coord) {
                         return None;
                     }
@@ -88,7 +89,7 @@ impl VillageMap {
                     {
                         match terrain {
                             Terrain::Water if is_airborne == false => return None,
-                            _ => return output,
+                            _ => return Some((final_coord, 1)),
                         }
                     }
 
@@ -102,7 +103,91 @@ impl VillageMap {
         )
     }
 
+    /// Flood into tiles within the range taking into consideration
+    /// on terrain, obstacles, and directions.
+    pub fn flood(
+        &self,
+        start: IVec2,
+        max_distance: u32,
+        directions: &[IVec2],
+        is_airborne: bool,
+        q_terrains: &Query<&Terrain>,
+    ) -> Vec<IVec2> {
+        find_all_within_distance_unweighted(start, max_distance, |tile_coord| {
+            directions.iter().filter_map(move |dir| {
+                let final_coord = tile_coord + *dir;
+
+                if self.is_out_of_bounds(final_coord) {
+                    return None;
+                }
+
+                // There is an obstacle blocking it
+                if self.object.get(final_coord).is_some() {
+                    return None;
+                }
+
+                // Check eligibility of moving on top of water tile
+                if let Some(terrain) = self
+                    .ground
+                    .get(final_coord)
+                    .and_then(|e| q_terrains.get(e).ok())
+                {
+                    match terrain {
+                        Terrain::Water if is_airborne == false => return None,
+                        _ => return Some(final_coord),
+                    }
+                }
+
+                None
+            })
+        })
+        .iter()
+        .copied()
+        .collect()
+    }
+
+    /// Sort tiles based on distance.
+    pub fn sort_tiles_by_distance(tiles: &mut [IVec2], target_tile: IVec2) {
+        tiles.sort_by_key(|t| IVec2::distance_squared(*t, target_tile));
+    }
+
+    /// Sort tiles based on heat map.
+    pub fn sort_tiles_by_heat(&self, tiles: &mut [IVec2]) {
+        tiles.sort_by_key(|t| {
+            let index = t.x + t.y * self.size.x as i32;
+            self.heat_map[index as usize]
+        });
+    }
+
+    /// Get best tile based on heat map.
+    pub fn get_best_tile(
+        &self,
+        start: IVec2,
+        max_distance: u32,
+        directions: &[IVec2],
+        is_airborne: bool,
+        q_terrains: &Query<&Terrain>,
+    ) -> Option<IVec2> {
+        let mut tiles = self.flood(start, max_distance, directions, is_airborne, q_terrains);
+        Self::sort_tiles_by_distance(&mut tiles, start);
+        self.sort_tiles_by_heat(&mut tiles);
+        tiles.first().copied()
+    }
+
     /// Generate heat map based on [`Self::object`].
+    ///
+    /// # Example
+    ///
+    /// 4, 3, 2, 3, 4, 5, 6, 7, 8, 9,
+    /// 3, 2, 1, 2, 3, 4, 5, 6, 7, 8,
+    /// 2, 1, 0, 1, 2, 3, 4, 5, 6, 7,
+    /// 2, 1, 1, 2, 2, 3, 4, 5, 6, 7,
+    /// 1, 0, 1, 2, 1, 2, 3, 4, 5, 6,
+    /// 2, 1, 2, 1, 0, 1, 2, 3, 4, 5,
+    /// 3, 2, 3, 2, 1, 2, 3, 4, 5, 6,
+    /// 4, 3, 4, 3, 2, 3, 4, 5, 6, 7,
+    /// 5, 4, 5, 4, 3, 4, 5, 6, 7, 8,
+    /// 6, 5, 6, 5, 4, 5, 6, 7, 8, 9,
     pub fn generate_heat_map(&mut self) {
         // Mark max as unvisted
         self.heat_map = vec![u32::MAX; (self.size.x * self.size.y) as usize];
@@ -119,7 +204,7 @@ impl VillageMap {
             let index = (tile_coord.x + tile_coord.y * self.size.x as i32) as usize;
             let curr_heat = self.heat_map[index];
 
-            for offset in KING_MOVES.iter() {
+            for offset in ROOK_MOVES.iter() {
                 let flood_coord = tile_coord.wrapping_add(*offset);
                 if self.is_out_of_bounds(flood_coord) {
                     continue;

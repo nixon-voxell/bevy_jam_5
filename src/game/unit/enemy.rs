@@ -111,19 +111,26 @@ fn spawn_enemies(
         ));
         village_map.object.set(tile_coord, enemy_entity.id());
 
-        println!(
-            "{:?}",
-            village_map.pathfind(
-                &tile_coord,
-                &IVec2::ZERO,
-                &ROOK_MOVES,
-                enemy.is_airborne,
-                &q_terrains,
-            )
-        );
+        if let Some(best_tile) = village_map.get_best_tile(
+            tile_coord,
+            enemy.movement,
+            &ROOK_MOVES,
+            enemy.is_airborne,
+            &q_terrains,
+        ) {
+            println!("best tile: {:?}", best_tile);
+            println!(
+                "{:?}",
+                village_map.pathfind(
+                    &tile_coord,
+                    &best_tile,
+                    &ROOK_MOVES,
+                    enemy.is_airborne,
+                    &q_terrains,
+                )
+            );
+        }
     }
-
-    // find_all_within_distance(, , )
 }
 
 /// Get a random coordinate that is at the border of the grid.
