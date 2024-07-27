@@ -24,24 +24,22 @@ impl Plugin for EnemyUnitPlugin {
         app.add_systems(OnEnter(TimeOfDay::Night), spawn_enemies)
             .add_systems(
                 Update,
-                move_enemies
+                (enemies_path, move_enemies)
                     .run_if(in_state(Screen::Playing).and_then(in_state(GameState::Resumed))),
             );
     }
 }
 
-fn move_enemies(
+fn enemies_path(
+    mut commands: Commands,
     q_terrains: Query<&Terrain>,
-    mut q_enemy_units: Query<
-        (Entity, &Movement, Option<&IsAirborne>, &mut Transform),
-        With<EnemyUnit>,
-    >,
+    mut q_enemy_units: Query<(Entity, &Movement, Option<&IsAirborne>), With<EnemyUnit>>,
     mut end_turn_evt: EventReader<EndTurn>,
     mut village_map: ResMut<VillageMap>,
 ) {
     if end_turn_evt.is_empty() == false {
         end_turn_evt.clear();
-        for (entity, movement, airborne, mut transform) in q_enemy_units.iter_mut() {
+        for (entity, movement, airborne) in q_enemy_units.iter_mut() {
             let Some(tile_coord) = village_map.object.locate(entity) else {
                 continue;
             };
@@ -57,7 +55,7 @@ fn move_enemies(
                 continue;
             };
 
-            let Some(path) = village_map.pathfind(
+            let Some((path, _)) = village_map.pathfind(
                 &tile_coord,
                 &best_tile,
                 &ROOK_MOVES,
@@ -67,11 +65,60 @@ fn move_enemies(
                 continue;
             };
 
+            commands.entity(entity).insert(TilePath::new(path));
             village_map.object.remove(tile_coord);
             village_map.object.set(best_tile, entity);
 
-            transform.translation =
-                tile_coord_translation(best_tile.x as f32, best_tile.y as f32, 2.0);
+            // transform.translation =
+            //     tile_coord_translation(best_tile.x as f32, best_tile.y as f32, 2.0);
+        }
+    }
+}
+
+fn move_enemies(
+    mut commands: Commands,
+    mut q_enemy_units: Query<(Entity, &mut Transform, &mut TilePath), With<EnemyUnit>>,
+    time: Res<Time>,
+) {
+    const SPEED: f32 = 4.0;
+    let Some((entity, mut transform, mut path)) = q_enemy_units.iter_mut().next() else {
+        return;
+    };
+
+    // Prevent out of bounds overflow
+    if path.index >= path.path.len() - 1 {
+        error!("Attempted to retrieve out of bounds path...");
+        commands.entity(entity).remove::<TilePath>();
+        return;
+    }
+
+    let current_tile = path.path[path.index].as_vec2();
+    let target_tile = path.path[path.index + 1].as_vec2();
+
+    let diff = target_tile - current_tile;
+    let length = diff.length();
+    if length < f32::EPSILON {
+        error!("Distance between target path and current path is too small!");
+        commands.entity(entity).remove::<TilePath>();
+        return;
+    }
+    // Normalize direction
+    let norm_dir = diff / length;
+
+    let travel_dist = SPEED * time.delta_seconds();
+    path.factor = f32::min(path.factor + travel_dist / length, 1.0);
+
+    let tile_coord = current_tile + norm_dir * path.factor * length;
+    transform.translation = tile_coord_translation(tile_coord.x, tile_coord.y, 2.0);
+
+    if path.factor >= 1.0 {
+        if path.index >= path.path.len() - 2 {
+            // No more paths left
+            commands.entity(entity).remove::<TilePath>();
+        } else {
+            // Increment the index to move towards the next path
+            path.index += 1;
+            path.factor = 0.0;
         }
     }
 }
@@ -239,4 +286,19 @@ impl EnemySpawn {
         movement: 4,
         is_airborne: true,
     };
+}
+
+#[derive(Component, Default, Debug, Clone)]
+pub struct TilePath {
+    pub path: Vec<IVec2>,
+    /// Current path index that the entity is located at.
+    pub index: usize,
+    /// Animation factor between 2 tiles.
+    pub factor: f32,
+}
+
+impl TilePath {
+    pub fn new(path: Vec<IVec2>) -> Self {
+        Self { path, ..default() }
+    }
 }
