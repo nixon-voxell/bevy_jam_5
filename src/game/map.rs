@@ -36,7 +36,7 @@ pub struct VillageMap {
     pub heat_map: Vec<u32>,
     pub ground: TileMap,
     pub object: TileMap,
-    pub player_spawn_area: HashSet<IVec2>,
+    pub deployment_zone: HashSet<IVec2>,
 }
 
 impl VillageMap {
@@ -46,7 +46,7 @@ impl VillageMap {
             heat_map: Vec::new(),
             ground: TileMap::new(size.as_ivec2()),
             object: TileMap::new(size.as_ivec2()),
-            player_spawn_area: HashSet::default(),
+            deployment_zone: HashSet::default(),
         }
     }
 
@@ -248,6 +248,10 @@ impl TileMap {
 
     pub fn bounds(&self) -> IRect {
         IRect::from_corners(IVec2::ZERO, self.size - 1)
+    }
+
+    pub fn is_occupied(&self, position: IVec2) -> bool {
+        self.map.get_by_left(&position).is_some()
     }
 
     /// get entity at position
