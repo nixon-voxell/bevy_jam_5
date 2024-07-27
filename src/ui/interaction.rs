@@ -34,7 +34,7 @@ pub struct InteractionPalette {
 #[derive(Component)]
 pub struct InteractAnimation(pub Interaction);
 
-fn apply_interaction_palette(
+pub fn apply_interaction_palette(
     mut q_palettes: InteractionQuery<(&InteractionPalette, &mut BackgroundColor)>,
 ) {
     for (interaction, (palette, mut background)) in &mut q_palettes {

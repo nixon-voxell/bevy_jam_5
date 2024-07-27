@@ -21,6 +21,7 @@ use crate::game::unit_list::{
 use crate::game::WatchRes;
 use crate::game::{assets::SoundtrackKey, audio::soundtrack::PlaySoundtrack};
 use crate::modals::merchant::{exit_mechant_btn_interaction, merchant_modal_layout};
+use crate::ui::interaction::apply_interaction_palette;
 use crate::ui::{palette::*, prelude::*};
 
 pub(super) fn plugin(app: &mut App) {
@@ -63,7 +64,9 @@ pub(super) fn plugin(app: &mut App) {
             end_turn_btn_interaction,
             exit_mechant_btn_interaction,
             fight_btn_interaction,
-            update_unit_list_container.run_if(in_state(Screen::Playing)),
+            update_unit_list_container
+                .run_if(in_state(Screen::Playing))
+                .before(apply_interaction_palette),
             select_player_unit_btn_interaction,
         ),
     );

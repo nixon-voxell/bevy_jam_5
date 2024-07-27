@@ -48,10 +48,11 @@ pub fn update_unit_list_container(
     container_query: Query<Entity, With<UnitListContainer>>,
     unit_query: Query<&UnitName>,
     player_unit_list: Res<PlayerUnitList>,
+    selected_unit: Res<SelectedUnit>,
 ) {
     if *local != player_unit_list.0 {
         *local = player_unit_list.0.clone();
-    } else {
+    } else if !selected_unit.is_changed() {
         return;
     }
     for entity in container_query.iter() {
@@ -61,9 +62,15 @@ pub fn update_unit_list_container(
             let Ok(name) = unit_query.get(*entity) else {
                 continue;
             };
+            let (text_color, back_color) = if selected_unit.entity == Some(*entity) {
+                (Color::BLACK, Color::WHITE)
+            } else {
+                (Color::WHITE, Color::BLACK)
+            };
             ui.container(ButtonBundle { ..default() }, |ui| {
                 ui.style()
                     .border_color(Color::WHITE)
+                    .background_color(back_color)
                     .border(UiRect::all(Val::Px(2.)))
                     .column_gap(Val::Px(4.))
                     .width(Val::Percent(100.))
@@ -84,12 +91,13 @@ pub fn update_unit_list_container(
                         name.0.split_whitespace().next().unwrap_or(""),
                     ))
                     .style()
-                    .font_size(20.);
+                    .font_size(20.)
+                    .font_color(text_color);
                 });
             })
             .insert((
                 InteractionPalette {
-                    none: css::BLACK.into(),
+                    none: back_color,
                     hovered: css::DARK_RED.into(),
                     pressed: css::INDIAN_RED.into(),
                 },
