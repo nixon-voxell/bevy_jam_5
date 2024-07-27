@@ -2,12 +2,11 @@ use bevy::{math::uvec2, prelude::*};
 
 use crate::{
     game::{
-        components::ObjectTileLayer,
         cycle::{EndTurn, Season, TimeOfDay},
         level::Terrain,
         map::{VillageMap, ROOK_MOVES},
         tile_set::{tile_coord_translation, TileSet, TILE_ANCHOR},
-        unit::{EnemyUnit, IsAirborne, UnitBundle},
+        unit::{spawn::SpawnAnimation, EnemyUnit, IsAirborne, UnitBundle},
     },
     screen::{playing::GameState, Screen},
 };
@@ -69,9 +68,6 @@ fn enemies_path(
             commands.entity(entity).insert(TilePath::new(path));
             village_map.object.remove(tile_coord);
             village_map.object.set(best_tile, entity);
-
-            // transform.translation =
-            //     tile_coord_translation(best_tile.x as f32, best_tile.y as f32, 2.0);
         }
     }
 }
@@ -119,7 +115,7 @@ fn move_enemies(
         } else {
             // Increment the index to move towards the next path
             path.index += 1;
-            path.factor = 0.0;
+            path.factor = 0.;
         }
     }
 }
@@ -200,7 +196,6 @@ fn spawn_enemies(
                     anchor: TILE_ANCHOR,
                     ..default()
                 },
-                transform: Transform::from_translation(translation),
                 texture: tile_set.get(enemy.name),
                 ..default()
             },
@@ -208,6 +203,7 @@ fn spawn_enemies(
                 .with_hit_points(enemy.hit_points)
                 .with_health(enemy.hit_points)
                 .with_movement(enemy.movement),
+            SpawnAnimation::new(translation),
             StateScoped(Screen::Playing),
         ));
         if enemy.is_airborne {

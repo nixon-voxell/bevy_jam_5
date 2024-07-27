@@ -1,15 +1,16 @@
 use crate::screen::Screen;
 use bevy::prelude::*;
 use rand::prelude::SliceRandom;
-
 use rand::thread_rng;
 
 use self::enemy::EnemyUnitPlugin;
+use self::spawn::{SpawnAnimation, SpawnUnitPlugin};
 
 use super::components::ObjectTileLayer;
 
 pub mod enemy;
 pub mod player;
+pub mod spawn;
 
 /// Character names generated from some random name generator
 pub const NAMES: &[&str] = &[
@@ -96,7 +97,7 @@ pub struct UnitPlugin;
 
 impl Plugin for UnitPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(EnemyUnitPlugin)
+        app.add_plugins((EnemyUnitPlugin, SpawnUnitPlugin))
             .add_systems(Update, health_ui.run_if(in_state(Screen::Playing)));
     }
 }
@@ -136,14 +137,14 @@ fn health_ui(
                                 custom_size: Some(HIT_POINT_SIZE),
                                 ..default()
                             },
-                            transform: Transform::from_translation(Vec3::new(
-                                start_x + HIT_POINT_SIZE.x * indexf + HIT_POINT_GAP * indexf,
-                                300.0,
-                                100.0,
-                            )),
                             ..default()
                         },
                         HealthIcon,
+                        SpawnAnimation::new(Vec3::new(
+                            start_x + HIT_POINT_SIZE.x * indexf + HIT_POINT_GAP * indexf,
+                            300.0,
+                            100.0,
+                        )),
                     ))
                     .id();
 

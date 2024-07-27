@@ -795,6 +795,7 @@ name = "bevy_jam_5"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "bevy_trauma_shake",
  "bimap",
  "clap",
  "log",
@@ -1117,6 +1118,16 @@ dependencies = [
  "bevy_math",
  "bevy_reflect",
  "thiserror",
+]
+
+[[package]]
+name = "bevy_trauma_shake"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8fba22bb49cd3257809a392372408665bb625f23d8b0577cd8f2ac2de0d00807"
+dependencies = [
+ "bevy",
+ "noisy_bevy",
 ]
 
 [[package]]
@@ -2755,6 +2766,15 @@ dependencies = [
  "cfg-if",
  "cfg_aliases 0.2.1",
  "libc",
+]
+
+[[package]]
+name = "noisy_bevy"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a498a5310e40540a941aca31ef341a0b229e11b04fb359c9c023ac412e34465b"
+dependencies = [
+ "bevy",
 ]
 
 [[package]]

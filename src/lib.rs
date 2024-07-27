@@ -16,6 +16,7 @@ use bevy::{
     prelude::*,
     window::PrimaryWindow,
 };
+use bevy_trauma_shake::{Shake, TraumaPlugin};
 use debug::DebugPlugin;
 
 pub struct AppPlugin {
@@ -29,9 +30,6 @@ impl Plugin for AppPlugin {
             Update,
             (AppSet::TickTimers, AppSet::RecordInput, AppSet::Update).chain(),
         );
-
-        // Spawn the main camera.
-        app.add_systems(Startup, spawn_camera);
 
         // Add Bevy plugins.
         app.add_plugins(
@@ -68,6 +66,8 @@ impl Plugin for AppPlugin {
 
         // Add other plugins.
         app.add_plugins((game::plugin, screen::plugin, ui::plugin))
+            .add_plugins(TraumaPlugin)
+            .add_systems(Startup, spawn_camera)
             .add_systems(Update, update_camera_scale);
 
         // Enable dev tools for dev builds.
@@ -75,22 +75,6 @@ impl Plugin for AppPlugin {
         app.add_plugins(dev_tools::plugin);
     }
 }
-
-/// High-level groupings of systems for the app in the `Update` schedule.
-/// When adding a new variant, make sure to order it in the `configure_sets`
-/// call above.
-#[derive(SystemSet, Debug, Clone, Copy, Eq, PartialEq, Hash)]
-enum AppSet {
-    /// Tick timers.
-    TickTimers,
-    /// Record player input.
-    RecordInput,
-    /// Do everything else (consider splitting this into further variants).
-    Update,
-}
-
-#[derive(Component)]
-pub struct VillageCamera;
 
 fn spawn_camera(mut commands: Commands) {
     commands.spawn((
@@ -112,6 +96,7 @@ fn spawn_camera(mut commands: Commands) {
         // [ui node outlines](https://bevyengine.org/news/bevy-0-14/#ui-node-outline-gizmos)
         // for debugging. So it's good to have this here for future-proofing.
         IsDefaultUiCamera,
+        Shake::default(),
     ));
 }
 
@@ -131,3 +116,19 @@ fn update_camera_scale(
         projection.scale = scale;
     }
 }
+
+/// High-level groupings of systems for the app in the `Update` schedule.
+/// When adding a new variant, make sure to order it in the `configure_sets`
+/// call above.
+#[derive(SystemSet, Debug, Clone, Copy, Eq, PartialEq, Hash)]
+enum AppSet {
+    /// Tick timers.
+    TickTimers,
+    /// Record player input.
+    RecordInput,
+    /// Do everything else (consider splitting this into further variants).
+    Update,
+}
+
+#[derive(Component)]
+pub struct VillageCamera;
