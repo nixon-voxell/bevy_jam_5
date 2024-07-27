@@ -156,6 +156,23 @@ fn enter_playing(mut commands: Commands) {
                 .style()
                 .padding(UiRect::all(Val::Px(10.0)))
                 .border_radius(BorderRadius::all(Val::Px(5.0)));
+
+                ui.container(ButtonBundle { ..default() }, |ui| {
+                    ui.label(LabelConfig::from("Fight"))
+                        .style()
+                        .font_size(LABEL_SIZE);
+                })
+                .insert((
+                    InteractionPalette {
+                        none: css::RED.into(),
+                        hovered: css::DARK_RED.into(),
+                        pressed: css::INDIAN_RED.into(),
+                    },
+                    EndTurnButton,
+                ))
+                .style()
+                .padding(UiRect::all(Val::Px(10.0)))
+                .border_radius(BorderRadius::all(Val::Px(5.0)));
             });
         })
         .insert(StateScoped(Screen::Playing));
