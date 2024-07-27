@@ -11,7 +11,8 @@ use crate::game::economy::{PlayerGold, VillagePopulation};
 use crate::game::unit::player::add_starting_player_units;
 use crate::game::unit::AvailableUnitNames;
 use crate::game::unit_list::{
-    inventory_list_layout, unit_list_layout, update_unit_list_container, PlayerUnitList,
+    inventory_list_layout, select_player_unit_btn_interaction, unit_list_layout,
+    update_unit_list_container, PlayerUnitList,
 };
 use crate::game::WatchRes;
 use crate::game::{assets::SoundtrackKey, audio::soundtrack::PlaySoundtrack};
@@ -54,6 +55,7 @@ pub(super) fn plugin(app: &mut App) {
             exit_mechant_btn_interaction,
             fight_btn_interaction,
             update_unit_list_container.run_if(in_state(Screen::Playing)),
+            select_player_unit_btn_interaction,
         ),
     );
     // .add_systems(
