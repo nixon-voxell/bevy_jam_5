@@ -59,7 +59,7 @@ pub fn pick_tile(
                 .ok();
             picked_tile_entity.0.push(e);
 
-            if let Some(tile) = village_map.ground.locate(e) {
+            if let Some(tile) = village_map.terrain.locate(e) {
                 picked_tile.0 = Some(tile);
                 picked_set = true;
             }

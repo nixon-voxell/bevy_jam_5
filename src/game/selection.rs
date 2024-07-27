@@ -24,6 +24,7 @@ impl Plugin for SelectionPlugin {
                 Update,
                 (
                     show_selected_tiles.run_if(resource_changed::<SelectedTiles>),
+                    color_selected_tiles.run_if(resource_changed::<SelectedTiles>),
                     set_selected_unit
                         .run_if(in_state(Screen::Playing))
                         .before(deploy_unit),
@@ -102,6 +103,28 @@ pub fn show_selected_tiles(
                 if let Ok((mut sprite, mut vis)) = query.get_mut(s[i]) {
                     sprite.color = selected_tiles.color;
                     *vis = Visibility::Visible;
+                }
+            }
+        }
+    }
+}
+
+fn color_selected_tiles(
+    selected_tiles: Res<SelectedTiles>,
+    village_map: Res<VillageMap>,
+    mut query: Query<&mut Sprite>,
+) {
+    for x in 0..village_map.size.x {
+        for y in 0..village_map.size.y {
+            let tile = IVec2::new(x as i32, y as i32);
+            if let Some(entity) = village_map.terrain.get(tile) {
+                if let Ok(mut sprite) = query.get_mut(entity) {
+                    let color = if selected_tiles.tiles.contains(&tile) {
+                        selected_tiles.color
+                    } else {
+                        Color::WHITE
+                    };
+                    sprite.color = color;
                 }
             }
         }

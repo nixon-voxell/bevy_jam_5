@@ -174,7 +174,7 @@ fn spawn_enemies(
             }
 
             let Some(terrain) = village_map
-                .ground
+                .terrain
                 .get(tile_coord)
                 .and_then(|e| q_terrains.get(e).ok())
             else {

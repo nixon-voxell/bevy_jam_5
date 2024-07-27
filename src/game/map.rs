@@ -34,7 +34,7 @@ pub const KING_MOVES: [IVec2; 8] = [
 pub struct VillageMap {
     pub size: UVec2,
     pub heat_map: Vec<u32>,
-    pub ground: TileMap,
+    pub terrain: TileMap,
     pub object: TileMap,
     pub deployment_zone: HashSet<IVec2>,
 }
@@ -44,7 +44,7 @@ impl VillageMap {
         VillageMap {
             size,
             heat_map: Vec::new(),
-            ground: TileMap::new(size.as_ivec2()),
+            terrain: TileMap::new(size.as_ivec2()),
             object: TileMap::new(size.as_ivec2()),
             deployment_zone: HashSet::default(),
         }
@@ -86,7 +86,7 @@ impl VillageMap {
 
                     // Check eligibility of moving on top of water tile
                     if let Some(terrain) = self
-                        .ground
+                        .terrain
                         .get(final_coord)
                         .and_then(|e| q_terrains.get(e).ok())
                     {
@@ -131,7 +131,7 @@ impl VillageMap {
 
                 // Check eligibility of moving on top of water tile
                 if let Some(terrain) = self
-                    .ground
+                    .terrain
                     .get(final_coord)
                     .and_then(|e| q_terrains.get(e).ok())
                 {

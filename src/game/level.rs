@@ -102,7 +102,7 @@ fn load_level(
             };
 
             village_map
-                .ground
+                .terrain
                 .set(IVec2::new(xi, yi), ground_entity.id());
 
             let mut ids = [Entity::PLACEHOLDER; 4];
