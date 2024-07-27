@@ -2,8 +2,9 @@
 
 use bevy::color::palettes::css;
 use bevy::ecs::entity::EntityHashMap;
-use bevy::{input::common_conditions::input_just_pressed, prelude::*};
+use bevy::prelude::*;
 use sickle_ui::prelude::*;
+// use bevy::input::common_conditions::input_just_pressed;
 
 use super::Screen;
 use crate::game::cycle::{EndDeployment, EndTurn, Season, Turn};
@@ -63,8 +64,8 @@ fn economy_status_layout(ui: &mut UiBuilder<Entity>) {
                 ui.style().column_gap(Val::Px(4.));
                 ui.icon("icons/gold-coins.png")
                     .style()
-                    .width(Val::Px(32.0))
-                    .height(Val::Px(32.0));
+                    .width(Val::Px(32.))
+                    .height(Val::Px(32.));
 
                 ui.label(LabelConfig::from("0"))
                     .insert(WatchRes::<PlayerGold>::default())
@@ -76,8 +77,8 @@ fn economy_status_layout(ui: &mut UiBuilder<Entity>) {
                 ui.style().column_gap(Val::Px(4.));
                 ui.icon("icons/population.png")
                     .style()
-                    .width(Val::Px(32.0))
-                    .height(Val::Px(32.0));
+                    .width(Val::Px(32.))
+                    .height(Val::Px(32.));
 
                 ui.label(LabelConfig::from("0"))
                     .insert(WatchRes::<VillagePopulation>::default())
@@ -94,9 +95,9 @@ fn enter_playing(mut commands: Commands) {
         .ui_builder(UiRoot)
         .column(|ui| {
             ui.style()
-                .width(Val::Percent(100.0))
-                .height(Val::Percent(100.0))
-                .padding(UiRect::all(Val::Px(60.0)));
+                .width(Val::Percent(100.))
+                .height(Val::Percent(100.))
+                .padding(UiRect::all(Val::Px(60.)));
 
             // Top pane
             ui.row(|ui| {
@@ -110,11 +111,11 @@ fn enter_playing(mut commands: Commands) {
                     .style()
                     .font_size(HEADER_SIZE);
 
-                ui.column(|_| {}).style().flex_grow(1.0);
+                ui.column(|_| {}).style().flex_grow(1.);
 
                 economy_status_layout(ui);
 
-                ui.column(|_| {}).style().width(Val::Px(20.0));
+                ui.column(|_| {}).style().width(Val::Px(20.));
 
                 // ui.container(ButtonBundle { ..default() }, |ui| {
                 //     ui.label(LabelConfig::from("Pause"))
@@ -140,7 +141,7 @@ fn enter_playing(mut commands: Commands) {
                 unit_list_layout(ui);
             })
             .style()
-            .flex_grow(1.0);
+            .flex_grow(1.);
             // Bottom panel
             ui.row(inventory_list_layout);
             ui.row(|ui| {
@@ -149,7 +150,7 @@ fn enter_playing(mut commands: Commands) {
                     .style()
                     .font_size(LABEL_SIZE);
 
-                ui.column(|_| {}).style().flex_grow(1.0);
+                ui.column(|_| {}).style().flex_grow(1.);
 
                 ui.container(ButtonBundle { ..default() }, |ui| {
                     ui.label(LabelConfig::from("End Turn"))
@@ -167,8 +168,8 @@ fn enter_playing(mut commands: Commands) {
                 ))
                 .insert(EndTurnButton)
                 .style()
-                .padding(UiRect::all(Val::Px(10.0)))
-                .border_radius(BorderRadius::all(Val::Px(5.0)));
+                .padding(UiRect::all(Val::Px(10.)))
+                .border_radius(BorderRadius::all(Val::Px(5.)));
 
                 ui.container(ButtonBundle { ..default() }, |ui| {
                     ui.label(LabelConfig::from("Fight"))
@@ -186,8 +187,8 @@ fn enter_playing(mut commands: Commands) {
                 ))
                 .style()
                 .display(Display::None)
-                .padding(UiRect::all(Val::Px(10.0)))
-                .border_radius(BorderRadius::all(Val::Px(5.0)));
+                .padding(UiRect::all(Val::Px(10.)))
+                .border_radius(BorderRadius::all(Val::Px(5.)));
             });
         })
         .insert(StateScoped(Screen::Playing));
@@ -316,15 +317,6 @@ pub enum GameState {
 }
 
 #[derive(Component)]
-pub struct ResumeButton;
-
-#[derive(Component)]
-pub struct PauseButton;
-
-#[derive(Component)]
-pub struct ExitButton;
-
-#[derive(Component)]
 pub struct EndTurnButton;
 
 /// When clicked end deployment
@@ -338,7 +330,7 @@ fn hide_all_with<T: Component>(
     mut displays: ResMut<DisplayCache>,
     mut q_vis: Query<(Entity, &mut Visibility, Option<&mut Style>), With<T>>,
 ) {
-    for (entity, mut vis, mut style) in q_vis.iter_mut() {
+    for (entity, mut vis, style) in q_vis.iter_mut() {
         *vis = Visibility::Hidden;
         if let Some(mut style) = style {
             displays.0.insert(entity, style.display);

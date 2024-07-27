@@ -2,7 +2,6 @@ use bevy::{math::uvec2, prelude::*};
 
 use crate::{
     game::{
-        components::ObjectTileLayer,
         cycle::{EndTurn, Season, TimeOfDay},
         level::Terrain,
         map::{VillageMap, ROOK_MOVES},
@@ -119,7 +118,7 @@ fn move_enemies(
         } else {
             // Increment the index to move towards the next path
             path.index += 1;
-            path.factor = 0.0;
+            path.factor = 0.;
         }
     }
 }
