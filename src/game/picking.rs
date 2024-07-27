@@ -3,6 +3,7 @@ use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use sickle_ui::prelude::SetLeftExt;
 
+use crate::screen::playing::GameState;
 use crate::screen::Screen;
 
 use super::deployment::deploy_unit;
@@ -27,7 +28,7 @@ impl Plugin for PickingPlugin {
                     pick_tile,
                     show_border_on_tile_pick,
                     dispatch_pressed_tile,
-                    deploy_unit,
+                    deploy_unit.run_if(in_state(GameState::Deployment)),
                 )
                     .chain()
                     .run_if(in_state(Screen::Playing)),
