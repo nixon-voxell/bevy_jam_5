@@ -2,9 +2,9 @@ use bevy::app::Plugin;
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 
-use crate::screen::playing::GameState;
 use crate::screen::Screen;
 
+use super::deployment::deploy_unit;
 use super::map::VillageMap;
 use super::tile_set::TILE_HALF_HEIGHT;
 use super::tile_set::TILE_WIDTH;
@@ -16,9 +16,15 @@ impl Plugin for PickingPlugin {
         app.init_resource::<PickedTileEntities>()
             .init_resource::<PickedTile>()
             .init_resource::<PickedPoint>()
+            .add_event::<TilePressedEvent>()
             .add_systems(
                 Update,
-                (find_picked_point, pick_tile)
+                (
+                    find_picked_point,
+                    pick_tile,
+                    dispatch_pressed_tile,
+                    deploy_unit,
+                )
                     .chain()
                     .run_if(in_state(Screen::Playing)),
             );
@@ -93,6 +99,21 @@ pub fn find_picked_point(
         picked_point.0 = Some(world_position);
     } else {
         picked_point.0 = None;
+    }
+}
+
+#[derive(Event, Debug)]
+pub struct TilePressedEvent(pub IVec2);
+
+pub fn dispatch_pressed_tile(
+    picked_tile: Res<PickedTile>,
+    mouse_button: Res<ButtonInput<MouseButton>>,
+    mut tile_pressed_event: EventWriter<TilePressedEvent>,
+) {
+    if mouse_button.just_pressed(MouseButton::Left) {
+        if let Some(picked_tile) = picked_tile.0 {
+            tile_pressed_event.send(TilePressedEvent(picked_tile));
+        }
     }
 }
 

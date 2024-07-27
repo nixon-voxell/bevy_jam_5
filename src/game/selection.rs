@@ -5,8 +5,10 @@ use bevy::utils::HashSet;
 
 use crate::game::map::ROOK_MOVES;
 use crate::path_finding::find_all_within_distance_unweighted;
+use crate::screen::playing::GameState;
 use crate::screen::Screen;
 
+use super::deployment::deploy_unit;
 use super::map::VillageMap;
 use super::picking::PickedTile;
 
@@ -19,12 +21,16 @@ impl Plugin for SelectionPlugin {
             .init_resource::<SelectedUnit>()
             .add_event::<SelectionEvent>()
             .add_systems(
-                PostUpdate,
+                Update,
                 (
                     show_selected_tiles.run_if(resource_changed::<SelectedTiles>),
-                    set_selected_unit.run_if(in_state(Screen::Playing)),
+                    set_selected_unit
+                        .run_if(in_state(Screen::Playing))
+                        .before(deploy_unit),
                     on_selection.after(set_selected_unit),
-                    show_movement_range.after(on_selection),
+                    show_movement_range
+                        .after(on_selection)
+                        .run_if(not(in_state(GameState::Deployment))),
                 )
                     .run_if(in_state(Screen::Playing)),
             );
@@ -35,6 +41,12 @@ impl Plugin for SelectionPlugin {
 #[derive(Resource, Default)]
 pub struct SelectedUnit {
     pub entity: Option<Entity>,
+}
+
+impl SelectedUnit {
+    pub fn set(&mut self, entity: Entity) {
+        self.entity = Some(entity);
+    }
 }
 
 #[derive(Resource, Default)]

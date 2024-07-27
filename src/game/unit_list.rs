@@ -58,11 +58,11 @@ pub fn update_unit_list_container(
     for entity in container_query.iter() {
         commands.entity(entity).despawn_descendants();
         let mut ui = commands.ui_builder(entity);
-        for entity in player_unit_list.0.iter() {
-            let Ok(name) = unit_query.get(*entity) else {
+        for unit_entity in player_unit_list.0.iter() {
+            let Ok(name) = unit_query.get(*unit_entity) else {
                 continue;
             };
-            let (text_color, back_color) = if selected_unit.entity == Some(*entity) {
+            let (text_color, back_color) = if selected_unit.entity == Some(*unit_entity) {
                 (Color::BLACK, Color::WHITE)
             } else {
                 (Color::WHITE, Color::BLACK)
@@ -101,7 +101,7 @@ pub fn update_unit_list_container(
                     hovered: css::DARK_RED.into(),
                     pressed: css::INDIAN_RED.into(),
                 },
-                SelectPlayerUnitButton(*entity),
+                SelectPlayerUnitButton(*unit_entity),
             ));
         }
     }
