@@ -9,6 +9,7 @@ use self::enemy::EnemyUnitPlugin;
 use super::components::ObjectTileLayer;
 
 pub mod enemy;
+pub mod player;
 
 /// Character names generated from some random name generator
 pub const NAMES: &[&str] = &[
@@ -80,8 +81,11 @@ impl Default for AvailableUnitNames {
 }
 
 impl AvailableUnitNames {
-    pub fn next_name(&mut self) -> Option<String> {
-        self.0.pop().map(|name| name.to_string())
+    pub fn next_name(&mut self) -> String {
+        self.0
+            .pop()
+            .map(|name| name.to_string())
+            .unwrap_or("Unnamed".to_string())
     }
 }
 
@@ -195,9 +199,12 @@ impl UnitTurnState {
     }
 }
 
+#[derive(Component, Default, PartialEq, Debug)]
+pub struct UnitName(pub String);
+
 #[derive(Bundle)]
 pub struct UnitBundle<T: Component> {
-    pub name: Name,
+    pub name: UnitName,
     pub hit_points: HitPoints,
     pub health: Health,
     pub health_icons: HealthIcons,
@@ -214,7 +221,7 @@ where
 {
     pub fn new(name: &str) -> Self {
         Self {
-            name: Name::new(String::from(name)),
+            name: UnitName(String::from(name)),
             hit_points: HitPoints(2),
             health: Health(2),
             health_icons: HealthIcons::default(),
