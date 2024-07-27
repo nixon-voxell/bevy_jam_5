@@ -1,6 +1,7 @@
 //! The screen state for the main game loop.
 
 use bevy::color::palettes::css;
+use bevy::ecs::entity::EntityHashMap;
 use bevy::{input::common_conditions::input_just_pressed, prelude::*};
 use sickle_ui::prelude::*;
 
@@ -16,6 +17,7 @@ use crate::ui::{palette::*, prelude::*};
 pub(super) fn plugin(app: &mut App) {
     app.init_state::<GameState>()
         .enable_state_scoped_entities::<GameState>()
+        .init_resource::<DisplayCache>()
         .add_systems(OnEnter(Screen::Playing), enter_playing)
         .add_systems(OnEnter(GameState::Merchant), merchant_modal_layout)
         .add_systems(OnExit(Screen::Playing), exit_playing)
@@ -172,7 +174,6 @@ fn enter_playing(mut commands: Commands) {
                     ui.label(LabelConfig::from("Fight"))
                         .insert(FightButton)
                         .style()
-                        .visibility(Visibility::Hidden)
                         .font_size(LABEL_SIZE);
                 })
                 .insert((
@@ -184,7 +185,7 @@ fn enter_playing(mut commands: Commands) {
                     FightButton,
                 ))
                 .style()
-                .visibility(Visibility::Hidden)
+                .display(Display::None)
                 .padding(UiRect::all(Val::Px(10.0)))
                 .border_radius(BorderRadius::all(Val::Px(5.0)));
             });
@@ -330,14 +331,30 @@ pub struct EndTurnButton;
 #[derive(Component)]
 pub struct FightButton;
 
-fn hide_all_with<T: Component>(mut q_vis: Query<&mut Visibility, With<T>>) {
-    for mut vis in q_vis.iter_mut() {
+#[derive(Resource, Default)]
+struct DisplayCache(EntityHashMap<Display>);
+
+fn hide_all_with<T: Component>(
+    mut displays: ResMut<DisplayCache>,
+    mut q_vis: Query<(Entity, &mut Visibility, Option<&mut Style>), With<T>>,
+) {
+    for (entity, mut vis, mut style) in q_vis.iter_mut() {
         *vis = Visibility::Hidden;
+        if let Some(mut style) = style {
+            displays.0.insert(entity, style.display);
+            style.display = Display::None;
+        }
     }
 }
 
-fn show_all_with<T: Component>(mut q_vis: Query<&mut Visibility, With<T>>) {
-    for mut vis in q_vis.iter_mut() {
+fn show_all_with<T: Component>(
+    mut displays: ResMut<DisplayCache>,
+    mut q_vis: Query<(Entity, &mut Visibility, Option<&mut Style>), With<T>>,
+) {
+    for (entity, mut vis, style) in q_vis.iter_mut() {
         *vis = Visibility::Visible;
+        if let Some(mut style) = style {
+            style.display = displays.0.remove(&entity).unwrap_or(Display::DEFAULT);
+        }
     }
 }

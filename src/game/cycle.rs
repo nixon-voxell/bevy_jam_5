@@ -34,6 +34,7 @@ impl Plugin for CyclePlugin {
                 Update,
                 (
                     end_turn,
+                    end_deployment,
                     update_cycle
                         .run_if(resource_changed::<Turn>)
                         .after(end_turn),
@@ -121,9 +122,12 @@ fn update_cycle(
     match turn.0 % TURN_PER_DAY >= day_cycle.day {
         true => {
             next_tod.set(TimeOfDay::Night);
-            game_state.set(GameState::Deployment);
         }
         false => next_tod.set(TimeOfDay::Day),
+    }
+
+    if turn.0 % TURN_PER_DAY == day_cycle.day {
+        game_state.set(GameState::Deployment);
     }
 }
 
