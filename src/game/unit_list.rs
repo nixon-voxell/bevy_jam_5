@@ -1,15 +1,30 @@
+use std::f32::MAX_10_EXP;
+
 use bevy::color::palettes::css;
 use bevy::prelude::*;
 use sickle_ui::prelude::*;
 
 use crate::ui::prelude::InteractionPalette;
 
+use super::selection::SelectedTiles;
+use super::selection::SelectedUnit;
+use super::unit;
+use super::unit::player::MAX_PLAYER_UNITS;
+use super::unit::PlayerUnit;
+use super::unit::UnitName;
 use super::INVENTORY_CAPACITY;
+
+#[derive(Component)]
+pub struct UnitListContainer;
+
+#[derive(Component)]
+pub struct PlayerUnitIcon;
 
 pub fn unit_list_layout(ui: &mut UiBuilder<Entity>) {
     ui.row(|ui| {
         ui.column(|ui| {
-            ui.style()
+            ui.insert(UnitListContainer)
+                .style()
                 .align_items(AlignItems::Start)
                 .justify_content(JustifyContent::Start)
                 .background_color(Color::BLACK)
@@ -17,31 +32,71 @@ pub fn unit_list_layout(ui: &mut UiBuilder<Entity>) {
                 .border(UiRect::all(Val::Px(2.)))
                 .padding(UiRect::all(Val::Px(2.)))
                 .row_gap(Val::Px(2.));
-
-            for _ in 0..4 {
-                ui.row(|ui| {
-                    ui.style()
-                        .border_color(Color::WHITE)
-                        .border(UiRect::all(Val::Px(2.)))
-                        .column_gap(Val::Px(4.))
-                        .padding(UiRect::all(Val::Px(4.)));
-                    ui.style()
-                        .align_items(AlignItems::Center)
-                        .justify_content(JustifyContent::SpaceBetween);
-
-                    ui.icon("tiles/human.png")
-                        .style()
-                        .width(Val::Px(64.))
-                        .height(Val::Px(64.));
-
-                    ui.row(|ui| {
-                        ui.style().padding(UiRect::all(Val::Px(4.)));
-                        ui.label(LabelConfig::from("3 / 3")).style().font_size(20.);
-                    });
-                });
-            }
         });
     });
+}
+
+#[derive(Resource, Default, Clone)]
+pub struct PlayerUnitList(pub Vec<Entity>);
+
+#[derive(Component)]
+pub struct SelectPlayerUnitButton(pub Entity);
+
+pub fn update_unit_list_container(
+    mut local: Local<Vec<Entity>>,
+    mut commands: Commands,
+    container_query: Query<Entity, With<UnitListContainer>>,
+    unit_query: Query<&UnitName>,
+    player_unit_list: Res<PlayerUnitList>,
+) {
+    if *local != player_unit_list.0 {
+        *local = player_unit_list.0.clone();
+    } else {
+        return;
+    }
+    for entity in container_query.iter() {
+        commands.entity(entity).despawn_descendants();
+        let mut ui = commands.ui_builder(entity);
+        for entity in player_unit_list.0.iter() {
+            let Ok(name) = unit_query.get(*entity) else {
+                continue;
+            };
+            ui.container(ButtonBundle { ..default() }, |ui| {
+                ui.style()
+                    .border_color(Color::WHITE)
+                    .border(UiRect::all(Val::Px(2.)))
+                    .column_gap(Val::Px(4.))
+                    .width(Val::Percent(100.))
+                    .padding(UiRect::all(Val::Px(4.)));
+                ui.style()
+                    .align_items(AlignItems::Center)
+                    .justify_content(JustifyContent::SpaceBetween);
+
+                ui.icon("tiles/human.png")
+                    .insert(PlayerUnitIcon)
+                    .style()
+                    .width(Val::Px(64.))
+                    .height(Val::Px(64.));
+
+                ui.row(|ui| {
+                    ui.style().padding(UiRect::all(Val::Px(4.)));
+                    ui.label(LabelConfig::from(
+                        name.0.split_whitespace().next().unwrap_or(""),
+                    ))
+                    .style()
+                    .font_size(20.);
+                });
+            })
+            .insert((
+                InteractionPalette {
+                    none: css::BLACK.into(),
+                    hovered: css::DARK_RED.into(),
+                    pressed: css::INDIAN_RED.into(),
+                },
+                SelectPlayerUnitButton(*entity),
+            ));
+        }
+    }
 }
 
 pub fn inventory_list_layout(ui: &mut UiBuilder<Entity>) {
@@ -67,4 +122,15 @@ pub fn inventory_list_layout(ui: &mut UiBuilder<Entity>) {
             }
         });
     });
+}
+
+pub fn select_player_unit_btn_interaction(
+    q_interactions: Query<(&Interaction, &SelectPlayerUnitButton), Changed<Interaction>>,
+    mut selected_unit: ResMut<SelectedUnit>,
+) {
+    for (interaction, select) in q_interactions.iter() {
+        if let Interaction::Pressed = interaction {
+            selected_unit.entity = Some(select.0);
+        }
+    }
 }

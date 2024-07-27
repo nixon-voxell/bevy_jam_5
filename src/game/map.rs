@@ -1,7 +1,9 @@
 use std::collections::VecDeque;
 
-use bevy::math::UVec2;
 use bevy::prelude::*;
+use bevy::utils::hashbrown::HashMap;
+use bevy::utils::HashSet;
+use bevy::{math::UVec2, utils::HashMap};
 use bimap::{BiHashMap, Overwritten};
 use pathfinding::directed::astar::astar;
 
@@ -35,6 +37,7 @@ pub struct VillageMap {
     pub heat_map: Vec<u32>,
     pub ground: TileMap,
     pub object: TileMap,
+    pub player_spawn_area: HashSet<IVec2>,
 }
 
 impl VillageMap {
@@ -44,6 +47,7 @@ impl VillageMap {
             heat_map: Vec::new(),
             ground: TileMap::new(size.as_ivec2()),
             object: TileMap::new(size.as_ivec2()),
+            player_spawn_area: HashSet::default(),
         }
     }
 

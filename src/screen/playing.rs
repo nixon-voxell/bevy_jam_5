@@ -9,7 +9,12 @@ use sickle_ui::prelude::*;
 use super::Screen;
 use crate::game::cycle::{EndDeployment, EndTurn, Season, Turn};
 use crate::game::economy::{PlayerGold, VillagePopulation};
-use crate::game::unit_list::{inventory_list_layout, unit_list_layout};
+use crate::game::unit::player::add_starting_player_units;
+use crate::game::unit::AvailableUnitNames;
+use crate::game::unit_list::{
+    inventory_list_layout, select_player_unit_btn_interaction, unit_list_layout,
+    update_unit_list_container, PlayerUnitList,
+};
 use crate::game::WatchRes;
 use crate::game::{assets::SoundtrackKey, audio::soundtrack::PlaySoundtrack};
 use crate::modals::merchant::{exit_mechant_btn_interaction, merchant_modal_layout};
@@ -19,7 +24,10 @@ pub(super) fn plugin(app: &mut App) {
     app.init_state::<GameState>()
         .enable_state_scoped_entities::<GameState>()
         .init_resource::<DisplayCache>()
+        .init_resource::<AvailableUnitNames>()
+        .init_resource::<PlayerUnitList>()
         .add_systems(OnEnter(Screen::Playing), enter_playing)
+        .add_systems(OnEnter(Screen::Playing), add_starting_player_units)
         .add_systems(OnEnter(GameState::Merchant), merchant_modal_layout)
         .add_systems(OnExit(Screen::Playing), exit_playing)
         .add_systems(
@@ -47,6 +55,8 @@ pub(super) fn plugin(app: &mut App) {
             end_turn_btn_interaction,
             exit_mechant_btn_interaction,
             fight_btn_interaction,
+            update_unit_list_container.run_if(in_state(Screen::Playing)),
+            select_player_unit_btn_interaction,
         ),
     );
     // .add_systems(
