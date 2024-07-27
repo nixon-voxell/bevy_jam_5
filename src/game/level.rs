@@ -2,7 +2,11 @@
 
 use bevy::prelude::*;
 
-use crate::{screen::Screen, VillageCamera};
+use crate::{
+    game::components::{GroundTileLayer, ObjectTileLayer},
+    screen::Screen,
+    VillageCamera,
+};
 
 use super::{
     picking::PickableTile,
@@ -81,6 +85,7 @@ fn load_level(
                     ..default()
                 },
                 PickableTile,
+                GroundTileLayer,
                 StateScoped(Screen::Playing),
             ));
             match ground_tile_name.as_str() {
@@ -139,6 +144,7 @@ fn load_level(
                     },
                     PickableTile,
                     StateScoped(Screen::Playing),
+                    ObjectTileLayer,
                     // IMPORTANT: There must only be structure in the map asset
                     Structure,
                 ));

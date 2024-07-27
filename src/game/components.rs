@@ -31,3 +31,9 @@ pub enum Ability {
 /// seems more manageable.
 #[derive(Component, Default, Debug, Clone)]
 pub struct Abilities(pub HashSet<Ability>);
+
+#[derive(Component, Debug)]
+pub struct GroundTileLayer;
+
+#[derive(Component, Debug)]
+pub struct ObjectTileLayer;

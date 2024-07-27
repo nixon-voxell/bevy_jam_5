@@ -4,6 +4,8 @@ use crate::screen::Screen;
 
 use self::enemy::EnemyUnitPlugin;
 
+use super::components::ObjectTileLayer;
+
 pub mod enemy;
 
 const HIT_POINT_SIZE: Vec2 = Vec2::new(40.0, 40.0);
@@ -125,6 +127,7 @@ pub struct UnitBundle<T: Component> {
     pub movement: Movement,
     pub turn_state: UnitTurnState,
     pub unit: T,
+    pub layer_marker: ObjectTileLayer,
     // pub abilities: Abilities,
 }
 
@@ -141,6 +144,7 @@ where
             movement: Movement(2),
             turn_state: UnitTurnState::default(),
             unit: T::default(),
+            layer_marker: ObjectTileLayer,
         }
     }
 }
@@ -172,6 +176,7 @@ pub struct StructureBundle {
     pub health: Health,
     pub health_icons: HealthIcons,
     pub structure: Structure,
+    pub layer_marker: ObjectTileLayer,
 }
 
 impl StructureBundle {
@@ -182,6 +187,7 @@ impl StructureBundle {
             health: Health(2),
             health_icons: HealthIcons::default(),
             structure: Structure,
+            layer_marker: ObjectTileLayer,
         }
     }
 }

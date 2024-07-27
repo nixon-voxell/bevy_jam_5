@@ -2,6 +2,7 @@ use bevy::{math::uvec2, prelude::*};
 
 use crate::{
     game::{
+        components::ObjectTileLayer,
         cycle::{EndTurn, Season, TimeOfDay},
         level::Terrain,
         map::{VillageMap, ROOK_MOVES},
