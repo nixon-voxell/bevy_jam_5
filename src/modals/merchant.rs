@@ -138,7 +138,7 @@ pub fn exit_mechant_btn_interaction(
         if let Interaction::Pressed = interaction {
             // Resumed is default state that is needed
             // when we go back into the game later.
-            next_game_state.set(GameState::Resumed);
+            next_game_state.set(GameState::BuildingTurn);
         }
     }
 }

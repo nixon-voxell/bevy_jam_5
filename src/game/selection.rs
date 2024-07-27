@@ -4,9 +4,7 @@ use bevy::utils::HashMap;
 use bevy::utils::HashSet;
 
 use crate::game::map::ROOK_MOVES;
-use crate::path_finding::find_all_within_distance;
 use crate::path_finding::find_all_within_distance_unweighted;
-use crate::screen::playing::GameState;
 use crate::screen::Screen;
 
 use super::map::VillageMap;
@@ -24,8 +22,7 @@ impl Plugin for SelectionPlugin {
                 PostUpdate,
                 (
                     show_selected_tiles.run_if(resource_changed::<SelectedTiles>),
-                    set_selected_unit
-                        .run_if(in_state(Screen::Playing).and_then(in_state(GameState::Resumed))),
+                    set_selected_unit.run_if(in_state(Screen::Playing)),
                     on_selection.after(set_selected_unit),
                     show_movement_range.after(on_selection),
                 )

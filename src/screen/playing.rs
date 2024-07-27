@@ -19,7 +19,6 @@ pub(super) fn plugin(app: &mut App) {
         .add_systems(OnEnter(Screen::Playing), enter_playing)
         .add_systems(OnEnter(GameState::Merchant), merchant_modal_layout)
         .add_systems(OnExit(Screen::Playing), exit_playing)
-        .add_systems(OnEnter(GameState::Paused), enter_pause)
         .add_systems(OnEnter(GameState::Deployment), hide_all_with::<EndTurn>)
         .add_systems(OnEnter(GameState::EnemyTurn), hide_all_with::<EndTurn>)
         .add_systems(OnExit(GameState::EnemyTurn), show_all_with::<EndTurn>);
@@ -27,17 +26,15 @@ pub(super) fn plugin(app: &mut App) {
     app.add_systems(
         Update,
         (
-            pause_btn_interaction,
-            resume_btn_interaction,
-            exit_btn_interaction,
+            // exit_btn_interaction,
             end_turn_btn_interaction,
             exit_mechant_btn_interaction,
         ),
-    )
-    .add_systems(
-        Update,
-        resume.run_if(in_state(GameState::Paused).and_then(input_just_pressed(KeyCode::Escape))),
     );
+    // .add_systems(
+    //     Update,
+    //     resume.run_if(in_state(GameState::Paused).and_then(input_just_pressed(KeyCode::Escape))),
+    // );
 }
 
 fn economy_status_layout(ui: &mut UiBuilder<Entity>) {
@@ -158,110 +155,88 @@ fn enter_playing(mut commands: Commands) {
         .insert(StateScoped(Screen::Playing));
 }
 
-fn resume(mut next_game_state: ResMut<NextState<GameState>>) {
-    next_game_state.set(GameState::Resumed);
-}
+// fn resume(mut next_game_state: ResMut<NextState<GameState>>) {
+//     next_game_state.set(GameState::Resumed);
+// }
 
-fn enter_pause(mut commands: Commands) {
-    commands
-        .ui_builder(UiRoot)
-        .column(|ui| {
-            ui.style()
-                .justify_content(JustifyContent::Center)
-                .justify_items(JustifyItems::Center)
-                .justify_self(JustifySelf::Center);
+// fn enter_pause(mut commands: Commands) {
+//     commands
+//         .ui_builder(UiRoot)
+//         .column(|ui| {
+//             ui.style()
+//                 .justify_content(JustifyContent::Center)
+//                 .justify_items(JustifyItems::Center)
+//                 .justify_self(JustifySelf::Center);
 
-            ui.row(|ui| {
-                ui.column(|ui| {
-                    ui.label(LabelConfig::from("Paused"))
-                        .style()
-                        .font_size(40.0);
+//             ui.row(|ui| {
+//                 ui.column(|ui| {
+//                     ui.label(LabelConfig::from("Paused"))
+//                         .style()
+//                         .font_size(40.0);
 
-                    ui.column(|_| {}).style().height(Val::Px(20.0));
+//                     ui.column(|_| {}).style().height(Val::Px(20.0));
 
-                    // Resume button
-                    ui.container(ButtonBundle { ..default() }, |ui| {
-                        ui.label(LabelConfig::from("Resume"))
-                            .style()
-                            .font_size(LABEL_SIZE);
-                    })
-                    .insert((
-                        InteractionPalette {
-                            none: css::GREEN.into(),
-                            hovered: css::DARK_GREEN.into(),
-                            pressed: css::GREEN.into(),
-                        },
-                        ResumeButton,
-                    ))
-                    .style()
-                    .padding(UiRect::all(Val::Px(10.0)))
-                    .border_radius(BorderRadius::all(Val::Px(5.0)));
+//                     // Resume button
+//                     ui.container(ButtonBundle { ..default() }, |ui| {
+//                         ui.label(LabelConfig::from("Resume"))
+//                             .style()
+//                             .font_size(LABEL_SIZE);
+//                     })
+//                     .insert((
+//                         InteractionPalette {
+//                             none: css::GREEN.into(),
+//                             hovered: css::DARK_GREEN.into(),
+//                             pressed: css::GREEN.into(),
+//                         },
+//                         ResumeButton,
+//                     ))
+//                     .style()
+//                     .padding(UiRect::all(Val::Px(10.0)))
+//                     .border_radius(BorderRadius::all(Val::Px(5.0)));
 
-                    ui.column(|_| {}).style().height(Val::Px(20.0));
+//                     ui.column(|_| {}).style().height(Val::Px(20.0));
 
-                    // Exit button
-                    ui.container(ButtonBundle { ..default() }, |ui| {
-                        ui.label(LabelConfig::from("Exit"))
-                            .style()
-                            .font_size(LABEL_SIZE);
-                    })
-                    .insert((
-                        InteractionPalette {
-                            none: css::RED.into(),
-                            hovered: css::DARK_RED.into(),
-                            pressed: css::RED.into(),
-                        },
-                        ExitButton,
-                    ))
-                    .style()
-                    .padding(UiRect::all(Val::Px(10.0)))
-                    .border_radius(BorderRadius::all(Val::Px(5.0)));
-                });
-            })
-            .style()
-            .padding(UiRect::all(Val::Px(18.0)))
-            .border_radius(BorderRadius::all(Val::Px(8.0)))
-            .background_color(Color::srgba(0.0, 0.0, 0.0, 0.6));
-        })
-        .insert(StateScoped(GameState::Paused));
-}
+//                     // Exit button
+//                     ui.container(ButtonBundle { ..default() }, |ui| {
+//                         ui.label(LabelConfig::from("Exit"))
+//                             .style()
+//                             .font_size(LABEL_SIZE);
+//                     })
+//                     .insert((
+//                         InteractionPalette {
+//                             none: css::RED.into(),
+//                             hovered: css::DARK_RED.into(),
+//                             pressed: css::RED.into(),
+//                         },
+//                         ExitButton,
+//                     ))
+//                     .style()
+//                     .padding(UiRect::all(Val::Px(10.0)))
+//                     .border_radius(BorderRadius::all(Val::Px(5.0)));
+//                 });
+//             })
+//             .style()
+//             .padding(UiRect::all(Val::Px(18.0)))
+//             .border_radius(BorderRadius::all(Val::Px(8.0)))
+//             .background_color(Color::srgba(0.0, 0.0, 0.0, 0.6));
+//         })
+//         .insert(StateScoped(GameState::Paused));
+// }
 
-fn pause_btn_interaction(
-    q_interactions: Query<&Interaction, (Changed<Interaction>, With<PauseButton>)>,
-    mut next_game_state: ResMut<NextState<GameState>>,
-) {
-    for interaction in q_interactions.iter() {
-        if let Interaction::Pressed = interaction {
-            next_game_state.set(GameState::Paused);
-        }
-    }
-}
-
-fn resume_btn_interaction(
-    q_interactions: Query<&Interaction, (Changed<Interaction>, With<ResumeButton>)>,
-    mut next_game_state: ResMut<NextState<GameState>>,
-) {
-    for interaction in q_interactions.iter() {
-        if let Interaction::Pressed = interaction {
-            next_game_state.set(GameState::Resumed);
-        }
-    }
-}
-
-fn exit_btn_interaction(
-    q_interactions: Query<&Interaction, (Changed<Interaction>, With<ExitButton>)>,
-    mut next_game_state: ResMut<NextState<GameState>>,
-    mut next_screen: ResMut<NextState<Screen>>,
-) {
-    for interaction in q_interactions.iter() {
-        if let Interaction::Pressed = interaction {
-            // Resumed is default state that is needed
-            // when we go back into the game later.
-            next_game_state.set(GameState::Resumed);
-            next_screen.set(Screen::Title);
-        }
-    }
-}
+// fn exit_btn_interaction(
+//     q_interactions: Query<&Interaction, (Changed<Interaction>, With<ExitButton>)>,
+//     mut next_game_state: ResMut<NextState<GameState>>,
+//     mut next_screen: ResMut<NextState<Screen>>,
+// ) {
+//     for interaction in q_interactions.iter() {
+//         if let Interaction::Pressed = interaction {
+//             // Resumed is default state that is needed
+//             // when we go back into the game later.
+//             next_game_state.set(GameState::Resumed);
+//             next_screen.set(Screen::Title);
+//         }
+//     }
+// }
 
 fn end_turn_btn_interaction(
     q_interactions: Query<&Interaction, (Changed<Interaction>, With<EndTurnButton>)>,
@@ -282,13 +257,13 @@ fn exit_playing(mut commands: Commands) {
 /// Pause or resumed.
 #[derive(States, Debug, Hash, PartialEq, Eq, Clone, Copy, Default)]
 pub enum GameState {
-    Resumed,
-    Paused,
     Merchant,
     #[default]
-    Inactive,
+    Normal,
     Deployment,
+    BattleTurn,
     EnemyTurn,
+    BuildingTurn,
 }
 
 #[derive(Component)]

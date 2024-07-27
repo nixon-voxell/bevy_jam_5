@@ -26,7 +26,7 @@ impl Plugin for EnemyUnitPlugin {
             .add_systems(
                 Update,
                 (enemies_path, move_enemies)
-                    .run_if(in_state(Screen::Playing).and_then(in_state(GameState::Resumed))),
+                    .run_if(in_state(Screen::Playing).and_then(in_state(GameState::EnemyTurn))),
             );
     }
 }
