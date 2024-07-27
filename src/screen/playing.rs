@@ -160,6 +160,7 @@ fn enter_playing(mut commands: Commands) {
                 ui.container(ButtonBundle { ..default() }, |ui| {
                     ui.label(LabelConfig::from("Fight"))
                         .style()
+                        .visibility(Visibility::Hidden)
                         .font_size(LABEL_SIZE);
                 })
                 .insert((
@@ -168,7 +169,7 @@ fn enter_playing(mut commands: Commands) {
                         hovered: css::DARK_RED.into(),
                         pressed: css::INDIAN_RED.into(),
                     },
-                    EndTurnButton,
+                    FightButton,
                 ))
                 .style()
                 .padding(UiRect::all(Val::Px(10.0)))
@@ -300,6 +301,10 @@ pub struct ExitButton;
 
 #[derive(Component)]
 pub struct EndTurnButton;
+
+/// When clicked end deployment
+#[derive(Component)]
+pub struct FightButton;
 
 fn hide_all_with<T: Component>(mut q_vis: Query<&mut Visibility, With<T>>) {
     for mut vis in q_vis.iter_mut() {
