@@ -284,6 +284,8 @@ pub enum GameState {
     Merchant,
     #[default]
     Inactive,
+    Deployment,
+    EnemyTurn,
 }
 
 #[derive(Component)]
