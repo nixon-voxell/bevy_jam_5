@@ -55,7 +55,7 @@ impl Plugin for CyclePlugin {
 }
 
 fn update_day(turn: Res<Turn>, mut next_game_state: ResMut<NextState<GameState>>) {
-    if turn.0 % TURN_PER_DAY == 0 {
+    if turn.0 != 0 && turn.0 % TURN_PER_DAY == 0 {
         next_game_state.set(GameState::Merchant);
     }
 }
