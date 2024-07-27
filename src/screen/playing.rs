@@ -303,14 +303,14 @@ pub struct ExitButton;
 #[derive(Component)]
 pub struct EndTurnButton;
 
-fn hide_all_with<T>(mut q_vis: Query<&mut Visibility, With<T>>) {
+fn hide_all_with<T: Component>(mut q_vis: Query<&mut Visibility, With<T>>) {
     for mut vis in q_vis.iter_mut() {
-        *q_vis = Visibility::Hidden;
+        *vis = Visibility::Hidden;
     }
 }
 
-fn show_all_with<T>(mut q_vis: Query<&mut Visibility, With<T>>) {
+fn show_all_with<T: Component>(mut q_vis: Query<&mut Visibility, With<T>>) {
     for mut vis in q_vis.iter_mut() {
-        *q_vis = Visibility::Visible;
+        *vis = Visibility::Visible;
     }
 }
