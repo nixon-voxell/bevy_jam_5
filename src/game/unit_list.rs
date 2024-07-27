@@ -1,18 +1,10 @@
-use std::f32::MAX_10_EXP;
-
+use super::selection::SelectedUnit;
+use super::unit::UnitName;
+use super::INVENTORY_CAPACITY;
+use crate::ui::prelude::InteractionPalette;
 use bevy::color::palettes::css;
 use bevy::prelude::*;
 use sickle_ui::prelude::*;
-
-use crate::ui::prelude::InteractionPalette;
-
-use super::selection::SelectedTiles;
-use super::selection::SelectedUnit;
-use super::unit;
-use super::unit::player::MAX_PLAYER_UNITS;
-use super::unit::PlayerUnit;
-use super::unit::UnitName;
-use super::INVENTORY_CAPACITY;
 
 #[derive(Component)]
 pub struct UnitListContainer;
@@ -107,9 +99,16 @@ pub fn update_unit_list_container(
     }
 }
 
+#[derive(Component)]
+pub struct SelectedUnitNameLabel;
+
 pub fn inventory_list_layout(ui: &mut UiBuilder<Entity>) {
     ui.column(|ui| {
-        ui.style().align_items(AlignItems::End);
+        ui.style().align_items(AlignItems::End).row_gap(Val::Px(4.));
+        ui.row(|ui| {
+            ui.label(LabelConfig::from("unit name"))
+                .insert(SelectedUnitNameLabel);
+        });
         ui.row(|ui| {
             ui.style().column_gap(Val::Px(2.));
             for _ in 0..INVENTORY_CAPACITY {
@@ -130,6 +129,25 @@ pub fn inventory_list_layout(ui: &mut UiBuilder<Entity>) {
             }
         });
     });
+}
+
+pub fn update_selected_unit_name_label(
+    selected_unit: Res<SelectedUnit>,
+    player_unit_list: Res<PlayerUnitList>,
+    name_query: Query<&UnitName>,
+    mut label_query: Query<&mut Text, With<SelectedUnitNameLabel>>,
+) {
+    let Some(entity) = selected_unit.entity else {
+        return;
+    };
+    let Ok(name) = name_query.get(entity) else {
+        return;
+    };
+    if selected_unit.is_changed() && player_unit_list.0.contains(&entity) {
+        for mut text in label_query.iter_mut() {
+            text.sections[0].value = name.0.clone();
+        }
+    }
 }
 
 pub fn select_player_unit_btn_interaction(

@@ -16,7 +16,7 @@ use crate::game::unit::player::add_starting_player_units;
 use crate::game::unit::AvailableUnitNames;
 use crate::game::unit_list::{
     inventory_list_layout, select_player_unit_btn_interaction, unit_list_layout,
-    update_unit_list_container, PlayerUnitList,
+    update_selected_unit_name_label, update_unit_list_container, PlayerUnitList,
 };
 use crate::game::WatchRes;
 use crate::game::{assets::SoundtrackKey, audio::soundtrack::PlaySoundtrack};
@@ -68,6 +68,7 @@ pub(super) fn plugin(app: &mut App) {
                 .run_if(in_state(Screen::Playing))
                 .before(apply_interaction_palette),
             select_player_unit_btn_interaction,
+            update_selected_unit_name_label,
         ),
     );
     // .add_systems(
