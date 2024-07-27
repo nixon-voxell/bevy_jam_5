@@ -19,7 +19,7 @@ pub fn deployment_setup(
             y: size.y as i32,
         },
     )
-    .inflate(-4);
+    .inflate(-3);
     for x in r.min.x..r.max.x {
         for y in r.min.y..r.max.y {
             village_map.deployment_zone.insert(IVec2::new(x, y));

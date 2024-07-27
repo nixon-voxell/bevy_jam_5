@@ -8,6 +8,9 @@ use sickle_ui::prelude::*;
 
 use super::Screen;
 use crate::game::cycle::{EndDeployment, EndTurn, Season, Turn};
+use crate::game::deployment::{
+    deployment_setup, deployment_zone_visualization, is_deployment_ready,
+};
 use crate::game::economy::{PlayerGold, VillagePopulation};
 use crate::game::unit::player::add_starting_player_units;
 use crate::game::unit::AvailableUnitNames;
@@ -32,11 +35,16 @@ pub(super) fn plugin(app: &mut App) {
         .add_systems(OnExit(Screen::Playing), exit_playing)
         .add_systems(
             OnEnter(GameState::Deployment),
+            (deployment_setup, deployment_zone_visualization).chain(),
+        )
+        .add_systems(
+            OnEnter(GameState::Deployment),
             hide_all_with::<EndTurnButton>,
         )
         .add_systems(
             Update,
-            show_all_with::<FightButton>.run_if(in_state(GameState::Deployment)),
+            show_all_with::<FightButton>
+                .run_if(in_state(GameState::Deployment).and_then(is_deployment_ready)),
         )
         .add_systems(
             OnExit(GameState::Deployment),

@@ -2,7 +2,10 @@ use bevy::prelude::*;
 
 use crate::screen::{playing::GameState, Screen};
 
-use super::{update_resource_label, update_resource_label_system, WatchRes};
+use super::{
+    map::VillageMap, unit_list::PlayerUnitList, update_resource_label,
+    update_resource_label_system, WatchRes,
+};
 
 /// Number of turns in a day.
 pub const TURN_PER_DAY: u32 = 10;
@@ -92,9 +95,17 @@ fn end_turn(mut end_turn_evt: EventReader<EndTurn>, mut turn: ResMut<Turn>) {
 fn end_deployment(
     mut end_deployment_evt: EventReader<EndDeployment>,
     mut gamestate: ResMut<NextState<GameState>>,
+    player_unit_list: Res<PlayerUnitList>,
+    village_map: Res<VillageMap>,
 ) {
-    if end_deployment_evt.is_empty() == false {
+    if !end_deployment_evt.is_empty() {
         end_deployment_evt.clear();
+        for entity in player_unit_list.0.iter() {
+            if village_map.object.locate(*entity).is_none() {
+                println!("Undeployed still");
+                return;
+            }
+        }
         gamestate.set(GameState::BattleTurn);
     }
 }
