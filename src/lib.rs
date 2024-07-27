@@ -1,3 +1,4 @@
+pub mod debug;
 #[cfg(feature = "dev")]
 mod dev_tools;
 mod game;
@@ -15,8 +16,11 @@ use bevy::{
     prelude::*,
     window::PrimaryWindow,
 };
+use debug::DebugPlugin;
 
-pub struct AppPlugin;
+pub struct AppPlugin {
+    pub show_debug: bool,
+}
 
 impl Plugin for AppPlugin {
     fn build(&self, app: &mut App) {
@@ -57,6 +61,10 @@ impl Plugin for AppPlugin {
                     ..default()
                 }),
         );
+
+        if self.show_debug {
+            app.add_plugins(DebugPlugin);
+        }
 
         // Add other plugins.
         app.add_plugins((game::plugin, screen::plugin, ui::plugin))

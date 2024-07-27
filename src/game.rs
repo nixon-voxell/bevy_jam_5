@@ -35,12 +35,20 @@ pub(super) fn plugin(app: &mut App) {
     ));
 }
 
-#[derive(Component, Default)]
+#[derive(Component)]
 pub struct WatchRes<R: Resource> {
     phantom: PhantomData<R>,
 }
 
-fn update_resource_label<R: Resource + ToString>() -> SystemConfigs {
+impl<R: Resource> Default for WatchRes<R> {
+    fn default() -> Self {
+        WatchRes {
+            phantom: PhantomData,
+        }
+    }
+}
+
+pub fn update_resource_label<R: Resource + ToString>() -> SystemConfigs {
     set_resource_label::<R>.run_if(resource_changed::<R>)
 }
 
