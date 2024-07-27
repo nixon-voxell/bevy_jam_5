@@ -1,12 +1,89 @@
-use bevy::prelude::*;
-
 use crate::screen::Screen;
+use bevy::prelude::*;
+use rand::prelude::SliceRandom;
+
+use rand::thread_rng;
 
 use self::enemy::EnemyUnitPlugin;
 
 use super::components::ObjectTileLayer;
 
 pub mod enemy;
+
+/// Character names generated from some random name generator
+pub const NAMES: &[&str] = &[
+    "Alaric Von Hohenberg",
+    "Isolde De Sauveterre",
+    "Dorian Blackwood",
+    "Elara Valois",
+    "Lucian Drakovich",
+    "Seraphina Ravenscroft",
+    "Thaddeus Greystone",
+    "Morgana Devereux",
+    "Victor Falkenrath",
+    "Selene Montclair",
+    "Tamachag Altan",
+    "Xartsaga Borjigin",
+    "Hychyt Chuluun",
+    "Shilugei Baatar",
+    "Khuchar Erdene",
+    "Dodai Ganzorig",
+    "Sibaguchu Oyun",
+    "Adkiragh Sukhbaatar",
+    "Jeder Temujin",
+    "Gugun Munkhbat",
+    "Hao Shuren",
+    "Qiao Kang",
+    "Dijewer de Weert",
+    "Jacop Janssens",
+    "Valentijn Hinckaert",
+    "Valck Heyns",
+    "Jeroom Michels",
+    "Aeriaen van der Gracht",
+    "Frederico de Nagele",
+    "Egghel van Teijlingen",
+    "Gabriel van der Molen",
+    "Filips Schiffel",
+    "Artur Falcão",
+    "Beco de Caria",
+    "Jorge Mendanha",
+    "Guomez de Monte Arroio",
+    "Eytor d'Abrantes",
+    "Johão della Praça",
+    "Olavi Paasio",
+    "Alex Rautiainen",
+    "Auvo Mäki",
+    "Heikki Honkanen",
+    "Lennart Soininen",
+    "Eerik Ilves",
+    "Bekir Burcak",
+    "Akpolat Samdereli",
+    "Erhan Calik",
+    "Sariaslan Asena",
+    "Toujou Dayu",
+    "Wakuni Rikyu",
+    "Yoshihisa Kimitada",
+    "Chintan Haque",
+    "Ashish Bhattacharya",
+];
+
+#[derive(Resource)]
+pub struct AvailableUnitNames(pub Vec<&'static str>);
+
+impl Default for AvailableUnitNames {
+    fn default() -> Self {
+        let mut names_vec: Vec<&'static str> = NAMES.to_vec();
+        let mut rng = thread_rng();
+        names_vec.shuffle(&mut rng);
+        AvailableUnitNames(names_vec)
+    }
+}
+
+impl AvailableUnitNames {
+    pub fn next_name(&mut self) -> Option<String> {
+        self.0.pop().map(|name| name.to_string())
+    }
+}
 
 const HIT_POINT_SIZE: Vec2 = Vec2::new(40.0, 40.0);
 const HIT_POINT_GAP: f32 = 10.0;
