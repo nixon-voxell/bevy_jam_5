@@ -1,11 +1,14 @@
 use bevy::app::Plugin;
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
+use sickle_ui::prelude::SetLeftExt;
 
 use crate::screen::Screen;
 
 use super::deployment::deploy_unit;
+use super::level::TileBorder;
 use super::map::VillageMap;
+use super::selection::SelectionMap;
 use super::tile_set::TILE_HALF_HEIGHT;
 use super::tile_set::TILE_WIDTH;
 
@@ -22,6 +25,7 @@ impl Plugin for PickingPlugin {
                 (
                     find_picked_point,
                     pick_tile,
+                    show_border_on_tile_pick,
                     dispatch_pressed_tile,
                     deploy_unit,
                 )
@@ -37,15 +41,16 @@ pub fn pick_tile(
     mut picked_tile: ResMut<PickedTile>,
     village_map: Res<VillageMap>,
     tiles_query: Query<(Entity, &GlobalTransform), With<PickableTile>>,
-    mut sprite_query: Query<&mut Sprite>,
 ) {
     let mut picked_set = false;
-    for previous in picked_tile_entity.0.drain(..) {
-        sprite_query
-            .get_mut(previous)
-            .map(|mut sprite| sprite.color = Color::WHITE)
-            .ok();
-    }
+    // for previous in picked_tile_entity.0.drain(..) {
+    //     sprite_query
+    //         .get_mut(previous)
+    //         .map(|mut sprite| sprite.color = Color::WHITE)
+    //         .ok();
+    // }
+
+    picked_tile_entity.0.clear();
 
     if let Some(point) = picked_point.0 {
         for (e, ..) in tiles_query
@@ -53,10 +58,10 @@ pub fn pick_tile(
             .map(|(e, t)| (e, (point - t.translation().xy()).abs(), t.translation().z))
             .filter(|(_, r, _)| is_point_in_triangle(r.x, r.y, 0.5 * TILE_WIDTH, TILE_HALF_HEIGHT))
         {
-            sprite_query
-                .get_mut(e)
-                .map(|mut sprite| sprite.color = Color::srgb(1., 0., 0.))
-                .ok();
+            // sprite_query
+            //     .get_mut(e)
+            //     .map(|mut sprite| sprite.color = Color::srgb(1., 0., 0.))
+            //     .ok();
             picked_tile_entity.0.push(e);
 
             if let Some(tile) = village_map.terrain.locate(e) {
@@ -69,6 +74,36 @@ pub fn pick_tile(
     if !picked_set {
         picked_tile.0 = None;
     }
+}
+
+pub fn show_border_on_tile_pick(
+    mut previous: Local<Option<IVec2>>,
+    picked_tile: Res<PickedTile>,
+    mut query: Query<&mut Visibility, With<TileBorder>>,
+    selection_map: Res<SelectionMap>,
+) {
+    if let Some(tile) = picked_tile.0 {
+        if Some(tile) != *previous {
+            if let Some(prev_ent) = previous
+                .and_then(|prev_tile| selection_map.borders.get(&prev_tile))
+                .copied()
+            {
+                if let Ok(mut v) = query.get_mut(prev_ent) {
+                    v.set_if_neq(Visibility::Hidden);
+                }
+            }
+            if let Some(entity) = selection_map.borders.get(&tile) {
+                if let Ok(mut v) = query.get_mut(*entity) {
+                    v.set_if_neq(Visibility::Visible);
+                }
+            }
+        }
+    } else {
+        for mut v in query.iter_mut() {
+            v.set_if_neq(Visibility::Hidden);
+        }
+    }
+    *previous = picked_tile.0;
 }
 
 #[derive(Component)]

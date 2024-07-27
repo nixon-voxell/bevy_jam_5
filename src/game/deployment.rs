@@ -8,6 +8,8 @@ use super::tile_set::tile_coord_translation;
 use super::tile_set::TileSet;
 use super::unit::player;
 use super::unit_list::PlayerUnitList;
+use bevy::color::palettes::css::GREEN;
+use bevy::color::palettes::css::LIME;
 use bevy::color::palettes::css::YELLOW;
 use bevy::prelude::*;
 
@@ -38,7 +40,7 @@ pub fn deployment_zone_visualization(
     mut selected_tiles: ResMut<SelectedTiles>,
 ) {
     selected_tiles.tiles = village_map.deployment_zone.clone();
-    selected_tiles.color = YELLOW.into();
+    selected_tiles.color = LIME.into();
 }
 
 pub fn is_deployment_ready(

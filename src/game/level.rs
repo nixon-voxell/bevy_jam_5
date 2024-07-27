@@ -1,5 +1,6 @@
 //! Spawn the main level by triggering other observers.
 
+use bevy::color::palettes::css::{GREEN, YELLOW};
 use bevy::prelude::*;
 
 use crate::{
@@ -31,6 +32,10 @@ impl Plugin for LevelPlugin {
             .add_systems(OnEnter(Screen::Playing), load_level);
     }
 }
+
+/// Marker component for a sprite that shows a line around the edges of a tile
+#[derive(Component)]
+pub struct TileBorder;
 
 fn load_level(
     mut commands: Commands,
@@ -112,6 +117,7 @@ fn load_level(
                         SpriteBundle {
                             sprite: Sprite {
                                 anchor: TILE_ANCHOR,
+                                color: GREEN.into(),
                                 ..Default::default()
                             },
                             texture: tile_set.get("edge"),
@@ -128,8 +134,31 @@ fn load_level(
                     ))
                     .id();
                 ids[i] = id;
+
+                ids[i] = id;
             }
-            selection_map.tiles.insert(IVec2::new(xi, yi), ids);
+            selection_map.edges.insert(IVec2::new(xi, yi), ids);
+            let id = commands
+                .spawn((
+                    SpriteBundle {
+                        sprite: Sprite {
+                            anchor: TILE_ANCHOR,
+                            color: YELLOW.into(),
+                            ..Default::default()
+                        },
+                        texture: tile_set.get("border"),
+                        transform: Transform {
+                            translation: edge_translation + Vec3::Z * 0.1,
+                            ..Default::default()
+                        },
+                        visibility: Visibility::Hidden,
+                        ..default()
+                    },
+                    StateScoped(Screen::Playing),
+                    TileBorder,
+                ))
+                .id();
+            selection_map.borders.insert(IVec2::new(xi, yi), id);
 
             if object_tile_name != "empty" {
                 let object_entity = commands.spawn((

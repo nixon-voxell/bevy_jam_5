@@ -58,7 +58,8 @@ pub struct SelectedTiles {
 
 #[derive(Resource, Default)]
 pub struct SelectionMap {
-    pub tiles: HashMap<IVec2, [Entity; 4]>,
+    pub edges: HashMap<IVec2, [Entity; 4]>,
+    pub borders: HashMap<IVec2, Entity>,
 }
 
 #[derive(Component, Copy, Clone, Debug)]
@@ -92,7 +93,7 @@ pub fn show_selected_tiles(
     }
 
     for &tile in selected_tiles.tiles.iter() {
-        let Some(s) = tile_ids.tiles.get(&tile) else {
+        let Some(s) = tile_ids.edges.get(&tile) else {
             continue;
         };
         let neighbours = ROOK_MOVES
