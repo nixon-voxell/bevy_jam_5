@@ -105,23 +105,23 @@ fn enter_playing(mut commands: Commands) {
 
                 ui.column(|_| {}).style().width(Val::Px(20.0));
 
-                ui.container(ButtonBundle { ..default() }, |ui| {
-                    ui.label(LabelConfig::from("Pause"))
-                        .style()
-                        .font_size(LABEL_SIZE);
-                })
-                .insert((
-                    InteractionPalette {
-                        none: NODE_BACKGROUND,
-                        hovered: BUTTON_HOVERED_BACKGROUND,
-                        pressed: BUTTON_PRESSED_BACKGROUND,
-                    },
-                    // Pause button component
-                    PauseButton,
-                ))
-                .style()
-                .padding(UiRect::all(Val::Px(10.0)))
-                .border_radius(BorderRadius::all(Val::Px(5.0)));
+                // ui.container(ButtonBundle { ..default() }, |ui| {
+                //     ui.label(LabelConfig::from("Pause"))
+                //         .style()
+                //         .font_size(LABEL_SIZE);
+                // })
+                // .insert((
+                //     InteractionPalette {
+                //         none: NODE_BACKGROUND,
+                //         hovered: BUTTON_HOVERED_BACKGROUND,
+                //         pressed: BUTTON_PRESSED_BACKGROUND,
+                //     },
+                //     // Pause button component
+                //     PauseButton,
+                // ))
+                // .style()
+                // .padding(UiRect::all(Val::Px(10.0)))
+                // .border_radius(BorderRadius::all(Val::Px(5.0)));
             });
             // Center panel
             ui.row(|ui| {
