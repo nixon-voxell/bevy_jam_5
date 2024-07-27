@@ -5,7 +5,7 @@ use bevy::{input::common_conditions::input_just_pressed, prelude::*};
 use sickle_ui::prelude::*;
 
 use super::Screen;
-use crate::game::cycle::{EndTurn, Season, Turn};
+use crate::game::cycle::{EndDeployment, EndTurn, Season, Turn};
 use crate::game::economy::{PlayerGold, VillagePopulation};
 use crate::game::unit_list::{inventory_list_layout, unit_list_layout};
 use crate::game::WatchRes;
@@ -24,6 +24,14 @@ pub(super) fn plugin(app: &mut App) {
             hide_all_with::<EndTurnButton>,
         )
         .add_systems(
+            Update,
+            show_all_with::<FightButton>.run_if(in_state(GameState::Deployment)),
+        )
+        .add_systems(
+            OnExit(GameState::Deployment),
+            (show_all_with::<EndTurnButton>, hide_all_with::<FightButton>),
+        )
+        .add_systems(
             OnEnter(GameState::EnemyTurn),
             hide_all_with::<EndTurnButton>,
         )
@@ -35,6 +43,7 @@ pub(super) fn plugin(app: &mut App) {
             // exit_btn_interaction,
             end_turn_btn_interaction,
             exit_mechant_btn_interaction,
+            fight_btn_interaction,
         ),
     );
     // .add_systems(
@@ -142,6 +151,7 @@ fn enter_playing(mut commands: Commands) {
 
                 ui.container(ButtonBundle { ..default() }, |ui| {
                     ui.label(LabelConfig::from("End Turn"))
+                        .insert(EndTurnButton)
                         .style()
                         .font_size(LABEL_SIZE);
                 })
@@ -153,25 +163,28 @@ fn enter_playing(mut commands: Commands) {
                     },
                     EndTurnButton,
                 ))
+                .insert(EndTurnButton)
                 .style()
                 .padding(UiRect::all(Val::Px(10.0)))
                 .border_radius(BorderRadius::all(Val::Px(5.0)));
 
                 ui.container(ButtonBundle { ..default() }, |ui| {
                     ui.label(LabelConfig::from("Fight"))
+                        .insert(FightButton)
                         .style()
                         .visibility(Visibility::Hidden)
                         .font_size(LABEL_SIZE);
                 })
                 .insert((
                     InteractionPalette {
-                        none: css::RED.into(),
+                        none: css::PURPLE.into(),
                         hovered: css::DARK_RED.into(),
                         pressed: css::INDIAN_RED.into(),
                     },
                     FightButton,
                 ))
                 .style()
+                .visibility(Visibility::Hidden)
                 .padding(UiRect::all(Val::Px(10.0)))
                 .border_radius(BorderRadius::all(Val::Px(5.0)));
             });
@@ -269,6 +282,17 @@ fn end_turn_btn_interaction(
     for interaction in q_interactions.iter() {
         if let Interaction::Pressed = interaction {
             next_turn_evt.send(EndTurn);
+        }
+    }
+}
+
+fn fight_btn_interaction(
+    q_interactions: Query<&Interaction, (Changed<Interaction>, With<FightButton>)>,
+    mut end_deployment_evt: EventWriter<EndDeployment>,
+) {
+    for interaction in q_interactions.iter() {
+        if let Interaction::Pressed = interaction {
+            end_deployment_evt.send(EndDeployment);
         }
     }
 }

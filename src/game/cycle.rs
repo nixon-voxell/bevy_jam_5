@@ -27,6 +27,7 @@ impl Plugin for CyclePlugin {
             .init_resource::<Turn>()
             .add_event::<NextSeason>()
             .add_event::<EndTurn>()
+            .add_event::<EndDeployment>()
             .add_systems(OnEnter(Screen::Playing), (reset_cycle, update_background))
             .add_systems(OnExit(Screen::Playing), reset_background)
             .add_systems(
@@ -87,6 +88,16 @@ fn end_turn(mut end_turn_evt: EventReader<EndTurn>, mut turn: ResMut<Turn>) {
     }
 }
 
+fn end_deployment(
+    mut end_deployment_evt: EventReader<EndDeployment>,
+    mut gamestate: ResMut<NextState<GameState>>,
+) {
+    if end_deployment_evt.is_empty() == false {
+        end_deployment_evt.clear();
+        gamestate.set(GameState::BattleTurn);
+    }
+}
+
 fn update_cycle(
     turn: Res<Turn>,
     mut day_cycle: ResMut<DayCycle>,
@@ -141,6 +152,9 @@ pub struct Turn(pub u32);
 
 #[derive(Event, Copy, Clone, PartialEq, Default)]
 pub struct EndTurn;
+
+#[derive(Event, Copy, Clone, PartialEq, Default)]
+pub struct EndDeployment;
 
 #[derive(Resource, Debug, Copy, Clone, PartialEq, Eq, Hash, Default)]
 pub enum Season {
