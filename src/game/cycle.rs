@@ -92,6 +92,7 @@ fn update_cycle(
     mut day_cycle: ResMut<DayCycle>,
     mut next_tod: ResMut<NextState<TimeOfDay>>,
     mut season: ResMut<Season>,
+    mut game_state: ResMut<NextState<GameState>>,
 ) {
     // Season
     let day = turn.0 / TURN_PER_DAY;
@@ -107,7 +108,10 @@ fn update_cycle(
 
     // Time of day
     match turn.0 % TURN_PER_DAY >= day_cycle.day {
-        true => next_tod.set(TimeOfDay::Night),
+        true => {
+            next_tod.set(TimeOfDay::Night);
+            game_state.set(GameState::Deployment);
+        }
         false => next_tod.set(TimeOfDay::Day),
     }
 }

@@ -19,9 +19,15 @@ pub(super) fn plugin(app: &mut App) {
         .add_systems(OnEnter(Screen::Playing), enter_playing)
         .add_systems(OnEnter(GameState::Merchant), merchant_modal_layout)
         .add_systems(OnExit(Screen::Playing), exit_playing)
-        .add_systems(OnEnter(GameState::Deployment), hide_all_with::<EndTurn>)
-        .add_systems(OnEnter(GameState::EnemyTurn), hide_all_with::<EndTurn>)
-        .add_systems(OnExit(GameState::EnemyTurn), show_all_with::<EndTurn>);
+        .add_systems(
+            OnEnter(GameState::Deployment),
+            hide_all_with::<EndTurnButton>,
+        )
+        .add_systems(
+            OnEnter(GameState::EnemyTurn),
+            hide_all_with::<EndTurnButton>,
+        )
+        .add_systems(OnExit(GameState::EnemyTurn), show_all_with::<EndTurnButton>);
 
     app.add_systems(
         Update,
