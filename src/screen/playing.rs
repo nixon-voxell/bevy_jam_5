@@ -19,7 +19,10 @@ pub(super) fn plugin(app: &mut App) {
         .add_systems(OnEnter(Screen::Playing), enter_playing)
         .add_systems(OnEnter(GameState::Merchant), merchant_modal_layout)
         .add_systems(OnExit(Screen::Playing), exit_playing)
-        .add_systems(OnEnter(GameState::Paused), enter_pause);
+        .add_systems(OnEnter(GameState::Paused), enter_pause)
+        .add_systems(OnEnter(GameState::Deployment), hide_all_with::<EndTurn>)
+        .add_systems(OnEnter(GameState::EnemyTurn), hide_all_with::<EndTurn>)
+        .add_systems(OnExit(GameState::EnemyTurn), show_all_with::<EndTurn>);
 
     app.add_systems(
         Update,
@@ -299,3 +302,15 @@ pub struct ExitButton;
 
 #[derive(Component)]
 pub struct EndTurnButton;
+
+fn hide_all_with<T>(mut q_vis: Query<&mut Visibility, With<T>>) {
+    for mut vis in q_vis.iter_mut() {
+        *q_vis = Visibility::Hidden;
+    }
+}
+
+fn show_all_with<T>(mut q_vis: Query<&mut Visibility, With<T>>) {
+    for mut vis in q_vis.iter_mut() {
+        *q_vis = Visibility::Visible;
+    }
+}
