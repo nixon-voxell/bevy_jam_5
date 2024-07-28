@@ -7,6 +7,7 @@ use crate::game::selection::SelectedUnit;
 use crate::game::tile_set::tile_coord_translation;
 use crate::game::unit_list::PlayerUnitList;
 use crate::path_finding::find_all_within_distance_unweighted;
+use crate::screen::playing::GameState;
 
 use super::*;
 
@@ -89,10 +90,12 @@ pub fn move_unit(
 pub fn reset_unit_turn_states(
     mut events: EventReader<EndTurn>,
     mut query: Query<&mut UnitTurnState>,
+    mut next_game_state: ResMut<NextState<GameState>>,
 ) {
     for _ in events.read() {
         for mut turn_state in query.iter_mut() {
-            *turn_state = UnitTurnState::default();
+            turn_state.reset();
+            next_game_state.set(GameState::EnemyTurn);
         }
     }
 }
