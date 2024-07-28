@@ -93,7 +93,9 @@ pub(super) fn plugin(app: &mut App) {
             Update,
             (
                 update_building_progress.run_if(in_state(Screen::Playing)),
-                update_building_progress_labels.run_if(in_state(Screen::Playing)),
+                update_building_progress_labels
+                    .run_if(in_state(Screen::Playing))
+                    .after(update_building_progress),
             ),
         );
 

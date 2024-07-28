@@ -348,29 +348,31 @@ pub fn update_building_progress(
     if events.read().last().is_some() {
         for (e, mut b, s) in building_query.iter_mut() {
             b.0 = b.0.saturating_sub(1);
-            commands.entity(e).despawn_recursive();
-            let Some(tile) = village_map.object.locate(e) else {
-                continue;
-            };
-            let object_translation = tile_coord_translation(tile.x as f32, tile.y as f32, 2.);
-            let object_entity = commands
-                .spawn((
-                    SpriteBundle {
-                        sprite: Sprite {
-                            anchor: TILE_ANCHOR,
-                            ..Default::default()
+            if b.0 == 0 {
+                commands.entity(e).despawn_recursive();
+                let Some(tile) = village_map.object.locate(e) else {
+                    continue;
+                };
+                let object_translation = tile_coord_translation(tile.x as f32, tile.y as f32, 2.);
+                let object_entity = commands
+                    .spawn((
+                        SpriteBundle {
+                            sprite: Sprite {
+                                anchor: TILE_ANCHOR,
+                                ..Default::default()
+                            },
+                            texture: tile_set.get("house1"),
+                            transform: Transform::from_translation(object_translation),
+                            ..default()
                         },
-                        texture: tile_set.get("house1"),
-                        transform: Transform::from_translation(object_translation),
-                        ..default()
-                    },
-                    PickableTile,
-                    StateScoped(Screen::Playing),
-                    StructureBundle::default(),
-                    SpawnAnimation::new(object_translation),
-                ))
-                .id();
-            village_map.object.set(tile, object_entity);
+                        PickableTile,
+                        StateScoped(Screen::Playing),
+                        StructureBundle::default(),
+                        SpawnAnimation::new(object_translation),
+                    ))
+                    .id();
+                village_map.object.set(tile, object_entity);
+            }
         }
     }
 }
