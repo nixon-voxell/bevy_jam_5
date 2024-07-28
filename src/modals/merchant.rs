@@ -24,13 +24,13 @@ pub fn merchant_modal_layout(mut commands: Commands) {
         .column(|ui| {
             ui.row(|ui| {
                 ui.style()
-                    .padding(UiRect::all(Val::Px(25.)))
+                    .padding(UiRect::all(Val::Px(18.)))
                     .border(UiRect::all(Val::Px(2.)))
                     .border_color(Color::WHITE)
-                    .border_radius(BorderRadius::all(Val::Px(50.)))
-                    .background_color(bevy::color::palettes::css::NAVY.into())
-                    .width(Val::Px(500.))
-                    .height(Val::Px(700.))
+                    .border_radius(BorderRadius::all(Val::Px(16.)))
+                    .background_color(Color::BLACK.with_alpha(0.8))
+                    .width(Val::Px(480.))
+                    .height(Val::Px(600.))
                     .justify_content(JustifyContent::Center);
                 ui.column(|ui| {
                     ui.style()
@@ -81,8 +81,8 @@ pub fn merchant_modal_layout(mut commands: Commands) {
                         ui.label(LabelConfig::from("ITEM DESCRIPTION"));
                     });
 
-                    // Resume button
-                    ui.container(ButtonBundle { ..default() }, |ui| {
+                    // Buy button
+                    ui.container(ButtonBundle::default(), |ui| {
                         ui.label(LabelConfig::from("Buy for 100 gold"))
                             .style()
                             .font_size(LABEL_SIZE);
@@ -96,17 +96,17 @@ pub fn merchant_modal_layout(mut commands: Commands) {
                         BuyButton::default(),
                     ));
 
-                    // Exit button
-                    ui.container(ButtonBundle { ..default() }, |ui| {
-                        ui.label(LabelConfig::from("X"))
+                    // Close button
+                    ui.container(ButtonBundle::default(), |ui| {
+                        ui.label(LabelConfig::from("x"))
                             .style()
                             .font_size(LABEL_SIZE);
                     })
                     .insert((
                         InteractionPalette {
-                            none: css::RED.into(),
-                            hovered: css::RED.into(),
-                            pressed: css::RED.into(),
+                            none: Color::BLACK.with_alpha(0.0),
+                            hovered: Color::BLACK.with_alpha(0.0),
+                            pressed: Color::BLACK.with_alpha(0.0),
                         },
                         ExitMerchantButton,
                     ))
