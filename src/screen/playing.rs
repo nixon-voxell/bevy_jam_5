@@ -34,7 +34,10 @@ pub(super) fn plugin(app: &mut App) {
         .add_systems(OnEnter(Screen::Playing), add_starting_player_units)
         .add_systems(OnEnter(GameState::Merchant), merchant_modal_layout)
         .add_systems(OnExit(Screen::Playing), exit_playing)
-        .add_systems(OnEnter(GameState::BattleTurn), reset_unit_turn_states)
+        .add_systems(
+            Update,
+            reset_unit_turn_states.run_if(in_state(Screen::Playing)),
+        )
         .add_systems(
             OnEnter(GameState::Deployment),
             (deployment_setup, deployment_zone_visualization).chain(),

@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 
+use crate::game::cycle::EndTurn;
 use crate::game::map::VillageMap;
 use crate::game::picking::TilePressedEvent;
 use crate::game::selection::SelectedUnit;
@@ -81,8 +82,13 @@ pub fn move_unit(
     }
 }
 
-pub fn reset_unit_turn_states(mut query: Query<&mut UnitTurnState>) {
-    for mut turn_state in query.iter_mut() {
-        *turn_state = UnitTurnState::default();
+pub fn reset_unit_turn_states(
+    mut events: EventReader<EndTurn>,
+    mut query: Query<&mut UnitTurnState>,
+) {
+    for _ in events.read() {
+        for mut turn_state in query.iter_mut() {
+            *turn_state = UnitTurnState::default();
+        }
     }
 }
