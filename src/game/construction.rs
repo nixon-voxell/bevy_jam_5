@@ -31,7 +31,7 @@ use super::unit::StructureBundle;
 pub enum StructureType {
     SmallHouse,
     House,
-    BigHouse,
+    StrongHouse,
     Tavern,
     ArcherTower,
     Blacksmith,
@@ -41,7 +41,7 @@ impl StructureType {
     pub const ALL: [Self; 6] = [
         Self::SmallHouse,
         Self::House,
-        Self::BigHouse,
+        Self::StrongHouse,
         Self::Tavern,
         Self::ArcherTower,
         Self::Blacksmith,
@@ -51,7 +51,7 @@ impl StructureType {
         match self {
             StructureType::SmallHouse => "small house",
             StructureType::House => "house",
-            StructureType::BigHouse => "big house",
+            StructureType::StrongHouse => "strong house",
             StructureType::Tavern => "tavern",
             StructureType::ArcherTower => "tower",
             StructureType::Blacksmith => "blacksmith",
@@ -62,7 +62,7 @@ impl StructureType {
         match self {
             StructureType::SmallHouse => "house1",
             StructureType::House => "house1",
-            StructureType::BigHouse => "house1",
+            StructureType::StrongHouse => "house1",
             StructureType::Tavern => "tavern",
             StructureType::ArcherTower => "tower",
             StructureType::Blacksmith => "blacksmith",
@@ -77,8 +77,8 @@ pub struct StructureCost {
     pub turns: u32,
     pub workers: u32,
     pub gold: u32,
-    /// only one can be built
-    pub exclusive: bool,
+    /// only one of these structures can be built
+    pub is_exclusive: bool,
 }
 
 #[derive(Resource, Deref)]
@@ -93,7 +93,7 @@ impl Default for StructureCosts {
                     turns: 2,
                     workers: 5,
                     gold: 25,
-                    exclusive: false,
+                    is_exclusive: false,
                 },
             ),
             (
@@ -102,16 +102,16 @@ impl Default for StructureCosts {
                     turns: 4,
                     workers: 10,
                     gold: 50,
-                    exclusive: false,
+                    is_exclusive: false,
                 },
             ),
             (
-                StructureType::BigHouse,
+                StructureType::StrongHouse,
                 StructureCost {
                     turns: 6,
                     workers: 15,
                     gold: 100,
-                    exclusive: false,
+                    is_exclusive: false,
                 },
             ),
             (
@@ -120,7 +120,7 @@ impl Default for StructureCosts {
                     turns: 5,
                     workers: 10,
                     gold: 75,
-                    exclusive: true,
+                    is_exclusive: true,
                 },
             ),
             (
@@ -129,7 +129,7 @@ impl Default for StructureCosts {
                     turns: 3,
                     workers: 5,
                     gold: 25,
-                    exclusive: false,
+                    is_exclusive: false,
                 },
             ),
             (
@@ -138,7 +138,7 @@ impl Default for StructureCosts {
                     turns: 7,
                     workers: 10,
                     gold: 125,
-                    exclusive: true,
+                    is_exclusive: true,
                 },
             ),
         ]
@@ -273,6 +273,7 @@ pub fn spawn_in_progress_building(
     population: Res<VillagePopulation>,
     mut working_population: ResMut<VillageEmployment>,
     mut gold: ResMut<VillageGold>,
+    structure_query: Query<&StructureType>,
 ) {
     let Some(TilePressedEvent(tile)) = events.read().last() else {
         return;
@@ -285,6 +286,14 @@ pub fn spawn_in_progress_building(
     let Some(cost) = structure_cost.get(&structure_type) else {
         return;
     };
+
+    if cost.is_exclusive {
+        for s in structure_query.iter() {
+            if *s == structure_type {
+                return;
+            }
+        }
+    }
 
     if !village_map.object.is_occupied(*tile) {
         if gold.0 < cost.gold {
@@ -322,7 +331,7 @@ pub fn spawn_in_progress_building(
                         text: Text::from_section(
                             cost.turns.to_string(),
                             TextStyle {
-                                font_size: 60.,
+                                font_size: 100.,
                                 ..Default::default()
                             },
                         ),

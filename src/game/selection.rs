@@ -1,18 +1,15 @@
-use bevy::math::vec2;
-use bevy::prelude::*;
-use bevy::utils::HashMap;
-use bevy::utils::HashSet;
-
-use crate::game::map::ROOK_MOVES;
-use crate::path_finding::find_all_within_distance_unweighted;
-use crate::screen::playing::GameState;
-use crate::screen::Screen;
-
 use super::deployment::deploy_unit;
 use super::level::Terrain;
 use super::map::VillageMap;
 use super::picking::PickedTile;
 use super::unit::Movement;
+use crate::game::map::ROOK_MOVES;
+use crate::screen::playing::GameState;
+use crate::screen::Screen;
+use bevy::math::vec2;
+use bevy::prelude::*;
+use bevy::utils::HashMap;
+use bevy::utils::HashSet;
 
 pub struct SelectionPlugin;
 
