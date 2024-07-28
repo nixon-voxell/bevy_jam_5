@@ -56,6 +56,17 @@ impl StructureType {
             StructureType::Blacksmith => "blacksmith",
         }
     }
+
+    pub fn tile_texture(&self) -> &str {
+        match self {
+            StructureType::SmallHouse => "house1",
+            StructureType::House => "house1",
+            StructureType::BigHouse => "house1",
+            StructureType::Tavern => "house1",
+            StructureType::ArcherTower => "house1",
+            StructureType::Blacksmith => "blacksmith",
+        }
+    }
 }
 
 #[derive(Component)]
@@ -286,36 +297,23 @@ pub fn spawn_in_progress_building(
         gold.0 -= cost.gold;
         working_population.0 += cost.workers;
 
-        let object_translation = tile_coord_translation(tile.x as f32, tile.y as f32, 1.5);
+        let object_translation = tile_coord_translation(tile.x as f32, tile.y as f32, 2.0);
         let id = commands
             .spawn((
                 SpriteBundle {
                     sprite: Sprite {
-                        anchor: super::tile_set::TILE_ANCHOR,
-                        color: Color::WHITE.with_alpha(0.75),
+                        anchor: TILE_ANCHOR,
+                        color: Color::WHITE.with_alpha(0.85),
                         ..Default::default()
                     },
                     transform: Transform::from_translation(object_translation),
-                    texture: tile_set.get("border_thick"),
-                    ..Default::default()
+                    texture: tile_set.get(structure_type.tile_texture()),
+                    ..default()
                 },
+                StateScoped(Screen::Playing),
                 structure_type,
                 RemainingConstructionTurns(cost.turns),
             ))
-            .with_children(|builder| {
-                builder.spawn((
-                    SpriteBundle {
-                        sprite: Sprite {
-                            anchor: TILE_ANCHOR,
-                            color: Color::WHITE.with_alpha(0.75),
-                            ..Default::default()
-                        },
-                        texture: tile_set.get("house1"),
-                        ..default()
-                    },
-                    StateScoped(Screen::Playing),
-                ));
-            })
             .with_children(|builder| {
                 builder.spawn((
                     Text2dBundle {
@@ -326,11 +324,23 @@ pub fn spawn_in_progress_building(
                                 ..Default::default()
                             },
                         ),
-                        transform: Transform::from_translation(0.2 * Vec3::Z),
+                        transform: Transform::from_translation(0.01 * Vec3::Z),
                         ..Default::default()
                     },
                     BuildingProgressLabel,
                 ));
+            })
+            .with_children(|builder| {
+                builder.spawn((SpriteBundle {
+                    sprite: Sprite {
+                        anchor: super::tile_set::TILE_ANCHOR,
+                        color: Color::WHITE.with_alpha(0.75),
+                        ..Default::default()
+                    },
+                    transform: Transform::from_translation(-0.01 * Vec3::Z),
+                    texture: tile_set.get("border_thick"),
+                    ..Default::default()
+                },));
             })
             .id();
 
@@ -361,7 +371,7 @@ pub fn update_building_progress(
                                 anchor: TILE_ANCHOR,
                                 ..Default::default()
                             },
-                            texture: tile_set.get("house1"),
+                            texture: tile_set.get(s.tile_texture()),
                             transform: Transform::from_translation(object_translation),
                             ..default()
                         },

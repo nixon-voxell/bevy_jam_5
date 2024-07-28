@@ -37,6 +37,7 @@ fn load_tiles(asset_server: Res<AssetServer>, mut tile_set: ResMut<TileSet>) {
         "gravelblock",
         "waterblock",
         "house1",
+        "blacksmith",
         "human",
         "werewolf",
         "slime",
