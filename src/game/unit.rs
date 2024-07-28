@@ -6,7 +6,8 @@ use rand::thread_rng;
 use self::enemy::EnemyUnitPlugin;
 use self::spawn::{SpawnAnimation, SpawnUnitPlugin};
 
-use super::components::ObjectTileLayer;
+use super::components::{ObjectTileLayer, PopulationCapacity};
+use super::constants::HOUSE_POPULATION_CAPACITY;
 
 pub mod enemy;
 pub mod player;
@@ -261,6 +262,7 @@ pub struct StructureBundle {
     pub health: Health,
     pub health_icons: HealthIcons,
     pub structure: Structure,
+    pub population_capacity: PopulationCapacity,
     pub layer_marker: ObjectTileLayer,
 }
 
@@ -272,6 +274,7 @@ impl Default for StructureBundle {
             health_icons: HealthIcons::default(),
             structure: Structure,
             layer_marker: ObjectTileLayer,
+            population_capacity: PopulationCapacity(HOUSE_POPULATION_CAPACITY),
         }
     }
 }

@@ -6,11 +6,12 @@ use bevy::prelude::*;
 use sickle_ui::prelude::*;
 
 use super::Screen;
+use crate::game::constants::{INITIAL_GOLD, INITIAL_POPULATION};
 use crate::game::cycle::{EndDeployment, EndTurn, Season, Turn};
 use crate::game::deployment::{
     deployment_setup, deployment_zone_visualization, is_deployment_ready,
 };
-use crate::game::economy::{PlayerGold, VillagePopulation};
+use crate::game::resources::{VillageGold, VillagePopulation};
 use crate::game::unit::player::{add_starting_player_units, move_unit, reset_unit_turn_states};
 use crate::game::unit::AvailableUnitNames;
 use crate::game::unit_list::{
@@ -75,10 +76,6 @@ pub(super) fn plugin(app: &mut App) {
             update_selected_unit_name_label,
         ),
     );
-    // .add_systems(
-    //     Update,
-    //     resume.run_if(in_state(GameState::Paused).and_then(input_just_pressed(KeyCode::Escape))),
-    // );
 }
 
 fn economy_status_layout(ui: &mut UiBuilder<Entity>) {
@@ -93,8 +90,8 @@ fn economy_status_layout(ui: &mut UiBuilder<Entity>) {
                     .width(Val::Px(32.))
                     .height(Val::Px(32.));
 
-                ui.label(LabelConfig::from("0"))
-                    .insert(WatchRes::<PlayerGold>::default())
+                ui.label(LabelConfig::from(INITIAL_GOLD.to_string()))
+                    .insert(WatchRes::<VillageGold>::default())
                     .style()
                     .font_size(LABEL_SIZE);
             });
@@ -106,7 +103,7 @@ fn economy_status_layout(ui: &mut UiBuilder<Entity>) {
                     .width(Val::Px(32.))
                     .height(Val::Px(32.));
 
-                ui.label(LabelConfig::from("0"))
+                ui.label(LabelConfig::from(INITIAL_POPULATION.to_string()))
                     .insert(WatchRes::<VillagePopulation>::default())
                     .style()
                     .font_size(LABEL_SIZE);

@@ -7,6 +7,7 @@ use bevy::{ecs::schedule::SystemConfigs, prelude::*};
 pub mod assets;
 pub mod audio;
 pub mod components;
+pub mod constants;
 pub mod cycle;
 pub mod deployment;
 pub mod economy;
