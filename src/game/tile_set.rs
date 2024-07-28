@@ -74,6 +74,9 @@ impl TileSet {
     ///
     /// For ease of use, unwrap is used to panic if value does not exists for certain key.
     pub fn get(&self, name: &str) -> Handle<Image> {
-        self.0.get(name).unwrap().clone()
+        match self.0.get(name) {
+            Some(handle) => handle.clone(),
+            None => panic!("Unable to get tile: {name}"),
+        }
     }
 }
