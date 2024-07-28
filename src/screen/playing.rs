@@ -7,6 +7,7 @@ use sickle_ui::prelude::*;
 
 use super::Screen;
 use crate::game::constants::{INITIAL_GOLD, INITIAL_POPULATION};
+use crate::game::construction::{building_panel_layout, StructureCosts};
 use crate::game::cycle::{EndDeployment, EndTurn, Season, Turn};
 use crate::game::deployment::{
     deployment_setup, deployment_zone_visualization, is_deployment_ready,
@@ -30,10 +31,12 @@ pub(super) fn plugin(app: &mut App) {
         .init_resource::<DisplayCache>()
         .init_resource::<AvailableUnitNames>()
         .init_resource::<PlayerUnitList>()
+        .init_resource::<StructureCosts>()
         .add_systems(OnEnter(Screen::Playing), enter_playing)
         .add_systems(OnEnter(Screen::Playing), add_starting_player_units)
         .add_systems(OnEnter(GameState::Merchant), merchant_modal_layout)
         .add_systems(OnExit(Screen::Playing), exit_playing)
+        .add_systems(OnEnter(Screen::Playing), building_panel_layout)
         .add_systems(
             Update,
             reset_unit_turn_states.run_if(in_state(Screen::Playing)),
