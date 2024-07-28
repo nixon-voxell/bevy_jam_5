@@ -6,11 +6,25 @@ use sickle_ui::prelude::*;
 use crate::screen::Screen;
 use crate::ui::prelude::InteractionPalette;
 
+use super::components::BuildingProgressLabel;
+use super::components::RemainingConstructionTurns;
 use super::constants::BIG_TEXT_SIZE;
 use super::constants::ICON_SIZE;
 use super::constants::TEXT_SIZE;
+use super::events::EndDayTurn;
 use super::events::SelectStructureTypeEvent;
+use super::map::VillageMap;
+use super::picking::PickableTile;
+use super::picking::TilePressedEvent;
+use super::resources::PopulationWorking;
 use super::resources::SelectedStructueType;
+use super::resources::VillageGold;
+use super::resources::VillagePopulation;
+use super::tile_set::tile_coord_translation;
+use super::tile_set::TileSet;
+use super::tile_set::TILE_ANCHOR;
+use super::unit::spawn::SpawnAnimation;
+use super::unit::StructureBundle;
 
 #[derive(Component, Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum StructureType {
@@ -233,6 +247,145 @@ pub fn update_build_panel(
         for (_, mut p, mut c) in q_interaction_pal.iter_mut() {
             p.none = Color::BLACK;
             c.0 = Color::BLACK;
+        }
+    }
+}
+
+pub fn spawn_in_progress_building(
+    mut commands: Commands,
+    mut events: EventReader<TilePressedEvent>,
+    mut village_map: ResMut<VillageMap>,
+    tile_set: Res<TileSet>,
+    selected_structure_type: Res<SelectedStructueType>,
+    structure_cost: Res<StructureCosts>,
+    population: Res<VillagePopulation>,
+    mut working_population: ResMut<PopulationWorking>,
+    mut gold: ResMut<VillageGold>,
+) {
+    let Some(TilePressedEvent(tile)) = events.read().last() else {
+        return;
+    };
+
+    let Some(structure_type) = selected_structure_type.0 else {
+        return;
+    };
+
+    let Some(cost) = structure_cost.get(&structure_type) else {
+        return;
+    };
+
+    if !village_map.object.is_occupied(*tile) {
+        if gold.0 < cost.gold {
+            return;
+        }
+
+        if population.0 < working_population.0 + cost.workers {
+            return;
+        }
+
+        gold.0 -= cost.gold;
+        working_population.0 += cost.workers;
+
+        let object_translation = tile_coord_translation(tile.x as f32, tile.y as f32, 1.5);
+        let id = commands
+            .spawn((
+                SpriteBundle {
+                    sprite: Sprite {
+                        anchor: super::tile_set::TILE_ANCHOR,
+                        color: Color::WHITE.with_alpha(0.75),
+                        ..Default::default()
+                    },
+                    transform: Transform::from_translation(object_translation),
+                    texture: tile_set.get("border_thick"),
+                    ..Default::default()
+                },
+                structure_type,
+                RemainingConstructionTurns(cost.turns),
+            ))
+            .with_children(|builder| {
+                builder.spawn((
+                    SpriteBundle {
+                        sprite: Sprite {
+                            anchor: TILE_ANCHOR,
+                            color: Color::WHITE.with_alpha(0.75),
+                            ..Default::default()
+                        },
+                        texture: tile_set.get("house1"),
+                        ..default()
+                    },
+                    StateScoped(Screen::Playing),
+                ));
+            })
+            .with_children(|builder| {
+                builder.spawn((
+                    Text2dBundle {
+                        text: Text::from_section(
+                            cost.turns.to_string(),
+                            TextStyle {
+                                font_size: 60.,
+                                ..Default::default()
+                            },
+                        ),
+                        transform: Transform::from_translation(0.2 * Vec3::Z),
+                        ..Default::default()
+                    },
+                    BuildingProgressLabel,
+                ));
+            })
+            .id();
+
+        village_map.object.set(*tile, id);
+    }
+}
+
+pub fn update_building_progress(
+    mut commands: Commands,
+    mut events: EventReader<EndDayTurn>,
+    mut building_query: Query<(Entity, &mut RemainingConstructionTurns, &StructureType)>,
+    mut village_map: ResMut<VillageMap>,
+    tile_set: Res<TileSet>,
+) {
+    if events.read().last().is_some() {
+        for (e, mut b, s) in building_query.iter_mut() {
+            b.0 = b.0.saturating_sub(1);
+            commands.entity(e).despawn_recursive();
+            let Some(tile) = village_map.object.locate(e) else {
+                continue;
+            };
+            let object_translation = tile_coord_translation(tile.x as f32, tile.y as f32, 2.);
+            let object_entity = commands
+                .spawn((
+                    SpriteBundle {
+                        sprite: Sprite {
+                            anchor: TILE_ANCHOR,
+                            ..Default::default()
+                        },
+                        texture: tile_set.get("house1"),
+                        transform: Transform::from_translation(object_translation),
+                        ..default()
+                    },
+                    PickableTile,
+                    StateScoped(Screen::Playing),
+                    StructureBundle::default(),
+                    SpawnAnimation::new(object_translation),
+                ))
+                .id();
+            village_map.object.set(tile, object_entity);
+        }
+    }
+}
+
+pub fn update_building_progress_labels(
+    mut building_query: Query<(&mut Text, &Parent), With<BuildingProgressLabel>>,
+    remaining: Query<&RemainingConstructionTurns>,
+    mut events: EventReader<EndDayTurn>,
+) {
+    if events.read().last().is_some() {
+        for (mut t, p) in building_query.iter_mut() {
+            let Ok(r) = remaining.get(p.get()) else {
+                continue;
+            };
+            t.sections[0].value = r.0.to_string();
         }
     }
 }

@@ -43,3 +43,6 @@ impl std::fmt::Display for VillagePopulation {
 
 #[derive(Resource, Default)]
 pub struct SelectedStructueType(pub Option<StructureType>);
+
+#[derive(Resource, Default)]
+pub struct PopulationWorking(pub u32);

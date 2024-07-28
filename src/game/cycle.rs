@@ -3,8 +3,8 @@ use bevy::prelude::*;
 use crate::screen::{playing::GameState, Screen};
 
 use super::{
-    map::VillageMap, unit_list::PlayerUnitList, update_resource_label,
-    update_resource_label_system, WatchRes,
+    events::EndDayTurn, map::VillageMap, resources::PopulationWorking, unit_list::PlayerUnitList,
+    update_resource_label, update_resource_label_system, WatchRes,
 };
 
 /// Number of turns in a day.
@@ -28,9 +28,11 @@ impl Plugin for CyclePlugin {
             .init_resource::<Season>()
             .init_resource::<DayCycle>()
             .init_resource::<Turn>()
+            .init_resource::<PopulationWorking>()
             .add_event::<NextSeason>()
             .add_event::<EndTurn>()
             .add_event::<EndDeployment>()
+            .add_event::<EndDayTurn>()
             .add_systems(OnEnter(Screen::Playing), (reset_cycle, update_background))
             .add_systems(OnExit(Screen::Playing), reset_background)
             .add_systems(
