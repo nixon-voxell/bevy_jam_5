@@ -8,7 +8,7 @@ use pathfinding::directed::astar::astar;
 
 use crate::path_finding::find_all_within_distance_unweighted;
 
-use super::level::Terrain;
+use super::{level::Terrain, unit::EnemyUnit};
 
 // On screen 0,0 is top middle tile,
 // y increases left-down, x increases right-down
@@ -192,12 +192,16 @@ impl VillageMap {
     /// 4, 3, 4, 3, 2, 3, 4, 5, 6, 7,
     /// 5, 4, 5, 4, 3, 4, 5, 6, 7, 8,
     /// 6, 5, 6, 5, 4, 5, 6, 7, 8, 9,
-    pub fn generate_heat_map(&mut self) {
+    pub fn generate_heat_map(&mut self, q_enemies: &Query<(), With<EnemyUnit>>) {
         // Mark max as unvisted
         self.heat_map = vec![u32::MAX; (self.size.x * self.size.y) as usize];
         let mut stack = VecDeque::new();
 
-        for tile_coord in self.object.map.left_values() {
+        for (tile_coord, entity) in self.object.map.iter() {
+            if q_enemies.contains(*entity) {
+                continue;
+            }
+
             let index = (tile_coord.x + tile_coord.y * self.size.x as i32) as usize;
             self.heat_map[index] = 0;
 
