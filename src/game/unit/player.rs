@@ -26,12 +26,16 @@ pub fn add_starting_player_units(
         let name = available_names.next_name();
         println!("add name: {name}");
         let id = commands
-            .spawn(
+            .spawn((
+                SpatialBundle {
+                    visibility: Visibility::Hidden,
+                    ..default()
+                },
                 UnitBundle::<PlayerUnit>::new(&name)
                     .with_health(3)
                     .with_hit_points(3)
                     .with_movement(3),
-            )
+            ))
             .id();
         player_unit_list.0.push(id);
     }
