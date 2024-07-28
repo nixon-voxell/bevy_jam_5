@@ -36,11 +36,11 @@ pub fn merchant_modal_layout(mut commands: Commands) {
                     ui.style()
                         .align_items(AlignItems::Center)
                         .justify_content(JustifyContent::SpaceBetween);
-                    ui.icon("portrait/merchant.png")
+                    ui.icon("icons/shop_character.png")
                         .style()
                         .width(Val::Px(192.))
                         .height(Val::Px(192.));
-                    ui.label(LabelConfig::from("Buy Anything You like"))
+                    ui.label(LabelConfig::from("Buy anything you like!"))
                         .style()
                         .margin(UiRect::all(Val::Px(16.)));
 

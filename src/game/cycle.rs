@@ -49,16 +49,9 @@ impl Plugin for CyclePlugin {
                     )
                         .after(update_cycle),
                     update_background.run_if(state_changed::<TimeOfDay>),
-                    update_day.run_if(resource_changed::<Turn>),
                 )
                     .run_if(in_state(Screen::Playing)),
             );
-    }
-}
-
-fn update_day(turn: Res<Turn>, mut next_game_state: ResMut<NextState<GameState>>) {
-    if turn.0 != 0 && turn.0 % TURN_PER_DAY == 0 {
-        next_game_state.set(GameState::Merchant);
     }
 }
 

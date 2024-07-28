@@ -1,90 +1,159 @@
-use bevy::{math::uvec2, prelude::*};
+use bevy::{color::palettes::css, math::uvec2, prelude::*};
+use bevy_trauma_shake::TraumaCommands;
 
-use crate::{
-    game::{
-        cycle::{Season, TimeOfDay},
-        level::Terrain,
-        map::{VillageMap, KING_MOVES, ROOK_MOVES},
-        tile_set::{tile_coord_translation, TileSet, TILE_ANCHOR},
-        unit::{spawn::SpawnAnimation, EnemyUnit, IsAirborne, UnitBundle},
-    },
-    screen::{playing::GameState, Screen},
-};
+use crate::game::cycle::{Season, TimeOfDay, Turn, TURN_PER_DAY};
+use crate::game::level::Terrain;
+use crate::game::map::{VillageMap, KING_MOVES, ROOK_MOVES};
+use crate::game::selection::SelectionMap;
+use crate::game::tile_set::{tile_coord_translation, TileSet, TILE_ANCHOR};
+use crate::game::unit::spawn::SpawnAnimation;
+use crate::game::unit::{EnemyUnit, IsAirborne, UnitBundle};
+use crate::screen::playing::GameState;
+use crate::screen::Screen;
 
-use super::Movement;
+use super::spawn::DespawnAnimation;
+use super::{Directions, Health, Movement};
 
 /// Distance from border that the enemy will spawn in.
 pub const ENEMY_SPAWN_RANGE: u32 = 2;
 const SPAWN_TRIAL: usize = 10;
+const ENEMY_MOVE_SPEED: f32 = 4.0;
+const ATTACK_DURATAION: f32 = 1.0;
 
 pub struct EnemyUnitPlugin;
 
 impl Plugin for EnemyUnitPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(TimeOfDay::Night), spawn_enemies)
-            .add_systems(OnEnter(GameState::EnemyTurn), enemies_path)
+        app.init_state::<EnemyActionState>()
+            .add_systems(OnEnter(TimeOfDay::Night), spawn_enemies)
+            .add_systems(OnEnter(GameState::EnemyTurn), find_movement_path)
             .add_systems(
                 Update,
-                move_enemies
+                (
+                    perform_attack.run_if(in_state(EnemyActionState::Attack)),
+                    move_enemies
+                        .run_if(in_state(EnemyActionState::Move))
+                        .after(find_movement_path),
+                )
                     .run_if(in_state(Screen::Playing).and_then(in_state(GameState::EnemyTurn))),
             );
     }
 }
 
-fn enemies_path(
+fn perform_attack(
     mut commands: Commands,
-    q_terrains: Query<&Terrain>,
-    mut q_enemy_units: Query<(Entity, &Movement, Option<&IsAirborne>), With<EnemyUnit>>,
-    mut village_map: ResMut<VillageMap>,
+    mut q_enemy_attacks: Query<(Entity, &mut EnemyAttack), With<EnemyUnit>>,
+    q_not_enemy_units: Query<(), Without<EnemyUnit>>,
+    mut q_health: Query<&mut Health>,
+    mut q_vis: Query<&mut Visibility>,
+    village_map: Res<VillageMap>,
+    selection_map: Res<SelectionMap>,
+    mut next_enemy_action_state: ResMut<NextState<EnemyActionState>>,
+    time: Res<Time>,
 ) {
-    for (entity, movement, airborne) in q_enemy_units.iter_mut() {
-        let Some(tile_coord) = village_map.object.locate(entity) else {
-            continue;
-        };
+    let Some((entity, mut enemy_attack)) = q_enemy_attacks.iter_mut().next() else {
+        next_enemy_action_state.set(EnemyActionState::Move);
+        return;
+    };
 
-        let is_airborne = airborne.is_some();
-        let Some(best_tile) = village_map.get_best_tile(
-            tile_coord,
-            movement.0,
-            &ROOK_MOVES,
-            is_airborne,
-            &q_terrains,
-        ) else {
-            continue;
-        };
+    if enemy_attack.factor == 0.0 {
+        commands.add_trauma(0.5);
+    }
 
-        let Some((path, _)) = village_map.pathfind(
-            &tile_coord,
-            &best_tile,
-            &ROOK_MOVES,
-            is_airborne,
-            &q_terrains,
-        ) else {
-            continue;
-        };
-
-        commands.entity(entity).insert(TilePath::new(path));
-        village_map.object.remove(tile_coord);
-        village_map.object.set(best_tile, entity);
+    enemy_attack.factor += time.delta_seconds();
+    if enemy_attack.factor >= ATTACK_DURATAION {
+        // Deal damage
+        if let Some(mut health) = village_map
+            .object
+            .get(enemy_attack.tile)
+            // Can only deal damage to non enemy units
+            .filter(|e| q_not_enemy_units.contains(*e))
+            .and_then(|e| q_health.get_mut(e).ok())
+        {
+            health.0 = health.0.saturating_sub(1);
+        }
+        // Hide marked tile
+        if let Some(mut vis) = selection_map
+            .thick_borders
+            .get(&enemy_attack.tile)
+            .and_then(|e| q_vis.get_mut(*e).ok())
+        {
+            *vis = Visibility::Hidden;
+        }
+        commands.entity(entity).remove::<EnemyAttack>();
     }
 }
 
 fn move_enemies(
     mut commands: Commands,
-    mut q_enemy_units: Query<(Entity, &mut Transform, &mut TilePath), With<EnemyUnit>>,
-    time: Res<Time>,
+    mut q_enemy_units: Query<
+        (Entity, &mut Transform, &Directions, Option<&mut TilePath>),
+        With<EnemyUnit>,
+    >,
+    q_not_enemy_units: Query<(), Without<EnemyUnit>>,
+    mut q_sprites: Query<(&mut Sprite, &mut Visibility)>,
     mut next_game_state: ResMut<NextState<GameState>>,
+    mut next_enemy_action_state: ResMut<NextState<EnemyActionState>>,
+    mut village_map: ResMut<VillageMap>,
+    selection_map: Res<SelectionMap>,
+    turn: Res<Turn>,
+    time: Res<Time>,
 ) {
-    const SPEED: f32 = 4.0;
-    let Some((entity, mut transform, mut path)) = q_enemy_units.iter_mut().next() else {
+    if turn.0 != 0 && turn.0 % TURN_PER_DAY == 0 {
+        // Next day starts, clear all enemies
+        for (enemy_entity, transform, ..) in q_enemy_units.iter() {
+            commands
+                .entity(enemy_entity)
+                .insert(DespawnAnimation::new(transform.translation).with_recursive(true));
+            village_map.object.remove_entity(enemy_entity);
+        }
+        next_game_state.set(GameState::Merchant);
+        return;
+    }
+
+    let Some((entity, mut transform, directions, path)) =
+        q_enemy_units.iter_mut().find(|(.., path)| path.is_some())
+    else {
+        next_enemy_action_state.set(EnemyActionState::Attack);
         next_game_state.set(GameState::BattleTurn);
         return;
     };
+    let mut path = path.unwrap();
 
-    // Prevent out of bounds overflow
+    // No more paths left
     if path.index >= path.path.len() - 1 {
-        error!("Attempted to retrieve out of bounds path...");
         commands.entity(entity).remove::<TilePath>();
+
+        if let Some(enemy_tile) = path.path.last() {
+            // Already in the best tile, find surroundings to attack!
+            // for direction in enemy.
+            for direction in directions.0.iter() {
+                let attack_tile = enemy_tile.saturating_add(*direction);
+                let Some(attack_entity) = village_map.object.get(attack_tile) else {
+                    continue;
+                };
+
+                if q_not_enemy_units.contains(attack_entity) {
+                    // Mark tile for attack in the next enemy turn.
+                    commands
+                        .entity(entity)
+                        .insert(EnemyAttack::new(attack_tile));
+
+                    // Add a red marker for indication
+                    if let Some((mut sprite, mut vis)) = selection_map
+                        .thick_borders
+                        .get(&attack_tile)
+                        .and_then(|e| q_sprites.get_mut(*e).ok())
+                    {
+                        sprite.color = css::RED.into();
+                        *vis = Visibility::Inherited;
+                    }
+
+                    // Only 1 object can be attacked at the same time
+                    break;
+                }
+            }
+        }
         return;
     }
 
@@ -101,21 +170,60 @@ fn move_enemies(
     // Normalize direction
     let norm_dir = diff / length;
 
-    let travel_dist = SPEED * time.delta_seconds();
+    let travel_dist = ENEMY_MOVE_SPEED * time.delta_seconds();
     path.factor = f32::min(path.factor + travel_dist / length, 1.0);
 
     let tile_coord = current_tile + norm_dir * path.factor * length;
     transform.translation = tile_coord_translation(tile_coord.x, tile_coord.y, 2.0);
 
     if path.factor >= 1.0 {
-        if path.index >= path.path.len() - 2 {
-            // No more paths left
-            commands.entity(entity).remove::<TilePath>();
-        } else {
-            // Increment the index to move towards the next path
-            path.index += 1;
-            path.factor = 0.;
-        }
+        // Increment the index to move towards the next path
+        path.index += 1;
+        path.factor = 0.0;
+    }
+}
+
+fn find_movement_path(
+    mut commands: Commands,
+    mut q_enemy_units: Query<
+        (Entity, &Movement, &Directions, Option<&IsAirborne>),
+        With<EnemyUnit>,
+    >,
+    q_terrains: Query<&Terrain>,
+    mut village_map: ResMut<VillageMap>,
+) {
+    // Regenerate heat map to check for player units as well.
+    village_map.generate_heat_map(|e| q_enemy_units.contains(e));
+
+    for (entity, movement, directions, airborne) in q_enemy_units.iter_mut() {
+        let Some(enemy_tile) = village_map.object.locate(entity) else {
+            continue;
+        };
+
+        let is_airborne = airborne.is_some();
+        let Some(best_tile) = village_map.get_best_tile(
+            enemy_tile,
+            movement.0,
+            &directions.0,
+            is_airborne,
+            &q_terrains,
+        ) else {
+            continue;
+        };
+
+        let Some((path, _)) = village_map.pathfind(
+            &enemy_tile,
+            &best_tile,
+            &directions.0,
+            is_airborne,
+            &q_terrains,
+        ) else {
+            continue;
+        };
+
+        commands.entity(entity).insert(TilePath::new(path));
+        village_map.object.remove(enemy_tile);
+        village_map.object.set(best_tile, entity);
     }
 }
 
@@ -198,7 +306,7 @@ fn spawn_enemies(
                 texture: tile_set.get(enemy.name),
                 ..default()
             },
-            UnitBundle::<EnemyUnit>::new(enemy.name)
+            UnitBundle::<EnemyUnit>::new(enemy.name, enemy.directions.to_vec())
                 .with_hit_points(enemy.hit_points)
                 .with_health(enemy.hit_points)
                 .with_movement(enemy.movement),
@@ -209,26 +317,6 @@ fn spawn_enemies(
             enemy_entity.insert(IsAirborne);
         }
         village_map.object.set(tile_coord, enemy_entity.id());
-
-        if let Some(best_tile) = village_map.get_best_tile(
-            tile_coord,
-            enemy.movement,
-            enemy.directions,
-            enemy.is_airborne,
-            &q_terrains,
-        ) {
-            println!("best tile: {:?}", best_tile);
-            println!(
-                "{:?}",
-                village_map.pathfind(
-                    &tile_coord,
-                    &best_tile,
-                    enemy.directions,
-                    enemy.is_airborne,
-                    &q_terrains,
-                )
-            );
-        }
     }
 }
 
@@ -301,4 +389,24 @@ impl TilePath {
     pub fn new(path: Vec<IVec2>) -> Self {
         Self { path, ..default() }
     }
+}
+
+#[derive(Component, Default, Debug, Clone)]
+pub struct EnemyAttack {
+    tile: IVec2,
+    /// Animation factor.
+    factor: f32,
+}
+
+impl EnemyAttack {
+    pub fn new(tile: IVec2) -> Self {
+        Self { tile, ..default() }
+    }
+}
+
+#[derive(States, Component, Default, Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(super) enum EnemyActionState {
+    #[default]
+    Attack,
+    Move,
 }

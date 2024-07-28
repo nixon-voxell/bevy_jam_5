@@ -145,7 +145,7 @@ pub fn update_selected_unit_name_label(
     };
     if selected_unit.is_changed() && player_unit_list.0.contains(&entity) {
         for mut text in label_query.iter_mut() {
-            text.sections[0].value = name.0.clone();
+            text.sections[0].value.clone_from(&name.0);
         }
     }
 }

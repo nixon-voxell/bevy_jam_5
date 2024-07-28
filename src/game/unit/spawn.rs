@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use crate::screen::Screen;
 
 /// Starting translation offset at spawn.
-const SPAWN_START_OFFSET: Vec3 = Vec3::new(0.0, 400.0, 0.0);
+const SPAWN_START_OFFSET: Vec3 = Vec3::new(0.0, 300.0, 0.0);
 /// Starting scale at spawn.
 const SPAWN_START_SCALE: Vec3 = Vec3::splat(0.3);
 /// Non-zero spawn animation duration.
@@ -15,7 +15,7 @@ impl Plugin for SpawnUnitPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             PostUpdate,
-            spawn_animation.run_if(in_state(Screen::Playing)),
+            (spawn_animation, despawn_animation).run_if(in_state(Screen::Playing)),
         );
     }
 }
@@ -42,6 +42,57 @@ fn spawn_animation(
         if spawn.progress > SPAWN_DURATION {
             commands.entity(entity).remove::<SpawnAnimation>();
         }
+    }
+}
+
+fn despawn_animation(
+    mut commands: Commands,
+    mut q_transforms: Query<(Entity, &mut Transform, &mut Sprite, &mut DespawnAnimation)>,
+    time: Res<Time>,
+) {
+    for (entity, mut transform, mut sprite, mut despawn) in q_transforms.iter_mut() {
+        let mut factor = despawn.progress / SPAWN_DURATION;
+        factor = f32::clamp(factor, 0.0, 1.0);
+        factor = cubic::ease_in_out(factor);
+
+        sprite.color.set_alpha(1.0 - factor);
+        transform.translation = Vec3::lerp(
+            despawn.origin_translation,
+            despawn.origin_translation + SPAWN_START_OFFSET,
+            factor,
+        );
+        transform.scale = Vec3::lerp(Vec3::ONE, SPAWN_START_SCALE, factor);
+
+        despawn.progress += time.delta_seconds();
+        if despawn.progress > SPAWN_DURATION {
+            if despawn.recursive {
+                commands.entity(entity).despawn_recursive();
+            } else {
+                commands.entity(entity).despawn();
+            }
+        }
+    }
+}
+
+#[derive(Component, Clone, Copy)]
+pub struct DespawnAnimation {
+    origin_translation: Vec3,
+    progress: f32,
+    recursive: bool,
+}
+
+impl DespawnAnimation {
+    pub fn new(origin_translation: Vec3) -> Self {
+        Self {
+            origin_translation,
+            progress: 0.0,
+            recursive: false,
+        }
+    }
+
+    pub fn with_recursive(mut self, recursive: bool) -> Self {
+        self.recursive = recursive;
+        self
     }
 }
 

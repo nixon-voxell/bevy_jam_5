@@ -4,10 +4,11 @@ use rand::prelude::SliceRandom;
 use rand::thread_rng;
 
 use self::enemy::EnemyUnitPlugin;
-use self::spawn::{SpawnAnimation, SpawnUnitPlugin};
+use self::spawn::{DespawnAnimation, SpawnAnimation, SpawnUnitPlugin};
 
 use super::components::{ObjectTileLayer, PopulationCapacity};
 use super::constants::HOUSE_POPULATION_CAPACITY;
+use super::map::VillageMap;
 
 pub mod enemy;
 pub mod player;
@@ -106,11 +107,22 @@ impl Plugin for UnitPlugin {
 fn health_ui(
     mut commands: Commands,
     mut q_hit_points: Query<
-        (Entity, &HitPoints, &Health, &mut HealthIcons),
+        (Entity, &HitPoints, &Health, &mut HealthIcons, &Transform),
         Or<(Changed<HitPoints>, Changed<Health>)>,
     >,
+    mut village_map: ResMut<VillageMap>,
 ) {
-    for (entity, hit_point, health, mut icons) in q_hit_points.iter_mut() {
+    for (entity, hit_point, health, mut icons, transform) in q_hit_points.iter_mut() {
+        if health.0 == 0 {
+            // Object dies
+            commands
+                .entity(entity)
+                .insert(DespawnAnimation::new(transform.translation).with_recursive(true));
+            village_map.object.remove_entity(entity);
+            return;
+        }
+
+        let is_icon_empty = icons.0.is_empty();
         // Remove previous health icons
         for icon in icons.0.iter() {
             commands.entity(*icon).despawn();
@@ -129,27 +141,30 @@ fn health_ui(
                     true => Srgba::RED,
                     false => Srgba::gray(0.2),
                 };
+                let translation = Vec3::new(
+                    start_x + HIT_POINT_SIZE.x * indexf + HIT_POINT_GAP * indexf,
+                    300.0,
+                    100.0,
+                );
 
-                let icon_id = builder
-                    .spawn((
-                        SpriteBundle {
-                            sprite: Sprite {
-                                color: color.into(),
-                                custom_size: Some(HIT_POINT_SIZE),
-                                ..default()
-                            },
+                let mut icon = builder.spawn((
+                    SpriteBundle {
+                        sprite: Sprite {
+                            color: color.into(),
+                            custom_size: Some(HIT_POINT_SIZE),
                             ..default()
                         },
-                        HealthIcon,
-                        SpawnAnimation::new(Vec3::new(
-                            start_x + HIT_POINT_SIZE.x * indexf + HIT_POINT_GAP * indexf,
-                            300.0,
-                            100.0,
-                        )),
-                    ))
-                    .id();
+                        transform: Transform::from_translation(translation),
+                        ..default()
+                    },
+                    HealthIcon,
+                ));
 
-                icons.0.push(icon_id);
+                if is_icon_empty {
+                    icon.insert(SpawnAnimation::new(translation));
+                }
+
+                icons.0.push(icon.id());
             }
         });
     }
@@ -187,6 +202,10 @@ pub struct EnemyUnit;
 #[derive(Component, Default, Copy, Clone, Debug)]
 pub struct IsAirborne;
 
+/// Directions a unit can move.
+#[derive(Component, Default, Clone, Debug)]
+pub struct Directions(pub Vec<IVec2>);
+
 /// Has unit moved or performed an action yet.
 /// Needs to be reset to default after each turn (Not good?).
 #[derive(Component, Default, Debug)]
@@ -214,6 +233,7 @@ pub struct UnitBundle<T: Component> {
     pub turn_state: UnitTurnState,
     pub unit: T,
     pub layer_marker: ObjectTileLayer,
+    pub directions: Directions,
     // pub abilities: Abilities,
 }
 
@@ -221,7 +241,7 @@ impl<T: Component> UnitBundle<T>
 where
     T: Default,
 {
-    pub fn new(name: &str) -> Self {
+    pub fn new(name: &str, directions: Vec<IVec2>) -> Self {
         Self {
             name: UnitName(String::from(name)),
             hit_points: HitPoints(2),
@@ -231,6 +251,7 @@ where
             turn_state: UnitTurnState::default(),
             unit: T::default(),
             layer_marker: ObjectTileLayer,
+            directions: Directions(directions),
         }
     }
 }

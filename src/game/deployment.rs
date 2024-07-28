@@ -85,6 +85,7 @@ pub fn deploy_unit(
                     StateScoped(Screen::Playing),
                 ));
                 village_map.object.set(*target_tile, entity_to_deploy);
+                println!("Placing {} at {}", entity_to_deploy, target_tile);
                 if let Some(next_unit) = player_unit_list
                     .0
                     .iter()

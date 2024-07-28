@@ -7,6 +7,7 @@ use crate::game::unit::spawn::SpawnAnimation;
 use crate::game::unit::StructureBundle;
 use crate::{game::components::GroundTileLayer, screen::Screen, VillageCamera};
 
+use super::unit::EnemyUnit;
 use super::{
     picking::PickableTile,
     selection::{SelectionEdge, SelectionMap},
@@ -40,10 +41,11 @@ pub struct TileThickBorder;
 
 fn load_level(
     mut commands: Commands,
+    mut village_camera_query: Query<&mut Transform, With<VillageCamera>>,
+    enemies_query: Query<(), With<EnemyUnit>>,
     mut levels: ResMut<Levels>,
     level_assets: Res<Assets<LevelAsset>>,
     tile_set: Res<TileSet>,
-    mut village_camera_query: Query<&mut Transform, With<VillageCamera>>,
 ) {
     // Choose a random level
     let level_index = rand::random::<usize>() % levels.0.len();
@@ -151,7 +153,7 @@ fn load_level(
                         },
                         texture: tile_set.get("border"),
                         transform: Transform {
-                            translation: edge_translation + Vec3::Z * 0.1,
+                            translation: edge_translation + Vec3::Z * 2.0,
                             ..Default::default()
                         },
                         visibility: Visibility::Hidden,
@@ -173,7 +175,7 @@ fn load_level(
                         },
                         texture: tile_set.get("border_thick"),
                         transform: Transform {
-                            translation: edge_translation + Vec3::Z * 0.1,
+                            translation: edge_translation + Vec3::Z,
                             ..Default::default()
                         },
                         visibility: Visibility::Hidden,
@@ -209,7 +211,7 @@ fn load_level(
         }
     }
 
-    village_map.generate_heat_map();
+    village_map.generate_heat_map(|e| enemies_query.contains(e));
     println!("{:?}", village_map.heat_map);
     commands.insert_resource(village_map);
     commands.insert_resource(selection_map)

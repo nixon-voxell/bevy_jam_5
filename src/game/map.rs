@@ -8,7 +8,7 @@ use pathfinding::directed::astar::astar;
 
 use crate::path_finding::find_all_within_distance_unweighted;
 
-use super::level::Terrain;
+use super::{level::Terrain, unit::EnemyUnit};
 
 // On screen 0,0 is top middle tile,
 // y increases left-down, x increases right-down
@@ -17,10 +17,10 @@ pub const NORTH: IVec2 = IVec2 { y: -1, x: 0 };
 pub const EAST: IVec2 = IVec2::X;
 pub const SOUTH: IVec2 = IVec2::Y;
 pub const WEST: IVec2 = IVec2 { x: -1, y: 0 };
-pub const NORTHEAST: IVec2 = NORTH.wrapping_add(EAST);
-pub const SOUTHEAST: IVec2 = SOUTH.wrapping_add(EAST);
-pub const NORTHWEST: IVec2 = NORTH.wrapping_add(WEST);
-pub const SOUTHWEST: IVec2 = SOUTH.wrapping_add(WEST);
+pub const NORTHEAST: IVec2 = NORTH.saturating_add(EAST);
+pub const SOUTHEAST: IVec2 = SOUTH.saturating_add(EAST);
+pub const NORTHWEST: IVec2 = NORTH.saturating_add(WEST);
+pub const SOUTHWEST: IVec2 = SOUTH.saturating_add(WEST);
 
 /// Four directional movement in straight lines like a rook
 pub const ROOK_MOVES: [IVec2; 4] = [NORTH, EAST, SOUTH, WEST];
@@ -100,7 +100,7 @@ impl VillageMap {
                 })
             },
             // heuristic
-            |tile_coord: &IVec2| IVec2::length_squared(target.wrapping_sub(*tile_coord)),
+            |tile_coord: &IVec2| IVec2::length_squared(target.saturating_sub(*tile_coord)),
             // sucess
             |tile_coord: &IVec2| tile_coord == target,
         )
@@ -192,12 +192,16 @@ impl VillageMap {
     /// 4, 3, 4, 3, 2, 3, 4, 5, 6, 7,
     /// 5, 4, 5, 4, 3, 4, 5, 6, 7, 8,
     /// 6, 5, 6, 5, 4, 5, 6, 7, 8, 9,
-    pub fn generate_heat_map(&mut self) {
+    pub fn generate_heat_map(&mut self, is_enemy: impl Fn(Entity) -> bool) {
         // Mark max as unvisted
         self.heat_map = vec![u32::MAX; (self.size.x * self.size.y) as usize];
         let mut stack = VecDeque::new();
 
-        for tile_coord in self.object.map.left_values() {
+        for (tile_coord, entity) in self.object.map.iter() {
+            if is_enemy(*entity) {
+                continue;
+            }
+
             let index = (tile_coord.x + tile_coord.y * self.size.x as i32) as usize;
             self.heat_map[index] = 0;
 
@@ -214,7 +218,7 @@ impl VillageMap {
             let curr_heat = self.heat_map[index];
 
             for offset in ROOK_MOVES.iter() {
-                let flood_coord = tile_coord.wrapping_add(*offset);
+                let flood_coord = tile_coord.saturating_add(*offset);
                 if self.is_out_of_bounds(flood_coord) {
                     continue;
                 }
