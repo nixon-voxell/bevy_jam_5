@@ -7,6 +7,7 @@ use crate::screen::Screen;
 use crate::ui::prelude::InteractionPalette;
 
 use super::components::BuildingProgressLabel;
+use super::components::ConstructionWorkers;
 use super::components::RemainingConstructionTurns;
 use super::constants::BIG_TEXT_SIZE;
 use super::constants::ICON_SIZE;
@@ -16,7 +17,7 @@ use super::events::SelectStructureTypeEvent;
 use super::map::VillageMap;
 use super::picking::PickableTile;
 use super::picking::TilePressedEvent;
-use super::resources::PopulationWorking;
+use super::resources::VillageEmployment;
 use super::resources::SelectedStructueType;
 use super::resources::VillageGold;
 use super::resources::VillagePopulation;
@@ -270,7 +271,7 @@ pub fn spawn_in_progress_building(
     selected_structure_type: Res<SelectedStructueType>,
     structure_cost: Res<StructureCosts>,
     population: Res<VillagePopulation>,
-    mut working_population: ResMut<PopulationWorking>,
+    mut working_population: ResMut<VillageEmployment>,
     mut gold: ResMut<VillageGold>,
 ) {
     let Some(TilePressedEvent(tile)) = events.read().last() else {
@@ -313,6 +314,7 @@ pub fn spawn_in_progress_building(
                 StateScoped(Screen::Playing),
                 structure_type,
                 RemainingConstructionTurns(cost.turns),
+                ConstructionWorkers(cost.workers),
             ))
             .with_children(|builder| {
                 builder.spawn((
@@ -351,14 +353,21 @@ pub fn spawn_in_progress_building(
 pub fn update_building_progress(
     mut commands: Commands,
     mut events: EventReader<EndDayTurn>,
-    mut building_query: Query<(Entity, &mut RemainingConstructionTurns, &StructureType)>,
+    mut building_query: Query<(
+        Entity,
+        &mut RemainingConstructionTurns,
+        &StructureType,
+        &ConstructionWorkers,
+    )>,
     mut village_map: ResMut<VillageMap>,
     tile_set: Res<TileSet>,
+    mut working_population: ResMut<VillageEmployment>,
 ) {
     if events.read().last().is_some() {
-        for (e, mut b, s) in building_query.iter_mut() {
+        for (e, mut b, s, w) in building_query.iter_mut() {
             b.0 = b.0.saturating_sub(1);
             if b.0 == 0 {
+                working_population.0 = working_population.0.saturating_sub(w.0);
                 commands.entity(e).despawn_recursive();
                 let Some(tile) = village_map.object.locate(e) else {
                     continue;

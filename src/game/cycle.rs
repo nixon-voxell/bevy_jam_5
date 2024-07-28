@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use crate::screen::{playing::GameState, Screen};
 
 use super::{
-    events::EndDayTurn, map::VillageMap, resources::PopulationWorking, unit_list::PlayerUnitList,
+    events::EndDayTurn, map::VillageMap, resources::VillageEmployment, unit_list::PlayerUnitList,
     update_resource_label, update_resource_label_system, WatchRes,
 };
 
@@ -28,7 +28,7 @@ impl Plugin for CyclePlugin {
             .init_resource::<Season>()
             .init_resource::<DayCycle>()
             .init_resource::<Turn>()
-            .init_resource::<PopulationWorking>()
+            .init_resource::<VillageEmployment>()
             .add_event::<NextSeason>()
             .add_event::<EndTurn>()
             .add_event::<EndDeployment>()

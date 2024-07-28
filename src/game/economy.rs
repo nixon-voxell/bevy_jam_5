@@ -6,6 +6,7 @@ use super::components::Income;
 use super::components::PopulationCapacity;
 use super::cycle::TimeOfDay;
 use super::cycle::Turn;
+use super::resources::VillageEmployment;
 use super::resources::VillageGold;
 use super::resources::VillagePopulation;
 use super::unit::Structure;
@@ -22,6 +23,7 @@ impl Plugin for EconomyPlugin {
                 (
                     update_resource_label::<VillageGold>(),
                     update_resource_label::<VillagePopulation>(),
+                    update_resource_label::<VillageEmployment>(),
                 )
                     .run_if(in_state(Screen::Playing)),
             )
