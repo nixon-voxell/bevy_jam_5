@@ -7,6 +7,7 @@ use super::selection::SelectedUnit;
 use super::tile_set::tile_coord_translation;
 use super::tile_set::TileSet;
 use super::unit::player;
+use super::unit::UnitBundle;
 use super::unit_list::PlayerUnitList;
 use bevy::color::palettes::css::GREEN;
 use bevy::color::palettes::css::LIME;

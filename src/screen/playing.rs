@@ -12,7 +12,7 @@ use crate::game::deployment::{
     deployment_setup, deployment_zone_visualization, is_deployment_ready,
 };
 use crate::game::economy::{PlayerGold, VillagePopulation};
-use crate::game::unit::player::add_starting_player_units;
+use crate::game::unit::player::{add_starting_player_units, move_unit, reset_unit_turn_states};
 use crate::game::unit::AvailableUnitNames;
 use crate::game::unit_list::{
     inventory_list_layout, select_player_unit_btn_interaction, unit_list_layout,
@@ -34,6 +34,7 @@ pub(super) fn plugin(app: &mut App) {
         .add_systems(OnEnter(Screen::Playing), add_starting_player_units)
         .add_systems(OnEnter(GameState::Merchant), merchant_modal_layout)
         .add_systems(OnExit(Screen::Playing), exit_playing)
+        .add_systems(OnEnter(GameState::BattleTurn), reset_unit_turn_states)
         .add_systems(
             OnEnter(GameState::Deployment),
             (deployment_setup, deployment_zone_visualization).chain(),
@@ -55,7 +56,8 @@ pub(super) fn plugin(app: &mut App) {
             OnEnter(GameState::EnemyTurn),
             hide_all_with::<EndTurnButton>,
         )
-        .add_systems(OnExit(GameState::EnemyTurn), show_all_with::<EndTurnButton>);
+        .add_systems(OnExit(GameState::EnemyTurn), show_all_with::<EndTurnButton>)
+        .add_systems(Update, move_unit.run_if(in_state(GameState::BattleTurn)));
 
     app.add_systems(
         Update,
