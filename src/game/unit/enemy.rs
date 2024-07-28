@@ -25,14 +25,14 @@ impl Plugin for EnemyUnitPlugin {
     fn build(&self, app: &mut App) {
         app.init_state::<EnemyActionState>()
             .add_systems(OnEnter(TimeOfDay::Night), spawn_enemies)
-            .add_systems(OnEnter(GameState::EnemyTurn), enemies_path)
+            .add_systems(OnEnter(GameState::EnemyTurn), find_movement_path)
             .add_systems(
                 Update,
                 (
                     perform_attack.run_if(in_state(EnemyActionState::Attack)),
                     move_enemies
                         .run_if(in_state(EnemyActionState::Move))
-                        .after(enemies_path),
+                        .after(find_movement_path),
                 )
                     .run_if(in_state(Screen::Playing).and_then(in_state(GameState::EnemyTurn))),
             );
@@ -115,6 +115,8 @@ fn move_enemies(
         commands.entity(entity).remove::<TilePath>();
 
         if let Some(enemy_tile) = path.path.last() {
+            // Removed at `find_movement_path`
+            village_map.object.set(*enemy_tile, entity);
             // Already in the best tile, find surroundings to attack!
             // for direction in enemy.
             for direction in directions.0.iter() {
@@ -173,7 +175,7 @@ fn move_enemies(
     }
 }
 
-fn enemies_path(
+fn find_movement_path(
     mut commands: Commands,
     mut q_enemy_units: Query<
         (Entity, &Movement, &Directions, Option<&IsAirborne>),
@@ -212,8 +214,8 @@ fn enemies_path(
         };
 
         commands.entity(entity).insert(TilePath::new(path));
+        // Will be set back in `move_enemies` system
         village_map.object.remove(enemy_tile);
-        village_map.object.set(best_tile, entity);
     }
 }
 
