@@ -19,6 +19,7 @@ fn load_icon_set(asset_server: Res<AssetServer>, mut icon_set: ResMut<IconSet>) 
         "population",
         "selection_arrow",
         "attack_arrow",
+        "hourglass",
     ];
     const ICONS: &[&str] = &[
         // Weapons
