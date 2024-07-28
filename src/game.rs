@@ -12,6 +12,7 @@ pub mod construction;
 pub mod cycle;
 pub mod deployment;
 pub mod economy;
+pub mod events;
 pub mod inventory;
 pub mod level;
 pub mod map;

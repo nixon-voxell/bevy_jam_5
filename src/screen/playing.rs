@@ -7,12 +7,15 @@ use sickle_ui::prelude::*;
 
 use super::Screen;
 use crate::game::constants::{INITIAL_GOLD, INITIAL_POPULATION};
-use crate::game::construction::{building_panel_layout, StructureCosts};
-use crate::game::cycle::{EndDeployment, EndTurn, Season, Turn};
+use crate::game::construction::{
+    build_btn_interaction, building_panel_layout, update_build_panel, StructureCosts,
+};
+use crate::game::cycle::{EndDeployment, EndTurn, Season, TimeOfDay, Turn};
 use crate::game::deployment::{
     deployment_setup, deployment_zone_visualization, is_deployment_ready,
 };
-use crate::game::resources::{VillageGold, VillagePopulation};
+use crate::game::events::SelectStructureTypeEvent;
+use crate::game::resources::{SelectedStructueType, VillageGold, VillagePopulation};
 use crate::game::unit::player::{add_starting_player_units, move_unit, reset_unit_turn_states};
 use crate::game::unit::AvailableUnitNames;
 use crate::game::unit_list::{
@@ -32,6 +35,8 @@ pub(super) fn plugin(app: &mut App) {
         .init_resource::<AvailableUnitNames>()
         .init_resource::<PlayerUnitList>()
         .init_resource::<StructureCosts>()
+        .init_resource::<SelectedStructueType>()
+        .add_event::<SelectStructureTypeEvent>()
         .add_systems(OnEnter(Screen::Playing), enter_playing)
         .add_systems(OnEnter(Screen::Playing), add_starting_player_units)
         .add_systems(OnEnter(GameState::Merchant), merchant_modal_layout)
@@ -63,7 +68,21 @@ pub(super) fn plugin(app: &mut App) {
             hide_all_with::<EndTurnButton>,
         )
         .add_systems(OnExit(GameState::EnemyTurn), show_all_with::<EndTurnButton>)
-        .add_systems(Update, move_unit.run_if(in_state(GameState::BattleTurn)));
+        .add_systems(Update, move_unit.run_if(in_state(GameState::BattleTurn)))
+        .add_systems(
+            OnExit(TimeOfDay::Day),
+            |mut s: ResMut<SelectedStructueType>| {
+                s.0 = None;
+            },
+        )
+        .add_systems(
+            Update,
+            (
+                build_btn_interaction.run_if(in_state(GameState::BuildingTurn)),
+                update_build_panel.run_if(resource_changed::<SelectedStructueType>),
+            )
+                .chain(),
+        );
 
     app.add_systems(
         Update,
@@ -335,11 +354,10 @@ fn exit_playing(mut commands: Commands) {
 pub enum GameState {
     Merchant,
     #[default]
-    Normal,
+    BuildingTurn,
     Deployment,
     BattleTurn,
     EnemyTurn,
-    BuildingTurn,
 }
 
 #[derive(Component)]

@@ -2,6 +2,7 @@ use bevy::prelude::*;
 
 use super::constants::INITIAL_GOLD;
 use super::constants::INITIAL_POPULATION;
+use super::construction::StructureType;
 
 #[derive(Resource, Debug, Copy, Clone, PartialEq, Default)]
 pub enum TurnPhase {
@@ -39,3 +40,6 @@ impl std::fmt::Display for VillagePopulation {
         self.0.fmt(f)
     }
 }
+
+#[derive(Resource, Default)]
+pub struct SelectedStructueType(pub Option<StructureType>);

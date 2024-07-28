@@ -9,6 +9,8 @@ use crate::ui::prelude::InteractionPalette;
 use super::constants::BIG_TEXT_SIZE;
 use super::constants::ICON_SIZE;
 use super::constants::TEXT_SIZE;
+use super::events::SelectStructureTypeEvent;
+use super::resources::SelectedStructueType;
 
 #[derive(Component, Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum StructureType {
@@ -139,7 +141,9 @@ pub fn building_panel_layout(mut commands: Commands, costs: Res<StructureCosts>)
                 .background_color(Color::BLACK)
                 .row_gap(Val::Px(2.))
                 .flex_grow(0.)
-                .flex_shrink(0.);
+                .flex_shrink(0.)
+                .margin(UiRect::all(Val::Px(10.)))
+                .width(Val::Px(300.));
 
             ui.label(LabelConfig::from("Build"))
                 .style()
@@ -151,65 +155,84 @@ pub fn building_panel_layout(mut commands: Commands, costs: Res<StructureCosts>)
                 };
 
                 ui.container(ButtonBundle { ..default() }, |ui| {
-                    ui.row(|ui| {
-                        ui.style()
-                            .flex_grow(1.)
-                            .padding(UiRect::all(Val::Px(5.)))
-                            .align_items(AlignItems::Center)
-                            .justify_content(JustifyContent::SpaceBetween)
-                            .border(UiRect::all(Val::Px(2.)))
-                            .background_color(css::BLACK.into())
-                            .border_color(Color::WHITE);
-
-                        ui.label(LabelConfig::from(building_type.name()))
-                            .style()
-                            .font_size(TEXT_SIZE);
-
-                        ui.row(|_| {}).style().flex_grow(1.);
-
-                        ui.row(|ui| {
-                            ui.style()
-                                .align_items(AlignItems::Center)
-                                .align_self(AlignSelf::End);
-
-                            ui.icon("icons/gold.png")
-                                .style()
-                                .width(ICON_SIZE)
-                                .height(ICON_SIZE);
-
-                            ui.label(LabelConfig::from(cost.gold.to_string()))
-                                .style()
-                                .font_size(TEXT_SIZE);
-
-                            ui.icon("icons/population.png")
-                                .style()
-                                .width(ICON_SIZE)
-                                .height(ICON_SIZE);
-
-                            ui.label(LabelConfig::from(cost.workers.to_string()))
-                                .style()
-                                .font_size(TEXT_SIZE);
-
-                            ui.icon("icons/hourglass.png")
-                                .style()
-                                .width(ICON_SIZE)
-                                .height(ICON_SIZE);
-
-                            ui.label(LabelConfig::from(cost.turns.to_string()))
-                                .style()
-                                .font_size(TEXT_SIZE);
-                        });
-                    })
-                    .insert((
+                    ui.insert((
+                        BuildButton(building_type),
                         InteractionPalette {
                             none: css::BLACK.into(),
                             hovered: css::TEAL.into(),
                             pressed: css::INDIAN_RED.into(),
                         },
-                        BuildButton(building_type),
-                    ));
+                    ))
+                    .style()
+                    .border(UiRect::all(Val::Px(2.)))
+                    .border_color(Color::WHITE)
+                    .padding(UiRect::all(Val::Px(5.)));
+
+                    ui.row(|ui| {
+                        ui.style().justify_content(JustifyContent::SpaceBetween);
+                        ui.label(LabelConfig::from(building_type.name()))
+                            .style()
+                            .font_size(TEXT_SIZE);
+
+                        ui.column(|ui| {
+                            ui.style().justify_content(JustifyContent::End);
+                            ui.row(|ui| {
+                                ui.style().column_gap(Val::Px(10.));
+                                for (icon, value) in [
+                                    ("icons/gold_coins.png", cost.gold.to_string()),
+                                    ("icons/population.png", cost.workers.to_string()),
+                                    ("icons/hourglass.png", cost.turns.to_string()),
+                                ] {
+                                    ui.row(|ui| {
+                                        ui.style()
+                                            .justify_content(JustifyContent::End)
+                                            .column_gap(Val::Px(1.));
+                                        ui.icon(icon).style().width(ICON_SIZE).height(ICON_SIZE);
+
+                                        ui.label(LabelConfig::from(value))
+                                            .style()
+                                            .font_size(TEXT_SIZE);
+                                    });
+                                }
+                            });
+                        });
+                    });
                 });
             }
         });
     });
+}
+
+pub fn build_btn_interaction(
+    q_interactions: Query<(&Interaction, &BuildButton), Changed<Interaction>>,
+    mut build_select: EventWriter<SelectStructureTypeEvent>,
+    mut selected_structure: ResMut<SelectedStructueType>,
+) {
+    for (i, b) in q_interactions.iter() {
+        if *i == Interaction::Pressed {
+            build_select.send(SelectStructureTypeEvent(b.0));
+            selected_structure.0 = Some(b.0);
+        }
+    }
+}
+
+pub fn update_build_panel(
+    selection: Res<SelectedStructueType>,
+    mut q_interaction_pal: Query<(&BuildButton, &mut InteractionPalette, &mut BackgroundColor)>,
+) {
+    if let Some(s) = selection.0 {
+        for (b, mut p, mut c) in q_interaction_pal.iter_mut() {
+            if b.0 == s {
+                p.none = css::RED.into();
+            } else {
+                p.none = Color::BLACK;
+                c.0 = Color::BLACK;
+            }
+        }
+    } else {
+        for (_, mut p, mut c) in q_interaction_pal.iter_mut() {
+            p.none = Color::BLACK;
+            c.0 = Color::BLACK;
+        }
+    }
 }
