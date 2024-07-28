@@ -15,7 +15,7 @@ impl Plugin for SpawnUnitPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             PostUpdate,
-            spawn_animation.run_if(in_state(Screen::Playing)),
+            (spawn_animation, despawn_animation).run_if(in_state(Screen::Playing)),
         );
     }
 }
@@ -41,6 +41,46 @@ fn spawn_animation(
         spawn.progress += time.delta_seconds();
         if spawn.progress > SPAWN_DURATION {
             commands.entity(entity).remove::<SpawnAnimation>();
+        }
+    }
+}
+
+fn despawn_animation(
+    mut commands: Commands,
+    mut q_transforms: Query<(Entity, &mut Transform, &mut Sprite, &mut DespawnAnimation)>,
+    time: Res<Time>,
+) {
+    for (entity, mut transform, mut sprite, mut spawn) in q_transforms.iter_mut() {
+        let mut factor = spawn.progress / SPAWN_DURATION;
+        factor = f32::clamp(factor, 0.0, 1.0);
+        factor = cubic::ease_in_out(factor);
+
+        sprite.color.set_alpha(1.0 - factor);
+        transform.translation = Vec3::lerp(
+            spawn.origin_translation,
+            spawn.origin_translation + SPAWN_START_OFFSET,
+            factor,
+        );
+        transform.scale = Vec3::lerp(Vec3::ONE, SPAWN_START_SCALE, factor);
+
+        spawn.progress += time.delta_seconds();
+        if spawn.progress > SPAWN_DURATION {
+            commands.entity(entity).remove::<DespawnAnimation>();
+        }
+    }
+}
+
+#[derive(Component, Clone, Copy)]
+pub struct DespawnAnimation {
+    origin_translation: Vec3,
+    progress: f32,
+}
+
+impl DespawnAnimation {
+    pub fn new(origin_translation: Vec3) -> Self {
+        Self {
+            origin_translation,
+            progress: 0.0,
         }
     }
 }
