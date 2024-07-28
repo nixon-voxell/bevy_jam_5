@@ -116,7 +116,7 @@ fn health_ui(
         }
         icons.0.clear();
 
-        // Spawn healht icons
+        // Spawn health icons
         commands.entity(entity).with_children(|builder| {
             let hit_pointf = hit_point.0 as f32;
             let start_x = -HIT_POINT_SIZE.x * hit_pointf * 0.5;
@@ -255,8 +255,8 @@ impl<T: Component> UnitBundle<T> {
 #[derive(Component)]
 pub struct Structure;
 
+#[derive(Bundle)]
 pub struct StructureBundle {
-    pub name: Name,
     pub hit_points: HitPoints,
     pub health: Health,
     pub health_icons: HealthIcons,
@@ -264,10 +264,9 @@ pub struct StructureBundle {
     pub layer_marker: ObjectTileLayer,
 }
 
-impl StructureBundle {
-    pub fn new(name: &str) -> Self {
+impl Default for StructureBundle {
+    fn default() -> Self {
         Self {
-            name: Name::new(String::from(name)),
             hit_points: HitPoints(2),
             health: Health(2),
             health_icons: HealthIcons::default(),
