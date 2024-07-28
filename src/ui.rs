@@ -3,6 +3,7 @@
 // Unused utilities and re-exports may trigger these lints undesirably.
 #![allow(dead_code, unused_imports)]
 
+pub mod icon_set;
 pub mod interaction;
 pub mod palette;
 mod widgets;
@@ -17,6 +18,8 @@ pub mod prelude {
 
 use bevy::prelude::*;
 
+use self::icon_set::IconSetUiPlugin;
+
 pub(super) fn plugin(app: &mut App) {
-    app.add_plugins(interaction::plugin);
+    app.add_plugins((interaction::plugin, IconSetUiPlugin));
 }

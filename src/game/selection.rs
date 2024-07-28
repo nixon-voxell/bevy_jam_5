@@ -11,6 +11,7 @@ use crate::screen::Screen;
 use super::deployment::deploy_unit;
 use super::map::VillageMap;
 use super::picking::PickedTile;
+use super::unit::Movement;
 
 pub struct SelectionPlugin;
 
@@ -133,18 +134,23 @@ fn color_selected_tiles(
 }
 
 pub fn show_movement_range(
+    q_movements: Query<&Movement>,
     selected_unit: Res<SelectedUnit>,
     mut selected_tiles: ResMut<SelectedTiles>,
     village_map: Res<VillageMap>,
 ) {
-    if let Some(entity) = selected_unit.entity {
-        if let Some(tile) = village_map.object.locate(entity) {
-            let tiles = find_all_within_distance_unweighted(tile, 4, |t| {
-                village_map.object.get_neighbouring_positions_rook(t)
-            });
-            selected_tiles.tiles = tiles;
-        }
-    }
+    let Some(entity) = selected_unit.entity else {
+        return;
+    };
+    let (Some(tile), Ok(movement)) = (village_map.object.locate(entity), q_movements.get(entity))
+    else {
+        return;
+    };
+
+    let tiles = find_all_within_distance_unweighted(tile, movement.0, |t| {
+        village_map.object.get_neighbouring_positions_rook(t)
+    });
+    selected_tiles.tiles = tiles;
 }
 
 #[derive(Event, Debug)]

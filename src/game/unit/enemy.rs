@@ -76,9 +76,11 @@ fn move_enemies(
     mut commands: Commands,
     mut q_enemy_units: Query<(Entity, &mut Transform, &mut TilePath), With<EnemyUnit>>,
     time: Res<Time>,
+    mut next_game_state: ResMut<NextState<GameState>>,
 ) {
     const SPEED: f32 = 4.0;
     let Some((entity, mut transform, mut path)) = q_enemy_units.iter_mut().next() else {
+        next_game_state.set(GameState::BattleTurn);
         return;
     };
 

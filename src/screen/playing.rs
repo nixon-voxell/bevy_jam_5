@@ -21,6 +21,7 @@ use crate::game::unit_list::{
 use crate::game::WatchRes;
 use crate::game::{assets::SoundtrackKey, audio::soundtrack::PlaySoundtrack};
 use crate::modals::merchant::{exit_mechant_btn_interaction, merchant_modal_layout};
+use crate::ui::icon_set::IconSet;
 use crate::ui::interaction::apply_interaction_palette;
 use crate::ui::{palette::*, prelude::*};
 
@@ -89,7 +90,7 @@ fn economy_status_layout(ui: &mut UiBuilder<Entity>) {
             ui.style().column_gap(Val::Px(40.));
             ui.row(|ui| {
                 ui.style().column_gap(Val::Px(4.));
-                ui.icon("icons/gold-coins.png")
+                ui.icon("icons/gold_coins.png")
                     .style()
                     .width(Val::Px(32.))
                     .height(Val::Px(32.));

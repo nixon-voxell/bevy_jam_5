@@ -70,7 +70,9 @@ fn run_scale_animation(
         transform.scale = Vec3::lerp(
             transform.scale,
             Vec3::splat(scale),
-            time.delta_seconds() * ANIMATION_SPEED,
+            // Clamp within 1 so that animation won't go crazy
+            // if delta seconds is somehow over 1
+            f32::min(time.delta_seconds() * ANIMATION_SPEED, 1.0),
         );
 
         if transform.scale == Vec3::ONE {
