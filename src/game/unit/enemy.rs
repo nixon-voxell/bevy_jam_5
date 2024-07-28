@@ -10,6 +10,7 @@ use crate::game::unit::spawn::SpawnAnimation;
 use crate::game::unit::{EnemyUnit, IsAirborne, UnitBundle};
 use crate::screen::playing::GameState;
 use crate::screen::Screen;
+use crate::ui::icon_set::IconSet;
 
 use super::spawn::DespawnAnimation;
 use super::{Directions, Health, Movement};
@@ -49,6 +50,7 @@ fn perform_attack(
     village_map: Res<VillageMap>,
     selection_map: Res<SelectionMap>,
     mut next_enemy_action_state: ResMut<NextState<EnemyActionState>>,
+    icon_set: Res<IconSet>,
     time: Res<Time>,
 ) {
     let Some((entity, mut enemy_attack)) = q_enemy_attacks.iter_mut().next() else {
@@ -57,6 +59,19 @@ fn perform_attack(
     };
 
     if enemy_attack.factor == 0.0 {
+        let tile = enemy_attack.tile.as_vec2();
+        let translation = tile_coord_translation(tile.x, tile.y, 3.0);
+        commands.spawn(ClawMarkBundle {
+            sprite: SpriteBundle {
+                sprite: Sprite {
+                    anchor: TILE_ANCHOR,
+                    ..default()
+                },
+                texture: icon_set.get("claw_mark"),
+                ..default()
+            },
+            despawn_anim: DespawnAnimation::new(translation).with_extra_progress(ATTACK_DURATAION),
+        });
         commands.add_trauma(0.5);
     }
 
@@ -402,6 +417,12 @@ impl EnemyAttack {
     pub fn new(tile: IVec2) -> Self {
         Self { tile, ..default() }
     }
+}
+
+#[derive(Bundle)]
+pub struct ClawMarkBundle {
+    pub sprite: SpriteBundle,
+    pub despawn_anim: DespawnAnimation,
 }
 
 #[derive(States, Component, Default, Debug, Clone, Copy, PartialEq, Eq, Hash)]

@@ -1,4 +1,5 @@
 use crate::screen::Screen;
+use crate::ui::icon_set::IconSet;
 use bevy::prelude::*;
 use rand::prelude::SliceRandom;
 use rand::thread_rng;
@@ -111,6 +112,7 @@ fn health_ui(
         Or<(Changed<HitPoints>, Changed<Health>)>,
     >,
     mut village_map: ResMut<VillageMap>,
+    icon_set: Res<IconSet>,
 ) {
     for (entity, hit_point, health, mut icons, transform) in q_hit_points.iter_mut() {
         if health.0 == 0 {
@@ -154,6 +156,7 @@ fn health_ui(
                             custom_size: Some(HIT_POINT_SIZE),
                             ..default()
                         },
+                        texture: icon_set.get("heart"),
                         transform: Transform::from_translation(translation),
                         ..default()
                     },

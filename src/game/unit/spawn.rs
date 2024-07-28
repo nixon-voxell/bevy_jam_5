@@ -94,6 +94,11 @@ impl DespawnAnimation {
         self.recursive = recursive;
         self
     }
+
+    pub fn with_extra_progress(mut self, progress: f32) -> Self {
+        self.progress = -progress;
+        self
+    }
 }
 
 #[derive(Component, Clone, Copy)]

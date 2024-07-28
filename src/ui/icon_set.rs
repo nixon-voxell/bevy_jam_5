@@ -36,12 +36,14 @@ fn load_icon_set(asset_server: Res<AssetServer>, mut icon_set: ResMut<IconSet>) 
         "speed_potion",
         "strength_potion",
         // General
+        "claw_mark",
         "shop",
         "shop_character",
         "bg1",
         "bg2",
         "button1",
         "button1-gs",
+        "heart",
     ];
 
     for pixel_icon in PIXEL_ICONS {
