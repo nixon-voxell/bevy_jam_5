@@ -20,7 +20,6 @@ use crate::game::unit_list::{
 use crate::game::WatchRes;
 use crate::game::{assets::SoundtrackKey, audio::soundtrack::PlaySoundtrack};
 use crate::modals::merchant::{exit_mechant_btn_interaction, merchant_modal_layout};
-use crate::ui::icon_set::IconSet;
 use crate::ui::interaction::apply_interaction_palette;
 use crate::ui::{palette::*, prelude::*};
 
