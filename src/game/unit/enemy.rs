@@ -223,7 +223,7 @@ fn find_movement_path(
 
         commands.entity(entity).insert(TilePath::new(path));
         village_map.object.remove(enemy_tile);
-        village_map.object.set(enemy_tile, entity);
+        village_map.object.set(best_tile, entity);
     }
 }
 
