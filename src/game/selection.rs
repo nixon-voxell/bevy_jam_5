@@ -3,6 +3,7 @@ use super::level::Terrain;
 use super::map::VillageMap;
 use super::picking::PickedTile;
 use super::unit::Movement;
+use super::unit::UnitTurnState;
 use crate::game::map::ROOK_MOVES;
 use crate::screen::playing::GameState;
 use crate::screen::Screen;
@@ -133,7 +134,7 @@ fn color_selected_tiles(
 }
 
 pub fn show_movement_range(
-    q_movements: Query<&Movement>,
+    q_movements: Query<(&Movement, &UnitTurnState)>,
     q_terrains: Query<&Terrain>,
     selected_unit: Res<SelectedUnit>,
     mut selected_tiles: ResMut<SelectedTiles>,
@@ -142,10 +143,16 @@ pub fn show_movement_range(
     let Some(entity) = selected_unit.entity else {
         return;
     };
-    let (Some(tile), Ok(movement)) = (village_map.object.locate(entity), q_movements.get(entity))
+    let (Some(tile), Ok((movement, turn_state))) =
+        (village_map.object.locate(entity), q_movements.get(entity))
     else {
         return;
     };
+
+    if turn_state.used_move {
+        selected_tiles.tiles.clear();
+        return;
+    }
 
     let tiles = village_map.flood(tile, movement.0, &ROOK_MOVES, false, &q_terrains);
     selected_tiles.tiles = tiles;
