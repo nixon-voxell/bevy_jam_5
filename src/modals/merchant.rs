@@ -40,7 +40,7 @@ pub fn merchant_modal_layout(mut commands: Commands) {
                         .style()
                         .width(Val::Px(192.))
                         .height(Val::Px(192.));
-                    ui.label(LabelConfig::from("Buy Anything You like"))
+                    ui.label(LabelConfig::from("Buy anything you like!"))
                         .style()
                         .margin(UiRect::all(Val::Px(16.)));
 

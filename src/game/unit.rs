@@ -4,10 +4,11 @@ use rand::prelude::SliceRandom;
 use rand::thread_rng;
 
 use self::enemy::EnemyUnitPlugin;
-use self::spawn::{SpawnAnimation, SpawnUnitPlugin};
+use self::spawn::{DespawnAnimation, SpawnAnimation, SpawnUnitPlugin};
 
 use super::components::{ObjectTileLayer, PopulationCapacity};
 use super::constants::HOUSE_POPULATION_CAPACITY;
+use super::map::VillageMap;
 
 pub mod enemy;
 pub mod player;
@@ -106,11 +107,21 @@ impl Plugin for UnitPlugin {
 fn health_ui(
     mut commands: Commands,
     mut q_hit_points: Query<
-        (Entity, &HitPoints, &Health, &mut HealthIcons),
+        (Entity, &HitPoints, &Health, &mut HealthIcons, &Transform),
         Or<(Changed<HitPoints>, Changed<Health>)>,
     >,
+    mut village_map: ResMut<VillageMap>,
 ) {
-    for (entity, hit_point, health, mut icons) in q_hit_points.iter_mut() {
+    for (entity, hit_point, health, mut icons, transform) in q_hit_points.iter_mut() {
+        if health.0 == 0 {
+            // Object dies
+            commands
+                .entity(entity)
+                .insert(DespawnAnimation::new(transform.translation).with_recursive(true));
+            village_map.object.remove_entity(entity);
+            return;
+        }
+
         let is_icon_empty = icons.0.is_empty();
         // Remove previous health icons
         for icon in icons.0.iter() {
