@@ -4,7 +4,7 @@ use bevy::ui::FocusPolicy;
 use sickle_ui::prelude::*;
 
 use crate::game::MERCHANT_ITEMS;
-use crate::game::MERCHANT_Z_LAYER;
+use crate::game::MODAL_Z_LAYER;
 use crate::screen::playing::GameState;
 use crate::ui::palette::LABEL_SIZE;
 use crate::ui::prelude::InteractionPalette;
@@ -120,7 +120,7 @@ pub fn merchant_modal_layout(mut commands: Commands) {
         .insert(StateScoped(GameState::Merchant))
         .style()
         .focus_policy(FocusPolicy::Block)
-        .z_index(ZIndex::Global(MERCHANT_Z_LAYER))
+        .z_index(ZIndex::Global(MODAL_Z_LAYER))
         .width(Val::Percent(100.))
         .height(Val::Percent(100.))
         .background_color(Color::srgba(0.25, 0.25, 0.25, 0.75))
