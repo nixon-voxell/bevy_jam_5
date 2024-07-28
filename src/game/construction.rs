@@ -17,8 +17,8 @@ use super::events::SelectStructureTypeEvent;
 use super::map::VillageMap;
 use super::picking::PickableTile;
 use super::picking::TilePressedEvent;
-use super::resources::VillageEmployment;
 use super::resources::SelectedStructueType;
+use super::resources::VillageEmployment;
 use super::resources::VillageGold;
 use super::resources::VillagePopulation;
 use super::tile_set::tile_coord_translation;
@@ -63,8 +63,8 @@ impl StructureType {
             StructureType::SmallHouse => "house1",
             StructureType::House => "house1",
             StructureType::BigHouse => "house1",
-            StructureType::Tavern => "house1",
-            StructureType::ArcherTower => "house1",
+            StructureType::Tavern => "tavern",
+            StructureType::ArcherTower => "tower",
             StructureType::Blacksmith => "blacksmith",
         }
     }
