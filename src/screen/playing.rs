@@ -8,13 +8,14 @@ use sickle_ui::prelude::*;
 use super::Screen;
 use crate::game::constants::{INITIAL_GOLD, INITIAL_POPULATION};
 use crate::game::construction::{
-    build_btn_interaction, building_panel_layout, update_build_panel, StructureCosts,
+    build_btn_interaction, building_panel_layout, spawn_in_progress_building, update_build_panel,
+    update_building_progress, update_building_progress_labels, StructureCosts,
 };
 use crate::game::cycle::{EndDeployment, EndTurn, Season, TimeOfDay, Turn};
 use crate::game::deployment::{
     deployment_setup, deployment_zone_visualization, is_deployment_ready,
 };
-use crate::game::events::SelectStructureTypeEvent;
+use crate::game::events::{EndDayTurn, SelectStructureTypeEvent};
 use crate::game::resources::{SelectedStructueType, VillageGold, VillagePopulation};
 use crate::game::unit::player::{add_starting_player_units, move_unit, reset_unit_turn_states};
 use crate::game::unit::AvailableUnitNames;
@@ -82,6 +83,18 @@ pub(super) fn plugin(app: &mut App) {
                 update_build_panel.run_if(resource_changed::<SelectedStructueType>),
             )
                 .chain(),
+        )
+        .add_systems(
+            Update,
+            spawn_in_progress_building
+                .run_if(in_state(Screen::Playing).and_then(in_state(GameState::BuildingTurn))),
+        )
+        .add_systems(
+            Update,
+            (
+                update_building_progress.run_if(in_state(Screen::Playing)),
+                update_building_progress_labels.run_if(in_state(Screen::Playing)),
+            ),
         );
 
     app.add_systems(
@@ -325,10 +338,15 @@ fn enter_playing(mut commands: Commands) {
 fn end_turn_btn_interaction(
     q_interactions: Query<&Interaction, (Changed<Interaction>, With<EndTurnButton>)>,
     mut next_turn_evt: EventWriter<EndTurn>,
+    mut day_turn_evt: EventWriter<EndDayTurn>,
+    state: Res<State<TimeOfDay>>,
 ) {
     for interaction in q_interactions.iter() {
         if let Interaction::Pressed = interaction {
             next_turn_evt.send(EndTurn);
+            if *state.get() == TimeOfDay::Day {
+                day_turn_evt.send(EndDayTurn);
+            }
         }
     }
 }

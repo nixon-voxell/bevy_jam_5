@@ -43,3 +43,9 @@ pub struct Income(pub u32);
 
 #[derive(Component, Debug)]
 pub struct PopulationCapacity(pub u32);
+
+#[derive(Component, Debug)]
+pub struct RemainingConstructionTurns(pub u32);
+
+#[derive(Component)]
+pub struct BuildingProgressLabel;
