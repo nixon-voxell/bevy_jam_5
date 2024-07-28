@@ -37,3 +37,9 @@ pub struct GroundTileLayer;
 
 #[derive(Component, Debug)]
 pub struct ObjectTileLayer;
+
+#[derive(Component, Debug)]
+pub struct Income(pub u32);
+
+#[derive(Component, Debug)]
+pub struct PopulationCapacity(pub u32);
