@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use crate::game::cycle::EndTurn;
-use crate::game::map::VillageMap;
+use crate::game::map::{VillageMap, ROOK_MOVES};
 use crate::game::picking::TilePressedEvent;
 use crate::game::selection::SelectedUnit;
 use crate::game::tile_set::tile_coord_translation;
@@ -25,20 +25,20 @@ pub fn add_starting_player_units(
     player_unit_list.0.clear();
     for _ in 0..INITIAL_PLAYER_UNITS {
         let name = available_names.next_name();
-        println!("add name: {name}");
         let id = commands
             .spawn((
                 SpatialBundle {
                     visibility: Visibility::Hidden,
                     ..default()
                 },
-                UnitBundle::<PlayerUnit>::new(&name)
+                UnitBundle::<PlayerUnit>::new(&name, ROOK_MOVES.to_vec())
                     .with_health(3)
                     .with_hit_points(3)
                     .with_movement(3),
             ))
             .id();
         player_unit_list.0.push(id);
+        println!("add name: {name} ({id})");
     }
 }
 

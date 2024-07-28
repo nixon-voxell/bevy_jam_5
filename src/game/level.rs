@@ -153,7 +153,7 @@ fn load_level(
                         },
                         texture: tile_set.get("border"),
                         transform: Transform {
-                            translation: edge_translation + Vec3::Z * 0.1,
+                            translation: edge_translation + Vec3::Z * 2.0,
                             ..Default::default()
                         },
                         visibility: Visibility::Hidden,
@@ -175,7 +175,7 @@ fn load_level(
                         },
                         texture: tile_set.get("border_thick"),
                         transform: Transform {
-                            translation: edge_translation + Vec3::Z * 0.1,
+                            translation: edge_translation + Vec3::Z,
                             ..Default::default()
                         },
                         visibility: Visibility::Hidden,
@@ -211,7 +211,7 @@ fn load_level(
         }
     }
 
-    village_map.generate_heat_map(&enemies_query);
+    village_map.generate_heat_map(|e| enemies_query.contains(e));
     println!("{:?}", village_map.heat_map);
     commands.insert_resource(village_map);
     commands.insert_resource(selection_map)
