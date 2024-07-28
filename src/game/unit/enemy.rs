@@ -11,6 +11,7 @@ use crate::game::unit::{EnemyUnit, IsAirborne, UnitBundle};
 use crate::screen::playing::GameState;
 use crate::screen::Screen;
 
+use super::spawn::DespawnAnimation;
 use super::{Directions, Health, Movement};
 
 /// Distance from border that the enemy will spawn in.
@@ -42,6 +43,7 @@ impl Plugin for EnemyUnitPlugin {
 fn perform_attack(
     mut commands: Commands,
     mut q_enemy_attacks: Query<(Entity, &mut EnemyAttack), With<EnemyUnit>>,
+    q_not_enemy_units: Query<(), Without<EnemyUnit>>,
     mut q_health: Query<&mut Health>,
     mut q_vis: Query<&mut Visibility>,
     village_map: Res<VillageMap>,
@@ -64,6 +66,8 @@ fn perform_attack(
         if let Some(mut health) = village_map
             .object
             .get(enemy_attack.tile)
+            // Can only deal damage to non enemy units
+            .filter(|e| q_not_enemy_units.contains(*e))
             .and_then(|e| q_health.get_mut(e).ok())
         {
             health.0 = health.0.saturating_sub(1);
@@ -82,8 +86,10 @@ fn perform_attack(
 
 fn move_enemies(
     mut commands: Commands,
-    mut q_enemy_units: Query<(Entity, &mut Transform, &mut TilePath, &Directions), With<EnemyUnit>>,
-    q_all_enemy_units: Query<Entity, With<EnemyUnit>>,
+    mut q_enemy_units: Query<
+        (Entity, &mut Transform, &Directions, Option<&mut TilePath>),
+        With<EnemyUnit>,
+    >,
     q_not_enemy_units: Query<(), Without<EnemyUnit>>,
     mut q_sprites: Query<(&mut Sprite, &mut Visibility)>,
     mut next_game_state: ResMut<NextState<GameState>>,
@@ -95,28 +101,30 @@ fn move_enemies(
 ) {
     if turn.0 != 0 && turn.0 % TURN_PER_DAY == 0 {
         // Next day starts, clear all enemies
-        for enemy_entity in q_all_enemy_units.iter() {
-            commands.entity(enemy_entity).despawn_recursive();
+        for (enemy_entity, transform, ..) in q_enemy_units.iter() {
+            commands
+                .entity(enemy_entity)
+                .insert(DespawnAnimation::new(transform.translation).with_recursive(true));
             village_map.object.remove_entity(enemy_entity);
         }
         next_game_state.set(GameState::Merchant);
         return;
     }
 
-    let Some((entity, mut transform, mut path, directions)) = q_enemy_units.iter_mut().next()
+    let Some((entity, mut transform, directions, path)) =
+        q_enemy_units.iter_mut().find(|(.., path)| path.is_some())
     else {
         next_enemy_action_state.set(EnemyActionState::Attack);
         next_game_state.set(GameState::BattleTurn);
         return;
     };
+    let mut path = path.unwrap();
 
     // No more paths left
     if path.index >= path.path.len() - 1 {
         commands.entity(entity).remove::<TilePath>();
 
         if let Some(enemy_tile) = path.path.last() {
-            // Removed at `find_movement_path`
-            village_map.object.set(*enemy_tile, entity);
             // Already in the best tile, find surroundings to attack!
             // for direction in enemy.
             for direction in directions.0.iter() {
@@ -214,8 +222,8 @@ fn find_movement_path(
         };
 
         commands.entity(entity).insert(TilePath::new(path));
-        // Will be set back in `move_enemies` system
         village_map.object.remove(enemy_tile);
+        village_map.object.set(enemy_tile, entity);
     }
 }
 
