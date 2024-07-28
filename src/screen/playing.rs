@@ -16,7 +16,9 @@ use crate::game::deployment::{
     deployment_setup, deployment_zone_visualization, is_deployment_ready,
 };
 use crate::game::events::{EndDayTurn, SelectStructureTypeEvent};
-use crate::game::resources::{SelectedStructueType, VillageGold, VillagePopulation};
+use crate::game::resources::{
+    SelectedStructueType, VillageEmployment, VillageGold, VillagePopulation,
+};
 use crate::game::unit::player::{add_starting_player_units, move_unit, reset_unit_turn_states};
 use crate::game::unit::AvailableUnitNames;
 use crate::game::unit_list::{
@@ -140,6 +142,13 @@ fn economy_status_layout(ui: &mut UiBuilder<Entity>) {
                     .width(Val::Px(32.))
                     .height(Val::Px(32.));
 
+                ui.label(LabelConfig::from(INITIAL_POPULATION.to_string()))
+                    .insert(WatchRes::<VillageEmployment>::default())
+                    .style()
+                    .font_size(LABEL_SIZE);
+                ui.label(LabelConfig::from("/"))
+                    .style()
+                    .font_size(LABEL_SIZE);
                 ui.label(LabelConfig::from(INITIAL_POPULATION.to_string()))
                     .insert(WatchRes::<VillagePopulation>::default())
                     .style()

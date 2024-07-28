@@ -49,3 +49,6 @@ pub struct RemainingConstructionTurns(pub u32);
 
 #[derive(Component)]
 pub struct BuildingProgressLabel;
+
+#[derive(Component)]
+pub struct ConstructionWorkers(pub u32);
