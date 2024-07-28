@@ -2,9 +2,9 @@ use bevy::{math::uvec2, prelude::*};
 
 use crate::{
     game::{
-        cycle::{EndTurn, Season, TimeOfDay},
+        cycle::{Season, TimeOfDay},
         level::Terrain,
-        map::{VillageMap, ROOK_MOVES},
+        map::{VillageMap, KING_MOVES, ROOK_MOVES},
         tile_set::{tile_coord_translation, TileSet, TILE_ANCHOR},
         unit::{spawn::SpawnAnimation, EnemyUnit, IsAirborne, UnitBundle},
     },
@@ -213,7 +213,7 @@ fn spawn_enemies(
         if let Some(best_tile) = village_map.get_best_tile(
             tile_coord,
             enemy.movement,
-            &ROOK_MOVES,
+            enemy.directions,
             enemy.is_airborne,
             &q_terrains,
         ) {
@@ -223,7 +223,7 @@ fn spawn_enemies(
                 village_map.pathfind(
                     &tile_coord,
                     &best_tile,
-                    &ROOK_MOVES,
+                    enemy.directions,
                     enemy.is_airborne,
                     &q_terrains,
                 )
@@ -261,6 +261,7 @@ pub struct EnemySpawn {
     pub hit_points: u32,
     pub movement: u32,
     pub is_airborne: bool,
+    pub directions: &'static [IVec2],
 }
 
 impl EnemySpawn {
@@ -269,18 +270,21 @@ impl EnemySpawn {
         hit_points: 3,
         movement: 3,
         is_airborne: false,
+        directions: &ROOK_MOVES,
     };
     pub const SLIME: Self = Self {
         name: "slime",
         hit_points: 4,
         movement: 2,
         is_airborne: false,
+        directions: &ROOK_MOVES,
     };
     pub const BAT: Self = Self {
         name: "bat",
         hit_points: 2,
         movement: 4,
         is_airborne: true,
+        directions: &KING_MOVES,
     };
 }
 
