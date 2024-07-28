@@ -125,7 +125,7 @@ impl VillageMap {
                 }
 
                 // There is an obstacle blocking it
-                if self.object.get(final_coord).is_some() {
+                if self.object.is_occupied(final_coord) {
                     return None;
                 }
 
@@ -201,6 +201,11 @@ impl VillageMap {
             self.heat_map[index] = 0;
 
             stack.push_back(*tile_coord);
+        }
+
+        if stack.is_empty() {
+            self.heat_map.fill(0);
+            return;
         }
 
         while let Some(tile_coord) = stack.pop_front() {

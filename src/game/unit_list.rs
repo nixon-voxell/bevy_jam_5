@@ -43,7 +43,7 @@ pub fn update_unit_list_container(
     selected_unit: Res<SelectedUnit>,
 ) {
     if *local != player_unit_list.0 {
-        *local = player_unit_list.0.clone();
+        local.clone_from(&player_unit_list.0);
     } else if !selected_unit.is_changed() {
         return;
     }

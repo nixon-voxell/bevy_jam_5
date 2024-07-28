@@ -61,6 +61,7 @@ pub struct SelectedTiles {
 pub struct SelectionMap {
     pub edges: HashMap<IVec2, [Entity; 4]>,
     pub borders: HashMap<IVec2, Entity>,
+    pub thick_borders: HashMap<IVec2, Entity>,
 }
 
 #[derive(Component, Copy, Clone, Debug)]

@@ -4,7 +4,6 @@ use bevy::color::palettes::css;
 use bevy::ecs::entity::EntityHashMap;
 use bevy::prelude::*;
 use sickle_ui::prelude::*;
-// use bevy::input::common_conditions::input_just_pressed;
 
 use super::Screen;
 use crate::game::cycle::{EndDeployment, EndTurn, Season, Turn};

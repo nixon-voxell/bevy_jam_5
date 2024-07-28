@@ -3,11 +3,9 @@
 use bevy::color::palettes::css::{GREEN, YELLOW};
 use bevy::prelude::*;
 
-use crate::{
-    game::components::{GroundTileLayer, ObjectTileLayer},
-    screen::Screen,
-    VillageCamera,
-};
+use crate::game::unit::spawn::SpawnAnimation;
+use crate::game::unit::StructureBundle;
+use crate::{game::components::GroundTileLayer, screen::Screen, VillageCamera};
 
 use super::{
     picking::PickableTile,
@@ -19,7 +17,6 @@ use self::level_asset::{LevelAsset, LevelAssetPlugin, Levels};
 use super::{
     map::VillageMap,
     tile_set::{tile_coord_translation, TileSet, TILE_ANCHOR, TILE_HALF_HEIGHT},
-    unit::Structure,
 };
 
 pub mod level_asset;
@@ -33,9 +30,13 @@ impl Plugin for LevelPlugin {
     }
 }
 
-/// Marker component for a sprite that shows a line around the edges of a tile
+/// Marker component for a sprite that shows a line around the edges of a tile.
 #[derive(Component)]
 pub struct TileBorder;
+
+/// Marker component for a sprite that shows a thick line around the edges of a tile.
+#[derive(Component)]
+pub struct TileThickBorder;
 
 fn load_level(
     mut commands: Commands,
@@ -110,6 +111,7 @@ fn load_level(
                 .terrain
                 .set(IVec2::new(xi, yi), ground_entity.id());
 
+            // Edges
             let mut ids = [Entity::PLACEHOLDER; 4];
             for (i, edge) in SelectionEdge::ALL.into_iter().enumerate() {
                 let id = commands
@@ -138,6 +140,7 @@ fn load_level(
                 ids[i] = id;
             }
             selection_map.edges.insert(IVec2::new(xi, yi), ids);
+            // Border
             let id = commands
                 .spawn((
                     SpriteBundle {
@@ -159,6 +162,28 @@ fn load_level(
                 ))
                 .id();
             selection_map.borders.insert(IVec2::new(xi, yi), id);
+            // Thick border
+            let id = commands
+                .spawn((
+                    SpriteBundle {
+                        sprite: Sprite {
+                            anchor: TILE_ANCHOR,
+                            color: YELLOW.into(),
+                            ..Default::default()
+                        },
+                        texture: tile_set.get("border_thick"),
+                        transform: Transform {
+                            translation: edge_translation + Vec3::Z * 0.1,
+                            ..Default::default()
+                        },
+                        visibility: Visibility::Hidden,
+                        ..default()
+                    },
+                    StateScoped(Screen::Playing),
+                    TileThickBorder,
+                ))
+                .id();
+            selection_map.thick_borders.insert(IVec2::new(xi, yi), id);
 
             if object_tile_name != "empty" {
                 let object_entity = commands.spawn((
@@ -168,14 +193,13 @@ fn load_level(
                             ..Default::default()
                         },
                         texture: tile_set.get(object_tile_name),
-                        transform: Transform::from_translation(object_translation),
                         ..default()
                     },
                     PickableTile,
                     StateScoped(Screen::Playing),
-                    ObjectTileLayer,
                     // IMPORTANT: There must only be structure in the map asset
-                    Structure,
+                    StructureBundle::default(),
+                    SpawnAnimation::new(object_translation),
                 ));
 
                 village_map

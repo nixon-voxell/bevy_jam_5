@@ -6,12 +6,8 @@ use super::selection::SelectedTiles;
 use super::selection::SelectedUnit;
 use super::tile_set::tile_coord_translation;
 use super::tile_set::TileSet;
-use super::unit::player;
-use super::unit::UnitBundle;
 use super::unit_list::PlayerUnitList;
-use bevy::color::palettes::css::GREEN;
 use bevy::color::palettes::css::LIME;
-use bevy::color::palettes::css::YELLOW;
 use bevy::prelude::*;
 
 pub fn deployment_setup(
@@ -19,7 +15,7 @@ pub fn deployment_setup(
     mut selected_unit: ResMut<SelectedUnit>,
     mut village_map: ResMut<VillageMap>,
 ) {
-    selected_unit.entity = player_unit_list.0.get(0).copied();
+    selected_unit.entity = player_unit_list.0.first().copied();
     let size = village_map.size;
     let r = IRect::from_corners(
         IVec2::ZERO,
@@ -40,7 +36,9 @@ pub fn deployment_zone_visualization(
     village_map: Res<VillageMap>,
     mut selected_tiles: ResMut<SelectedTiles>,
 ) {
-    selected_tiles.tiles = village_map.deployment_zone.clone();
+    selected_tiles
+        .tiles
+        .clone_from(&village_map.deployment_zone);
     selected_tiles.color = LIME.into();
 }
 
