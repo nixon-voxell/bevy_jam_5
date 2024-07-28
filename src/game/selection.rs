@@ -9,6 +9,7 @@ use crate::screen::playing::GameState;
 use crate::screen::Screen;
 
 use super::deployment::deploy_unit;
+use super::level::Terrain;
 use super::map::VillageMap;
 use super::picking::PickedTile;
 use super::unit::Movement;
@@ -136,6 +137,7 @@ fn color_selected_tiles(
 
 pub fn show_movement_range(
     q_movements: Query<&Movement>,
+    q_terrains: Query<&Terrain>,
     selected_unit: Res<SelectedUnit>,
     mut selected_tiles: ResMut<SelectedTiles>,
     village_map: Res<VillageMap>,
@@ -148,9 +150,7 @@ pub fn show_movement_range(
         return;
     };
 
-    let tiles = find_all_within_distance_unweighted(tile, movement.0, |t| {
-        village_map.object.get_neighbouring_positions_rook(t)
-    });
+    let tiles = village_map.flood(tile, movement.0, &ROOK_MOVES, false, &q_terrains);
     selected_tiles.tiles = tiles;
 }
 

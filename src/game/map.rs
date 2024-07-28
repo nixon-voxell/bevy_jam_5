@@ -115,7 +115,7 @@ impl VillageMap {
         directions: &[IVec2],
         is_airborne: bool,
         q_terrains: &Query<&Terrain>,
-    ) -> Vec<IVec2> {
+    ) -> HashSet<IVec2> {
         find_all_within_distance_unweighted(start, max_distance, |tile_coord| {
             directions.iter().filter_map(move |dir| {
                 let final_coord = tile_coord + *dir;
@@ -144,9 +144,6 @@ impl VillageMap {
                 None
             })
         })
-        .iter()
-        .copied()
-        .collect()
     }
 
     /// Sort tiles based on distance.
@@ -171,7 +168,11 @@ impl VillageMap {
         is_airborne: bool,
         q_terrains: &Query<&Terrain>,
     ) -> Option<IVec2> {
-        let mut tiles = self.flood(start, max_distance, directions, is_airborne, q_terrains);
+        let mut tiles = self
+            .flood(start, max_distance, directions, is_airborne, q_terrains)
+            .iter()
+            .cloned()
+            .collect::<Vec<_>>();
         Self::sort_tiles_by_distance(&mut tiles, start);
         self.sort_tiles_by_heat(&mut tiles);
         tiles.first().copied()

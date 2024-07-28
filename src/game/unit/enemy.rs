@@ -22,9 +22,10 @@ pub struct EnemyUnitPlugin;
 impl Plugin for EnemyUnitPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(TimeOfDay::Night), spawn_enemies)
+            .add_systems(OnEnter(GameState::EnemyTurn), enemies_path)
             .add_systems(
                 Update,
-                (enemies_path, move_enemies)
+                move_enemies
                     .run_if(in_state(Screen::Playing).and_then(in_state(GameState::EnemyTurn))),
             );
     }
@@ -34,41 +35,37 @@ fn enemies_path(
     mut commands: Commands,
     q_terrains: Query<&Terrain>,
     mut q_enemy_units: Query<(Entity, &Movement, Option<&IsAirborne>), With<EnemyUnit>>,
-    mut end_turn_evt: EventReader<EndTurn>,
     mut village_map: ResMut<VillageMap>,
 ) {
-    if end_turn_evt.is_empty() == false {
-        end_turn_evt.clear();
-        for (entity, movement, airborne) in q_enemy_units.iter_mut() {
-            let Some(tile_coord) = village_map.object.locate(entity) else {
-                continue;
-            };
+    for (entity, movement, airborne) in q_enemy_units.iter_mut() {
+        let Some(tile_coord) = village_map.object.locate(entity) else {
+            continue;
+        };
 
-            let is_airborne = airborne.is_some();
-            let Some(best_tile) = village_map.get_best_tile(
-                tile_coord,
-                movement.0,
-                &ROOK_MOVES,
-                is_airborne,
-                &q_terrains,
-            ) else {
-                continue;
-            };
+        let is_airborne = airborne.is_some();
+        let Some(best_tile) = village_map.get_best_tile(
+            tile_coord,
+            movement.0,
+            &ROOK_MOVES,
+            is_airborne,
+            &q_terrains,
+        ) else {
+            continue;
+        };
 
-            let Some((path, _)) = village_map.pathfind(
-                &tile_coord,
-                &best_tile,
-                &ROOK_MOVES,
-                is_airborne,
-                &q_terrains,
-            ) else {
-                continue;
-            };
+        let Some((path, _)) = village_map.pathfind(
+            &tile_coord,
+            &best_tile,
+            &ROOK_MOVES,
+            is_airborne,
+            &q_terrains,
+        ) else {
+            continue;
+        };
 
-            commands.entity(entity).insert(TilePath::new(path));
-            village_map.object.remove(tile_coord);
-            village_map.object.set(best_tile, entity);
-        }
+        commands.entity(entity).insert(TilePath::new(path));
+        village_map.object.remove(tile_coord);
+        village_map.object.set(best_tile, entity);
     }
 }
 
