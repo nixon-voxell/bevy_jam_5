@@ -261,7 +261,6 @@ pub fn select_item_btn_interaction(
         if let Interaction::Pressed = interaction {
             if select.0 < inventory.slot_count() {
                 if inventory.get(select.0).is_some() {
-                    println!("select item -> {:?}", select.0);
                     inventory.selected_item = Some(select.0);
                 }
             }
