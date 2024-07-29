@@ -108,8 +108,8 @@ impl Plugin for UnitPlugin {
 fn health_ui(
     mut commands: Commands,
     mut q_hit_points: Query<
-        (Entity, &HitPoints, &Health, &mut HealthIcons, &Transform),
-        Or<(Changed<HitPoints>, Changed<Health>)>,
+        (Entity, &MaxHealth, &Health, &mut HealthIcons, &Transform),
+        Or<(Changed<MaxHealth>, Changed<Health>)>,
     >,
     q_is_player: Query<(), With<PlayerUnit>>,
     mut village_map: ResMut<VillageMap>,
@@ -182,7 +182,7 @@ fn health_ui(
 
 /// Amount of damage a unit can take before dying.
 #[derive(Component, Copy, Clone, Debug, Deref, DerefMut, PartialEq)]
-pub struct HitPoints(pub u32);
+pub struct MaxHealth(pub u32);
 
 /// Amount of health the unity current has.
 #[derive(Component, Copy, Clone, Debug, Deref, DerefMut, PartialEq)]
@@ -236,7 +236,7 @@ pub struct UnitName(pub String);
 #[derive(Bundle)]
 pub struct UnitBundle<T: Component> {
     pub name: UnitName,
-    pub hit_points: HitPoints,
+    pub hit_points: MaxHealth,
     pub health: Health,
     pub health_icons: HealthIcons,
     pub movement: Movement,
@@ -254,7 +254,7 @@ where
     pub fn new(name: &str, directions: Vec<IVec2>) -> Self {
         Self {
             name: UnitName(String::from(name)),
-            hit_points: HitPoints(2),
+            hit_points: MaxHealth(2),
             health: Health(2),
             health_icons: HealthIcons::default(),
             movement: Movement(2),
@@ -268,7 +268,7 @@ where
 
 impl<T: Component> UnitBundle<T> {
     pub fn with_hit_points(mut self, hit_points: u32) -> Self {
-        self.hit_points = HitPoints(hit_points);
+        self.hit_points = MaxHealth(hit_points);
         self
     }
 
@@ -289,7 +289,7 @@ pub struct Structure;
 
 #[derive(Bundle)]
 pub struct StructureBundle {
-    pub hit_points: HitPoints,
+    pub hit_points: MaxHealth,
     pub health: Health,
     pub health_icons: HealthIcons,
     pub structure: Structure,
@@ -300,7 +300,7 @@ pub struct StructureBundle {
 impl Default for StructureBundle {
     fn default() -> Self {
         Self {
-            hit_points: HitPoints(2),
+            hit_points: MaxHealth(2),
             health: Health(2),
             health_icons: HealthIcons::default(),
             structure: Structure,
