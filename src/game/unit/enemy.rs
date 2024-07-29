@@ -136,6 +136,8 @@ fn move_enemies(
                         .entity(player_entity)
                         .insert(DespawnAnimation::new(transform.translation).with_hide_only(true));
                 }
+
+                village_map.object.remove_entity(player_entity);
             }
         }
         next_game_state.set(GameState::BuildingTurn);
