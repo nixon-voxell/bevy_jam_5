@@ -14,6 +14,7 @@ use crate::game::selection::ObjectPressedEvent;
 use crate::game::selection::SelectedUnit;
 use crate::game::unit::player::TilePressedEvent;
 use crate::game::unit::Health;
+use crate::game::unit::MaxHealth;
 use crate::game::unit::Movement;
 use crate::game::unit::PlayerUnit;
 use crate::game::unit::Structure;
@@ -256,7 +257,7 @@ impl Default for TavernSubject {
 
 pub fn update_slot_labels(
     subject: Res<TavernSubject>,
-    query: Query<(&UnitName, &Movement, &Health, &MaxInventorySize)>,
+    query: Query<(&UnitName, &Movement, &MaxHealth, &MaxInventorySize)>,
     mut n_query: Query<
         &mut Text,
         (
@@ -315,9 +316,14 @@ pub fn upgrade_buttons(
     mut gold: ResMut<VillageGold>,
     subject: Res<TavernSubject>,
     upgrade_query: Query<(&Interaction, &TavernUpgrade), Changed<Interaction>>,
-    mut stats_query: Query<(&mut Movement, &mut Health, &mut MaxInventorySize)>,
+    mut stats_query: Query<(
+        &mut Movement,
+        &mut Health,
+        &mut MaxHealth,
+        &mut MaxInventorySize,
+    )>,
 ) {
-    let Ok((mut m, mut h, mut s)) = stats_query.get_mut(subject.0) else {
+    let Ok((mut m, mut h, mut mh, mut s)) = stats_query.get_mut(subject.0) else {
         return;
     };
 
@@ -332,7 +338,14 @@ pub fn upgrade_buttons(
             if UPGRADE_COST <= gold.0 {
                 if match u {
                     TavernUpgrade::AddMovement => upgrade(&mut m.0),
-                    TavernUpgrade::AddHealth => upgrade(&mut h.0),
+                    TavernUpgrade::AddHealth => {
+                        if upgrade(&mut mh.0) {
+                            h.0 = (h.0 + 1).min(mh.0);
+                            true
+                        } else {
+                            false
+                        }
+                    }
                     TavernUpgrade::AddItemSlot => upgrade(&mut s.0),
                 } {
                     gold.0 -= UPGRADE_COST;
