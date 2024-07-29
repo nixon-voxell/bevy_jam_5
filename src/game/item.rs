@@ -40,7 +40,7 @@ fn apply_item_effect(
     q_enemy_units: Query<(), With<EnemyUnit>>,
     mut selection_events: EventReader<SelectionEvent>,
     mut prev_selection: Local<Option<Entity>>,
-    village_map: Res<VillageMap>,
+    mut village_map: ResMut<VillageMap>,
     icon_set: Res<IconSet>,
 ) {
     for selection_event in selection_events.read() {
@@ -108,9 +108,11 @@ fn apply_item_effect(
                                             ..default()
                                         },
                                         despawn_anim: DespawnAnimation::new(translation)
-                                            .with_extra_progress(CLAW_ANIM_DURATAION),
+                                            .with_extra_progress(CLAW_ANIM_DURATAION)
+                                            .with_recursive(true),
                                     });
                                     commands.add_trauma(0.5);
+                                    village_map.object.remove_entity(curr_entity);
                                 }
 
                                 println!("Successfully used item: {}", item.name);
