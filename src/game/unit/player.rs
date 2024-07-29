@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
 use crate::game::cycle::EndTurn;
+use crate::game::inventory::Inventory;
 use crate::game::map::{VillageMap, ROOK_MOVES};
 use crate::game::picking::TilePressedEvent;
 use crate::game::selection::SelectedUnit;
@@ -13,9 +14,6 @@ use super::*;
 
 pub const INITIAL_PLAYER_UNITS: usize = 2;
 pub const MAX_PLAYER_UNITS: usize = 5;
-
-#[derive(Component, Default)]
-pub struct PlayerUnit;
 
 pub fn add_starting_player_units(
     mut available_names: ResMut<AvailableUnitNames>,
@@ -35,6 +33,7 @@ pub fn add_starting_player_units(
                     .with_health(3)
                     .with_hit_points(3)
                     .with_movement(3),
+                Inventory::default(),
             ))
             .id();
         player_unit_list.0.push(id);

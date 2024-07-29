@@ -2,11 +2,13 @@ use super::deployment::deploy_unit;
 use super::level::Terrain;
 use super::map::VillageMap;
 use super::picking::PickedTile;
+use super::unit::EnemyUnit;
 use super::unit::Movement;
 use super::unit::UnitTurnState;
 use crate::game::map::ROOK_MOVES;
 use crate::screen::playing::GameState;
 use crate::screen::Screen;
+use bevy::color::palettes::css;
 use bevy::math::vec2;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
@@ -136,6 +138,7 @@ fn color_selected_tiles(
 pub fn show_movement_range(
     q_movements: Query<(&Movement, &UnitTurnState)>,
     q_terrains: Query<&Terrain>,
+    q_enemies: Query<(), With<EnemyUnit>>,
     selected_unit: Res<SelectedUnit>,
     mut selected_tiles: ResMut<SelectedTiles>,
     village_map: Res<VillageMap>,
@@ -156,6 +159,13 @@ pub fn show_movement_range(
 
     let tiles = village_map.flood(tile, movement.0, &ROOK_MOVES, false, &q_terrains);
     selected_tiles.tiles = tiles;
+    match q_enemies.contains(entity) {
+        true => selected_tiles.color = css::INDIAN_RED.into(),
+        false => {
+            // match turn_state.used_move
+            selected_tiles.color = css::LIME.into();
+        }
+    }
 }
 
 #[derive(Event, Debug)]

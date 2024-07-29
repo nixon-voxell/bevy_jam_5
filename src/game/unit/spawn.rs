@@ -47,10 +47,16 @@ fn spawn_animation(
 
 fn despawn_animation(
     mut commands: Commands,
-    mut q_transforms: Query<(Entity, &mut Transform, &mut Sprite, &mut DespawnAnimation)>,
+    mut q_transforms: Query<(
+        Entity,
+        &mut Transform,
+        &mut Sprite,
+        &mut Visibility,
+        &mut DespawnAnimation,
+    )>,
     time: Res<Time>,
 ) {
-    for (entity, mut transform, mut sprite, mut despawn) in q_transforms.iter_mut() {
+    for (entity, mut transform, mut sprite, mut vis, mut despawn) in q_transforms.iter_mut() {
         let mut factor = despawn.progress / SPAWN_DURATION;
         factor = f32::clamp(factor, 0.0, 1.0);
         factor = cubic::ease_in_out(factor);
@@ -65,7 +71,9 @@ fn despawn_animation(
 
         despawn.progress += time.delta_seconds();
         if despawn.progress > SPAWN_DURATION {
-            if despawn.recursive {
+            if despawn.hide_only {
+                *vis = Visibility::Hidden;
+            } else if despawn.recursive {
                 commands.entity(entity).despawn_recursive();
             } else {
                 commands.entity(entity).despawn();
@@ -78,6 +86,7 @@ fn despawn_animation(
 pub struct DespawnAnimation {
     origin_translation: Vec3,
     progress: f32,
+    hide_only: bool,
     recursive: bool,
 }
 
@@ -86,8 +95,14 @@ impl DespawnAnimation {
         Self {
             origin_translation,
             progress: 0.0,
+            hide_only: false,
             recursive: false,
         }
+    }
+
+    pub fn with_extra_progress(mut self, progress: f32) -> Self {
+        self.progress = -progress;
+        self
     }
 
     pub fn with_recursive(mut self, recursive: bool) -> Self {
@@ -95,8 +110,8 @@ impl DespawnAnimation {
         self
     }
 
-    pub fn with_extra_progress(mut self, progress: f32) -> Self {
-        self.progress = -progress;
+    pub fn with_hide_only(mut self, hide_only: bool) -> Self {
+        self.hide_only = hide_only;
         self
     }
 }

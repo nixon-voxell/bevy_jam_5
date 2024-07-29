@@ -59,7 +59,7 @@ pub fn update_unit_list_container(
             } else {
                 (Color::WHITE, Color::BLACK)
             };
-            ui.container(ButtonBundle { ..default() }, |ui| {
+            ui.container(ButtonBundle::default(), |ui| {
                 ui.style()
                     .border_color(Color::WHITE)
                     .background_color(back_color)

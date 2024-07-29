@@ -64,7 +64,7 @@ pub struct Description(pub String);
 
 /// Item can be used
 #[derive(Component, Default, Debug, Clone)]
-pub struct UsuableItem;
+pub struct UsableItem;
 
 /// Item can be worn
 /// A maximum of one wearable item of each variant can be equipped by a character
