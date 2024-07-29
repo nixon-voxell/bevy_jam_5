@@ -382,6 +382,7 @@ fn exit_playing(mut commands: Commands) {
 #[derive(States, Debug, Hash, PartialEq, Eq, Clone, Copy, Default)]
 pub enum GameState {
     Merchant,
+    Tavern,
     #[default]
     BuildingTurn,
     Deployment,
