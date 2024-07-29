@@ -53,4 +53,5 @@ pub fn update_income(
     }
     let mut rng = rand::thread_rng();
     population.0 += 5 + rng.gen_range(0..10);
+    population.0 = population.0.min(total_population_capacity);
 }
