@@ -6,7 +6,7 @@ use sickle_ui::prelude::*;
 use crate::game::constants::BIG_TEXT_SIZE;
 use crate::game::constants::TEXT_SIZE;
 use crate::game::inventory::Inventory;
-use crate::game::inventory::ItemTemplate;
+use crate::game::inventory::Item;
 use crate::game::inventory::ITEM_TEMPLATES;
 use crate::game::selection::SelectedUnit;
 use crate::game::MODAL_Z_LAYER;
@@ -51,7 +51,7 @@ pub struct ExitMerchantButton;
 
 #[derive(Resource, Default, Debug)]
 pub struct MerchantItems {
-    pub items: [Option<&'static ItemTemplate>; 3],
+    pub items: [Option<&'static Item>; 3],
     pub selection: Option<usize>,
 }
 

@@ -2,8 +2,8 @@ use bevy::prelude::*;
 
 use super::map::{KING_MOVES, ROOK_MOVES};
 
-pub const ITEM_TEMPLATES: &[ItemTemplate] = &[
-    ItemTemplate {
+pub const ITEM_TEMPLATES: &[Item] = &[
+    Item {
         name: "axe",
         description: "Axe, mid range weapon. (Land only)",
         health_effect: -2,
@@ -13,7 +13,7 @@ pub const ITEM_TEMPLATES: &[ItemTemplate] = &[
         cost: 10,
         air: false,
     },
-    ItemTemplate {
+    Item {
         name: "dagger",
         description: "Dagger, close range high damage weapon. (Land only)",
         health_effect: -2,
@@ -23,7 +23,7 @@ pub const ITEM_TEMPLATES: &[ItemTemplate] = &[
         cost: 10,
         air: false,
     },
-    ItemTemplate {
+    Item {
         name: "sword",
         description: "Sword, mid range high damage weapon. (Land only)",
         health_effect: -4,
@@ -33,7 +33,7 @@ pub const ITEM_TEMPLATES: &[ItemTemplate] = &[
         cost: 30,
         air: false,
     },
-    ItemTemplate {
+    Item {
         name: "whip",
         description: "Whip, long range low damage weapon. (Land & Air)",
         health_effect: -1,
@@ -43,7 +43,7 @@ pub const ITEM_TEMPLATES: &[ItemTemplate] = &[
         cost: 10,
         air: true,
     },
-    ItemTemplate {
+    Item {
         name: "bow",
         description: "Bow, long range weapon. (Land & Air)",
         health_effect: -2,
@@ -53,7 +53,7 @@ pub const ITEM_TEMPLATES: &[ItemTemplate] = &[
         cost: 10,
         air: true,
     },
-    ItemTemplate {
+    Item {
         name: "health_potion",
         description: "Healing potion, heals 1 health.",
         health_effect: 1,
@@ -71,14 +71,14 @@ pub struct MaxInventorySize(pub u32);
 
 impl Default for MaxInventorySize {
     fn default() -> Self {
-        Self(4)
+        Self(3)
     }
 }
 
 /// List of an entity's equipped items
 #[derive(Component, Debug)]
 pub struct Inventory {
-    item_slots: Vec<Option<Entity>>,
+    item_slots: Vec<Option<Item>>,
 }
 
 impl Default for Inventory {
@@ -98,17 +98,17 @@ impl Inventory {
         self.item_slots.push(None);
     }
 
-    pub fn take(&mut self, slot: usize) -> Option<Entity> {
+    pub fn take(&mut self, slot: usize) -> Option<Item> {
         self.item_slots[slot].take()
     }
 
-    pub fn get(&self, slot: usize) -> Option<Entity> {
+    pub fn get(&self, slot: usize) -> Option<Item> {
         self.item_slots[slot]
     }
 
-    pub fn set(&mut self, slot: usize, entity: Entity) -> Option<Entity> {
+    pub fn set(&mut self, slot: usize, item: Item) -> Option<Item> {
         let previous = self.item_slots[slot];
-        self.item_slots[slot] = Some(entity);
+        self.item_slots[slot] = Some(item);
         previous
     }
 
@@ -148,7 +148,7 @@ impl Default for ConsumbleItem {
 
 /// Marking that this entity is just a reference item.
 #[derive(Debug, Clone, Copy)]
-pub struct ItemTemplate {
+pub struct Item {
     /// Name of the item
     pub name: &'static str,
     /// Long description of the item
