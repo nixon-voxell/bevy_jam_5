@@ -25,8 +25,8 @@ pub const ITEM_TEMPLATES: &[Item] = &[
     },
     Item {
         name: "sword",
-        description: "Sword, mid range high damage weapon. (Land only)",
-        health_effect: -3,
+        description: "Sword, mid range weapon. (Land only)",
+        health_effect: -1,
         item_count: 1,
         directions: &KING_MOVES,
         range: 2,
