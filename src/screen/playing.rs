@@ -9,7 +9,7 @@ use super::Screen;
 use crate::game::constants::{INITIAL_GOLD, INITIAL_POPULATION};
 use crate::game::construction::{
     build_btn_interaction, building_panel_layout, spawn_in_progress_building, update_build_panel,
-    update_building_progress, update_building_progress_labels, StructureCosts,
+    update_building_progress, update_building_progress_labels, BuildingPanel, StructureCosts,
 };
 use crate::game::cycle::{EndDeployment, EndTurn, Season, TimeOfDay, Turn};
 use crate::game::deployment::{
@@ -32,8 +32,8 @@ use crate::game::WatchRes;
 use crate::game::{assets::SoundtrackKey, audio::soundtrack::PlaySoundtrack};
 
 use crate::modals::tavern::{
-    enter_tavern_modal, exit_tavern_btn_interaction, tavern_button, tavern_modal_layout,
-    update_slot_labels, upgrade_buttons, TavernSubject,
+    enter_tavern_modal, exit_tavern_btn_interaction, recruit_button, tavern_button,
+    tavern_modal_layout, update_slot_labels, upgrade_buttons, TavernSubject,
 };
 
 use crate::modals::merchant::MerchantModalPlugin;
@@ -127,9 +127,22 @@ pub(super) fn plugin(app: &mut App) {
         .add_systems(Update, enter_tavern_modal.after(dispatch_object_pressed))
         .add_systems(
             Update,
-            (tavern_button, upgrade_buttons, update_slot_labels)
+            (
+                tavern_button,
+                upgrade_buttons,
+                update_slot_labels,
+                recruit_button,
+            )
                 .chain()
                 .run_if(in_state(GameState::Tavern)),
+        )
+        .add_systems(
+            OnEnter(GameState::BuildingTurn),
+            show_all_with::<BuildingPanel>,
+        )
+        .add_systems(
+            OnExit(GameState::BuildingTurn),
+            hide_all_with::<BuildingPanel>,
         );
 
     app.add_systems(

@@ -19,6 +19,22 @@ use super::*;
 pub const INITIAL_PLAYER_UNITS: usize = 2;
 pub const MAX_PLAYER_UNITS: usize = 5;
 
+pub fn spawn_player_unit(commands: &mut Commands, name: String) -> Entity {
+    commands
+        .spawn((
+            SpatialBundle {
+                visibility: Visibility::Hidden,
+                ..default()
+            },
+            UnitBundle::<PlayerUnit>::new(&name, ROOK_MOVES.to_vec())
+                .with_health(3)
+                .with_hit_points(3)
+                .with_movement(3),
+            MaxInventorySize(3),
+        ))
+        .id()
+}
+
 pub fn add_starting_player_units(
     mut available_names: ResMut<AvailableUnitNames>,
     mut player_unit_list: ResMut<PlayerUnitList>,
@@ -27,19 +43,7 @@ pub fn add_starting_player_units(
     player_unit_list.0.clear();
     for _ in 0..INITIAL_PLAYER_UNITS {
         let name = available_names.next_name();
-        let id = commands
-            .spawn((
-                SpatialBundle {
-                    visibility: Visibility::Hidden,
-                    ..default()
-                },
-                UnitBundle::<PlayerUnit>::new(&name, ROOK_MOVES.to_vec())
-                    .with_health(3)
-                    .with_hit_points(3)
-                    .with_movement(3),
-                MaxInventorySize(3),
-            ))
-            .id();
+        let id = spawn_player_unit(&mut commands, name);
         player_unit_list.0.push(id);
     }
 }

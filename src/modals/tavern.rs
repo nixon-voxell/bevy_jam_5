@@ -4,15 +4,20 @@ use bevy::ui::FocusPolicy;
 use sickle_ui::prelude::*;
 
 use crate::game::components::Tavern;
+use crate::game::constants::BIG_TEXT_SIZE;
+use crate::game::constants::RECRUIT_COST;
+use crate::game::constants::SLOT_COST;
+use crate::game::constants::TAVERN_FONT_SIZE;
 use crate::game::constants::UPGRADE_COST;
-use crate::game::construction::BuildingSite;
-use crate::game::construction::StructureType;
 use crate::game::inventory::MaxInventorySize;
 use crate::game::map::VillageMap;
 use crate::game::resources::VillageGold;
 use crate::game::selection::ObjectPressedEvent;
 use crate::game::selection::SelectedUnit;
+use crate::game::unit::player;
+use crate::game::unit::player::spawn_player_unit;
 use crate::game::unit::player::TilePressedEvent;
+use crate::game::unit::AvailableUnitNames;
 use crate::game::unit::Health;
 use crate::game::unit::MaxHealth;
 use crate::game::unit::Movement;
@@ -23,6 +28,7 @@ use crate::game::unit_list::PlayerUnitList;
 use crate::game::MERCHANT_ITEMS;
 use crate::game::MODAL_Z_LAYER;
 use crate::screen::playing::GameState;
+use crate::spawn_camera;
 use crate::ui::palette::LABEL_SIZE;
 use crate::ui::prelude::InteractionPalette;
 
@@ -58,6 +64,33 @@ pub struct ItemSlotLabel;
 #[derive(Component)]
 pub struct NameLabel;
 
+#[derive(Component)]
+pub struct RecruitButton;
+
+#[derive(Component)]
+pub struct TavernUnitList;
+
+pub fn spawn_hero_button(ui: &mut UiBuilder<Entity>, entity: Entity, name: String) {
+    ui.container(ButtonBundle::default(), |ui| {
+        ui.insert(TavernButton(entity));
+
+        ui.style()
+            .margin(UiRect::all(Val::Px(2.)))
+            .padding(UiRect::all(Val::Px(2.)))
+            .border(UiRect::all(Val::Px(2.)))
+            .border_color(Color::WHITE)
+            .justify_content(JustifyContent::Start);
+        ui.label(LabelConfig::from(name))
+            .style()
+            .font_size(TAVERN_FONT_SIZE);
+    })
+    .insert(InteractionPalette {
+        none: css::BLACK.into(),
+        hovered: css::DARK_RED.into(),
+        pressed: css::INDIAN_RED.into(),
+    });
+}
+
 pub fn tavern_modal_layout(
     mut commands: Commands,
     player_unit_list: Res<PlayerUnitList>,
@@ -89,52 +122,74 @@ pub fn tavern_modal_layout(
                         .row_gap(Val::Px(20.));
                     ui.label(LabelConfig::from("Tavern"))
                         .style()
-                        .margin(UiRect::all(Val::Px(16.)));
+                        .margin(UiRect::all(Val::Px(16.)))
+                        .font_size(BIG_TEXT_SIZE);
                     ui.icon("icons/mug_of_beer.png")
                         .style()
                         .width(Val::Px(64.))
                         .height(Val::Px(64.));
 
                     ui.column(|ui| {
+                        ui.insert(TavernUnitList);
                         for entity in player_unit_list.0.iter() {
                             if let Ok((entity, name, ..)) = unit_query.get(*entity) {
-                                ui.container(ButtonBundle::default(), |ui| {
-                                    ui.insert(TavernButton(entity));
-
-                                    ui.style()
-                                        .margin(UiRect::all(Val::Px(2.)))
-                                        .border(UiRect::all(Val::Px(2.)))
-                                        .border_color(Color::WHITE)
-                                        .justify_content(JustifyContent::Start);
-                                    ui.label(LabelConfig::from(name.0.clone()));
-                                })
-                                .insert(InteractionPalette {
-                                    none: css::BLACK.into(),
-                                    hovered: css::DARK_RED.into(),
-                                    pressed: css::INDIAN_RED.into(),
-                                });
+                                spawn_hero_button(ui, entity, name.0.clone());
                             }
                         }
                     });
 
+                    if player_unit_list.0.len() <= 5 {
+                        ui.row(|ui| {
+                            ui.container(ButtonBundle::default(), |ui| {
+                                ui.insert(RecruitButton);
+
+                                ui.style()
+                                    .margin(UiRect::all(Val::Px(2.)))
+                                    .padding(UiRect::all(Val::Px(2.)))
+                                    .border(UiRect::all(Val::Px(2.)))
+                                    .border_color(Color::WHITE)
+                                    .justify_content(JustifyContent::Start);
+                                ui.label(LabelConfig::from(format!("Recruit {RECRUIT_COST} gold")))
+                                    .style()
+                                    .font_size(TAVERN_FONT_SIZE);
+                            })
+                            .insert(InteractionPalette {
+                                none: css::BLACK.into(),
+                                hovered: css::DARK_RED.into(),
+                                pressed: css::INDIAN_RED.into(),
+                            });
+                        });
+                    }
+
                     ui.row(|ui| {
                         ui.column(|ui| {
                             ui.style().row_gap(Val::Px(10.));
-                            ui.label(LabelConfig::from("")).insert(NameLabel);
+                            ui.label(LabelConfig::from(""))
+                                .insert(NameLabel)
+                                .style()
+                                .font_size(TAVERN_FONT_SIZE);
                             ui.row(|ui| {
-                                ui.label(LabelConfig::from("Movement:"));
-                                ui.label(LabelConfig::from("")).insert(MovementLabel);
+                                ui.label(LabelConfig::from("Movement:"))
+                                    .style()
+                                    .font_size(TAVERN_FONT_SIZE);
+                                ui.label(LabelConfig::from(""))
+                                    .insert(MovementLabel)
+                                    .style()
+                                    .font_size(TAVERN_FONT_SIZE);
                                 ui.row(|ui| {}).style().width(Val::Px(20.));
                                 ui.container(ButtonBundle::default(), |ui| {
                                     ui.insert(TavernUpgrade::AddMovement)
                                         .style()
                                         .margin(UiRect::all(Val::Px(2.)))
+                                        .padding(UiRect::all(Val::Px(2.)))
                                         .border(UiRect::all(Val::Px(2.)))
                                         .border_color(Color::WHITE)
                                         .justify_content(JustifyContent::Start);
                                     ui.label(LabelConfig::from(format!(
                                         "+movement {UPGRADE_COST} gold"
-                                    )));
+                                    )))
+                                    .style()
+                                    .font_size(TAVERN_FONT_SIZE);
                                 })
                                 .insert(InteractionPalette {
                                     none: css::BLACK.into(),
@@ -144,19 +199,27 @@ pub fn tavern_modal_layout(
                             });
 
                             ui.row(|ui| {
-                                ui.label(LabelConfig::from("Health:"));
-                                ui.label(LabelConfig::from("")).insert(HealthLabel);
+                                ui.label(LabelConfig::from("Health:"))
+                                    .style()
+                                    .font_size(TAVERN_FONT_SIZE);
+                                ui.label(LabelConfig::from(""))
+                                    .insert(HealthLabel)
+                                    .style()
+                                    .font_size(TAVERN_FONT_SIZE);
                                 ui.row(|ui| {}).style().width(Val::Px(20.));
                                 ui.container(ButtonBundle::default(), |ui| {
                                     ui.insert(TavernUpgrade::AddHealth)
                                         .style()
                                         .margin(UiRect::all(Val::Px(2.)))
+                                        .padding(UiRect::all(Val::Px(2.)))
                                         .border(UiRect::all(Val::Px(2.)))
                                         .border_color(Color::WHITE)
                                         .justify_content(JustifyContent::Start);
                                     ui.label(LabelConfig::from(format!(
                                         "+health {UPGRADE_COST} gold"
-                                    )));
+                                    )))
+                                    .style()
+                                    .font_size(TAVERN_FONT_SIZE);
                                 })
                                 .insert(InteractionPalette {
                                     none: css::BLACK.into(),
@@ -166,19 +229,27 @@ pub fn tavern_modal_layout(
                             });
 
                             ui.row(|ui| {
-                                ui.label(LabelConfig::from("Item Slots:"));
-                                ui.label(LabelConfig::from("")).insert(ItemSlotLabel);
+                                ui.label(LabelConfig::from("Item Slots:"))
+                                    .style()
+                                    .font_size(TAVERN_FONT_SIZE);
+                                ui.label(LabelConfig::from(""))
+                                    .insert(ItemSlotLabel)
+                                    .style()
+                                    .font_size(TAVERN_FONT_SIZE);
                                 ui.row(|_| {}).style().width(Val::Px(20.));
                                 ui.container(ButtonBundle::default(), |ui| {
                                     ui.insert(TavernUpgrade::AddItemSlot)
                                         .style()
                                         .margin(UiRect::all(Val::Px(2.)))
+                                        .padding(UiRect::all(Val::Px(2.)))
                                         .border(UiRect::all(Val::Px(2.)))
                                         .border_color(Color::WHITE)
                                         .justify_content(JustifyContent::Start);
                                     ui.label(LabelConfig::from(format!(
-                                        "+item slot {UPGRADE_COST} gold"
-                                    )));
+                                        "+item slot {SLOT_COST} gold"
+                                    )))
+                                    .style()
+                                    .font_size(TAVERN_FONT_SIZE);
                                 })
                                 .insert(InteractionPalette {
                                     none: css::BLACK.into(),
@@ -346,7 +417,10 @@ pub fn upgrade_buttons(
                             false
                         }
                     }
-                    TavernUpgrade::AddItemSlot => upgrade(&mut s.0),
+                    TavernUpgrade::AddItemSlot => {
+                        upgrade(&mut s.0);
+                        false
+                    }
                 } {
                     gold.0 -= UPGRADE_COST;
                 }
@@ -362,6 +436,31 @@ pub fn tavern_button(
     for (i, b) in i_q.iter() {
         if *i == Interaction::Pressed {
             subject.0 = b.0;
+        }
+    }
+}
+
+pub fn recruit_button(
+    r_q: Query<&Interaction, (With<RecruitButton>, Changed<Interaction>)>,
+    mut commands: Commands,
+    mut gold: ResMut<VillageGold>,
+    mut player_unit_list: ResMut<PlayerUnitList>,
+    mut names: ResMut<AvailableUnitNames>,
+    t_q: Query<Entity, With<TavernUnitList>>,
+) {
+    if player_unit_list.0.len() < 5 {
+        for i in r_q.iter() {
+            if RECRUIT_COST <= gold.0 {
+                if *i == Interaction::Pressed {
+                    gold.0 -= RECRUIT_COST;
+                    let name = names.next_name();
+                    let id = spawn_player_unit(&mut commands, name.clone());
+                    player_unit_list.0.push(id);
+                    for entity in t_q.iter() {
+                        spawn_hero_button(&mut commands.ui_builder(entity), id, name.clone())
+                    }
+                }
+            }
         }
     }
 }

@@ -153,9 +153,13 @@ impl Default for StructureCosts {
     }
 }
 
+#[derive(Component)]
+pub struct BuildingPanel;
+
 pub fn building_panel_layout(mut commands: Commands, costs: Res<StructureCosts>) {
     commands.ui_builder(UiRoot).row(|ui| {
         ui.insert(StateScoped(Screen::Playing))
+            .insert(BuildingPanel)
             .style()
             .width(Val::Percent(100.))
             .height(Val::Percent(100.))
