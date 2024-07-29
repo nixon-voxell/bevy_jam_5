@@ -332,7 +332,7 @@ fn enter_playing(
                     .justify_content(JustifyContent::Start)
                     .margin(UiRect::left(Val::Px(10.)));
                 ui.column(|ui| {
-                    ui.style().row_gap(Val::Px(60.));
+                    ui.style().row_gap(Val::Px(20.));
                     unit_list_layout(ui);
 
                     ui.row(|ui| {
