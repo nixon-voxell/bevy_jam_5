@@ -16,11 +16,11 @@ pub const ITEM_TEMPLATES: &[Item] = &[
     Item {
         name: "dagger",
         description: "Dagger, close range high damage weapon. (Land only)",
-        health_effect: -2,
+        health_effect: -4,
         item_count: 1,
         directions: &ROOK_MOVES,
         range: 1,
-        cost: 10,
+        cost: 40,
         air: false,
     },
     Item {
@@ -40,7 +40,7 @@ pub const ITEM_TEMPLATES: &[Item] = &[
         item_count: 1,
         directions: &KING_MOVES,
         range: 3,
-        cost: 10,
+        cost: 20,
         air: true,
     },
     Item {
@@ -50,7 +50,7 @@ pub const ITEM_TEMPLATES: &[Item] = &[
         item_count: 2,
         directions: &KING_MOVES,
         range: 3,
-        cost: 10,
+        cost: 30,
         air: true,
     },
     Item {
@@ -60,7 +60,7 @@ pub const ITEM_TEMPLATES: &[Item] = &[
         item_count: 1,
         directions: &KING_MOVES,
         range: 2,
-        cost: 10,
+        cost: 20,
         air: false,
     },
 ];
