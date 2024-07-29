@@ -1,6 +1,6 @@
 //! The screen state for the main game loop.
 
-use bevy::color::palettes::css;
+use bevy::color::palettes::css::{self, WHEAT};
 use bevy::ecs::entity::EntityHashMap;
 use bevy::prelude::*;
 use sickle_ui::prelude::*;
@@ -224,9 +224,9 @@ fn enter_playing(
             ui.style()
                 .width(Val::Percent(100.))
                 .height(Val::Percent(100.))
-                .padding(UiRect::all(Val::Px(60.)));
+                .padding(UiRect::all(Val::Px(40.)))
+                .justify_content(JustifyContent::SpaceBetween);
 
-            // Top pane
             ui.row(|ui| {
                 ui.style()
                     .justify_content(JustifyContent::SpaceBetween)
@@ -244,24 +244,13 @@ fn enter_playing(
 
                 ui.column(|_| {}).style().width(Val::Px(20.));
             });
-            // Center panel
+
             ui.row(|ui| {
-                ui.style().align_items(AlignItems::Center);
-                unit_list_layout(ui);
-            })
-            .style()
-            .flex_grow(1.);
-            // Bottom panel
-            ui.row(|ui| {
-                item_slots.0 = inventory_list_layout(ui);
-            });
-            ui.row(|ui| {
+                ui.style().justify_content(JustifyContent::SpaceBetween);
                 ui.label(LabelConfig::from("Turn Until"))
                     .insert(WatchRes::<Turn>::default())
                     .style()
                     .font_size(LABEL_SIZE);
-
-                ui.column(|_| {}).style().flex_grow(1.);
 
                 ui.column(|ui| {
                     ui.style()
@@ -284,7 +273,7 @@ fn enter_playing(
                         OpenMerchantButton,
                     ))
                     .style()
-                    .margin(UiRect::all(Val::Px(10.)))
+                    .margin(UiRect::px(10., 10., 10., 20.))
                     .border_radius(BorderRadius::all(Val::Px(50.)))
                     .width(Val::Px(100.0))
                     .height(Val::Px(100.0));
@@ -328,6 +317,31 @@ fn enter_playing(
             });
         })
         .insert(StateScoped(Screen::Playing));
+
+    commands
+        .ui_builder(UiRoot)
+        .column(|ui| {
+            ui.insert(StateScoped(Screen::Playing));
+            ui.style()
+                .width(Val::Percent(100.))
+                .height(Val::Percent(100.))
+                .justify_content(JustifyContent::Center);
+            ui.row(|ui| {
+                ui.style()
+                    .align_items(AlignItems::Center)
+                    .justify_content(JustifyContent::Start)
+                    .margin(UiRect::left(Val::Px(10.)));
+                ui.column(|ui| {
+                    ui.style().row_gap(Val::Px(20.));
+                    unit_list_layout(ui);
+
+                    ui.row(|ui| {
+                        item_slots.0 = inventory_list_layout(ui);
+                    });
+                });
+            });
+        })
+        .style();
 }
 
 fn end_turn_btn_interaction(
