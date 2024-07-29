@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use rand::Rng;
 
 use crate::screen::Screen;
 
@@ -35,7 +36,7 @@ impl Plugin for EconomyPlugin {
 }
 
 pub fn update_income(
-    population: Res<VillagePopulation>,
+    mut population: ResMut<VillagePopulation>,
     mut gold: ResMut<VillageGold>,
     income_query: Query<&Income, With<Structure>>,
     cap_query: Query<&PopulationCapacity, With<Structure>>,
@@ -50,4 +51,7 @@ pub fn update_income(
     for income in income_query.iter() {
         gold.0 += income.0;
     }
+    let mut rng = rand::thread_rng();
+    population.0 += 5 + rng.gen_range(0..10);
+    population.0 = population.0.min(total_population_capacity);
 }

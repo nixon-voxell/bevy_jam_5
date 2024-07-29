@@ -9,6 +9,7 @@ use crate::game::constants::RECRUIT_COST;
 use crate::game::constants::SLOT_COST;
 use crate::game::constants::TAVERN_FONT_SIZE;
 use crate::game::constants::UPGRADE_COST;
+use crate::game::inventory::Inventory;
 use crate::game::inventory::MaxInventorySize;
 use crate::game::resources::VillageGold;
 use crate::game::selection::ObjectPressedEvent;
@@ -239,7 +240,7 @@ pub fn tavern_modal_layout(
                                         .border_color(Color::WHITE)
                                         .justify_content(JustifyContent::Start);
                                     ui.label(LabelConfig::from(format!(
-                                        "+item slot {SLOT_COST} gold"
+                                        "+item slot {UPGRADE_COST} gold"
                                     )))
                                     .style()
                                     .font_size(TAVERN_FONT_SIZE);
@@ -380,12 +381,7 @@ pub fn upgrade_buttons(
     mut gold: ResMut<VillageGold>,
     subject: Res<TavernSubject>,
     upgrade_query: Query<(&Interaction, &TavernUpgrade), Changed<Interaction>>,
-    mut stats_query: Query<(
-        &mut Movement,
-        &mut Health,
-        &mut MaxHealth,
-        &mut MaxInventorySize,
-    )>,
+    mut stats_query: Query<(&mut Movement, &mut Health, &mut MaxHealth, &mut Inventory)>,
 ) {
     let Ok((mut m, mut h, mut mh, mut s)) = stats_query.get_mut(subject.0) else {
         return;
@@ -411,8 +407,12 @@ pub fn upgrade_buttons(
                         }
                     }
                     TavernUpgrade::AddItemSlot => {
-                        upgrade(&mut s.0);
-                        false
+                        if s.slot_count() < 5 {
+                            s.add_slot();
+                            true
+                        } else {
+                            false
+                        }
                     }
                 } {
                     gold.0 -= UPGRADE_COST;
