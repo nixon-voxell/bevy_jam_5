@@ -111,10 +111,11 @@ fn move_enemies(
     q_not_enemy_units: Query<(), Without<EnemyUnit>>,
     mut q_sprites: Query<(&mut Sprite, &mut Visibility)>,
     q_transforms: Query<&Transform, Without<EnemyUnit>>,
+    mut q_vis: Query<&mut Visibility>,
     mut next_game_state: ResMut<NextState<GameState>>,
     mut next_enemy_action_state: ResMut<NextState<EnemyActionState>>,
     mut village_map: ResMut<VillageMap>,
-    selection_map: Res<SelectionMap>,
+    selection_map: ResMut<SelectionMap>,
     player_unit_list: Res<PlayerUnitList>,
     turn: Res<Turn>,
     time: Res<Time>,
@@ -138,6 +139,13 @@ fn move_enemies(
                 }
 
                 village_map.object.remove_entity(player_entity);
+            }
+        }
+
+        // Hide all thick borders
+        for border in selection_map.thick_borders.values() {
+            if let Ok(mut vis) = q_vis.get_mut(*border) {
+                *vis = Visibility::Hidden;
             }
         }
         next_game_state.set(GameState::BuildingTurn);
