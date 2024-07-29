@@ -2,9 +2,9 @@ use bevy::ui::Val;
 use bevy::ui::ZIndex;
 
 //pub const INITIAL_GOLD: u32 = 50;
-pub const INITIAL_GOLD: u32 = 1000;
+pub const INITIAL_GOLD: u32 = 100;
 //pub const INITIAL_POPULATION: u32 = 25;
-pub const INITIAL_POPULATION: u32 = 250;
+pub const INITIAL_POPULATION: u32 = 25;
 
 pub const HOUSE_POPULATION_CAPACITY: u32 = 10;
 
