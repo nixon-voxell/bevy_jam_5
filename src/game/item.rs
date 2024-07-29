@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{color::palettes::css, prelude::*};
 use bevy_trauma_shake::TraumaCommands;
 
 use crate::{
@@ -15,9 +15,9 @@ use crate::{
 };
 
 use super::{
-    inventory::Inventory,
+    inventory::{Inventory, Item},
     map::VillageMap,
-    selection::SelectionEvent,
+    selection::{self, SelectedTiles, SelectedUnit, SelectionEvent},
     unit::{EnemyUnit, Health, UnitTurnState},
 };
 
@@ -25,11 +25,64 @@ pub struct ItemPlugin;
 
 impl Plugin for ItemPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(
+        app.init_resource::<InventorySelection>().add_systems(
             Update,
-            apply_item_effect
+            (
+                show_attack_range,
+                apply_item_effect.after(selection::set_selected_unit),
+                deselect_inventory_on_click,
+            )
+                .chain()
                 .run_if(in_state(GameState::BattleTurn).and_then(in_state(Screen::Playing))),
         );
+    }
+}
+
+#[derive(Resource, Default)]
+pub struct InventorySelection {
+    pub selection: Option<(Item, Entity, usize)>,
+    pub tile: IVec2,
+}
+
+fn show_attack_range(
+    q_inventories: Query<(Entity, &Inventory, &UnitTurnState), Changed<Inventory>>,
+    mut selection_tiles: ResMut<SelectedTiles>,
+    village_map: Res<VillageMap>,
+    mut inventory_selection: ResMut<InventorySelection>,
+) {
+    for (entity, inventory, turn_state) in q_inventories.iter() {
+        if turn_state.used_action {
+            continue;
+        }
+
+        if let Some(item) = inventory.selected_item.and_then(|i| inventory.get(i)) {
+            let Some(tile) = village_map.object.locate(entity) else {
+                continue;
+            };
+
+            let possible_action_tiles =
+                find_all_within_distance_unweighted(tile, item.range, |t| {
+                    item.directions.iter().copied().map(move |d| t + d)
+                });
+
+            selection_tiles.tiles = possible_action_tiles;
+            selection_tiles.color = css::ORANGE.into();
+
+            *inventory_selection = InventorySelection {
+                selection: Some((item, entity, inventory.selected_item.unwrap())),
+                tile,
+            };
+        }
+    }
+}
+
+fn deselect_inventory_on_click(
+    mut inventory_selection: ResMut<InventorySelection>,
+    mut selection_events: EventReader<SelectionEvent>,
+) {
+    if selection_events.is_empty() == false {
+        selection_events.clear();
+        inventory_selection.selection = None;
     }
 }
 
@@ -38,99 +91,90 @@ fn apply_item_effect(
     mut q_inventories: Query<(&mut Inventory, &mut UnitTurnState)>,
     mut q_healths: Query<&mut Health>,
     q_enemy_units: Query<(), With<EnemyUnit>>,
-    mut selection_events: EventReader<SelectionEvent>,
-    mut prev_selection: Local<Option<Entity>>,
     mut village_map: ResMut<VillageMap>,
     icon_set: Res<IconSet>,
+    selected_unit: Res<SelectedUnit>,
+    inventory_selection: Res<InventorySelection>,
+    mut selection_events: EventReader<SelectionEvent>,
 ) {
-    for selection_event in selection_events.read() {
-        println!("selection event");
-        match *selection_event {
-            SelectionEvent::Selected(curr_entity) => {
-                let Some(prev_entity) = *prev_selection else {
-                    return;
-                };
+    if selection_events.is_empty() {
+        return;
+    } else {
+        selection_events.clear();
+    }
 
-                let Ok((mut inventory, mut turn_state)) = q_inventories.get_mut(prev_entity) else {
-                    return;
-                };
+    let Some((mut item, origin_entity, index)) = inventory_selection.selection else {
+        return;
+    };
+    let Some(target_entity) = selected_unit.entity else {
+        return;
+    };
+    let Some(target_tile) = village_map.object.locate(target_entity) else {
+        return;
+    };
+    let Ok((mut inventory, mut turn_state)) = q_inventories.get_mut(origin_entity) else {
+        return;
+    };
 
-                if turn_state.used_action == false {
-                    return;
-                }
+    if turn_state.used_action {
+        return;
+    }
 
-                let (Some(prev_tile), Some(curr_tile)) = (
-                    village_map.object.locate(prev_entity),
-                    village_map.object.locate(curr_entity),
-                ) else {
-                    return;
-                };
+    // Cannot apply negative effect on player units
+    if q_enemy_units.contains(target_entity) == false && item.health_effect < 0 {
+        return;
+    }
 
-                if let Some(index) = inventory.selected_item {
-                    if let Some(mut item) = inventory.take(index) {
-                        // Cannot apply negative effect on player units
-                        if q_enemy_units.contains(curr_entity) == false && item.health_effect < 0 {
-                            return;
-                        }
+    // Cannot apply positive effect on enemy units
+    if q_enemy_units.contains(target_entity) && item.health_effect > 0 {
+        return;
+    }
 
-                        // Cannot apply positive effect on enemy units
-                        if q_enemy_units.contains(curr_entity) && item.health_effect > 0 {
-                            return;
-                        }
+    println!("Using item: {}", item.name);
 
-                        println!("Using item: {}", item.name);
+    let possible_action_tiles =
+        find_all_within_distance_unweighted(inventory_selection.tile, item.range, |t| {
+            item.directions.iter().copied().map(move |d| t + d)
+        });
 
-                        let possible_action_tiles =
-                            find_all_within_distance_unweighted(prev_tile, item.range, |t| {
-                                item.directions.iter().copied().map(move |d| t + d)
-                            });
+    if possible_action_tiles.contains(&target_tile) {
+        if let Ok(mut health) = q_healths.get_mut(target_entity) {
+            if item.health_effect > 0 {
+                health.0 += item.health_effect as u32;
+            } else {
+                health.0 = health.0.saturating_sub(item.health_effect.unsigned_abs());
 
-                        if possible_action_tiles.contains(&curr_tile) {
-                            if let Ok(mut health) = q_healths.get_mut(curr_entity) {
-                                if item.health_effect > 0 {
-                                    health.0 += item.health_effect as u32;
-                                } else {
-                                    health.0 =
-                                        health.0.saturating_sub(item.health_effect.unsigned_abs());
+                let translation =
+                    tile_coord_translation(target_tile.x as f32, target_tile.y as f32, 3.0);
+                commands.spawn(ClawMarkBundle {
+                    sprite: SpriteBundle {
+                        sprite: Sprite {
+                            anchor: TILE_ANCHOR,
+                            ..default()
+                        },
+                        texture: icon_set.get("claw_mark"),
+                        ..default()
+                    },
+                    despawn_anim: DespawnAnimation::new(translation)
+                        .with_extra_progress(CLAW_ANIM_DURATAION),
+                });
+                commands.add_trauma(0.5);
 
-                                    let translation = tile_coord_translation(
-                                        curr_tile.x as f32,
-                                        curr_tile.y as f32,
-                                        3.0,
-                                    );
-                                    commands.spawn(ClawMarkBundle {
-                                        sprite: SpriteBundle {
-                                            sprite: Sprite {
-                                                anchor: TILE_ANCHOR,
-                                                ..default()
-                                            },
-                                            texture: icon_set.get("claw_mark"),
-                                            ..default()
-                                        },
-                                        despawn_anim: DespawnAnimation::new(translation)
-                                            .with_extra_progress(CLAW_ANIM_DURATAION)
-                                            .with_recursive(true),
-                                    });
-                                    commands.add_trauma(0.5);
-                                    village_map.object.remove_entity(curr_entity);
-                                }
-
-                                println!("Successfully used item: {}", item.name);
-
-                                // Use up one item
-                                item.item_count = item.item_count.saturating_sub(1);
-                                if item.item_count > 0 {
-                                    // Set back item if it is not used up yet.
-                                    inventory.set(index, item);
-                                }
-
-                                turn_state.used_action = true;
-                            }
-                        }
-                    }
+                if health.0 == 0 {
+                    village_map.object.remove_entity(target_entity);
                 }
             }
-            SelectionEvent::Deselected(entity) => *prev_selection = Some(entity),
+
+            println!("Successfully used item: {}", item.name);
+
+            // Use up one item
+            item.item_count = item.item_count.saturating_sub(1);
+            if item.item_count > 0 {
+                // Set back item if it is not used up yet.
+                inventory.set(index, item);
+            }
+
+            turn_state.used_action = true;
         }
     }
 }

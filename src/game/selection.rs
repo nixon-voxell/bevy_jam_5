@@ -39,7 +39,8 @@ impl Plugin for SelectionPlugin {
                     on_selection.after(set_selected_unit),
                     show_movement_range
                         .after(on_selection)
-                        .run_if(not(in_state(GameState::Deployment))),
+                        .run_if(not(in_state(GameState::Deployment)))
+                        .run_if(resource_changed::<SelectedUnit>),
                 )
                     .run_if(in_state(Screen::Playing)),
             );
