@@ -14,6 +14,7 @@ pub mod deployment;
 pub mod economy;
 pub mod events;
 pub mod inventory;
+pub mod item;
 pub mod level;
 pub mod map;
 mod picking;
