@@ -8,6 +8,7 @@ use crate::game::selection::SelectionMap;
 use crate::game::tile_set::{tile_coord_translation, TileSet, TILE_ANCHOR};
 use crate::game::unit::spawn::SpawnAnimation;
 use crate::game::unit::{EnemyUnit, IsAirborne, UnitBundle};
+use crate::game::unit_list::PlayerUnitList;
 use crate::screen::playing::GameState;
 use crate::screen::Screen;
 use crate::ui::icon_set::IconSet;
@@ -107,20 +108,33 @@ fn move_enemies(
     >,
     q_not_enemy_units: Query<(), Without<EnemyUnit>>,
     mut q_sprites: Query<(&mut Sprite, &mut Visibility)>,
+    q_transforms: Query<&Transform, Without<EnemyUnit>>,
     mut next_game_state: ResMut<NextState<GameState>>,
     mut next_enemy_action_state: ResMut<NextState<EnemyActionState>>,
     mut village_map: ResMut<VillageMap>,
     selection_map: Res<SelectionMap>,
+    player_unit_list: Res<PlayerUnitList>,
     turn: Res<Turn>,
     time: Res<Time>,
 ) {
     if turn.0 != 0 && turn.0 % TURN_PER_DAY == 0 {
-        // Next day starts, clear all enemies
+        // Next day starts, clear all enemy units
         for (enemy_entity, transform, ..) in q_enemy_units.iter() {
             commands
                 .entity(enemy_entity)
                 .insert(DespawnAnimation::new(transform.translation).with_recursive(true));
             village_map.object.remove_entity(enemy_entity);
+        }
+
+        // Hide all player units
+        for &player_entity in player_unit_list.0.iter() {
+            if village_map.object.locate(player_entity).is_some() {
+                if let Ok(transform) = q_transforms.get(player_entity) {
+                    commands
+                        .entity(player_entity)
+                        .insert(DespawnAnimation::new(transform.translation).with_hide_only(true));
+                }
+            }
         }
         next_game_state.set(GameState::BuildingTurn);
         return;

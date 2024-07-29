@@ -6,6 +6,7 @@ use crate::game::inventory::MaxInventorySize;
 
 use crate::game::inventory::Inventory;
 
+use crate::game::level::Terrain;
 use crate::game::map::{VillageMap, ROOK_MOVES};
 pub use crate::game::picking::TilePressedEvent;
 use crate::game::selection::SelectedUnit;
@@ -51,16 +52,27 @@ pub fn add_starting_player_units(
 pub fn move_unit(
     mut event_reader: EventReader<TilePressedEvent>,
     selected_unit: Res<SelectedUnit>,
-    mut map: ResMut<VillageMap>,
-    mut turn_state_query: Query<(&mut UnitTurnState, &Movement), With<PlayerUnit>>,
-    mut transform: Query<&mut Transform>,
+    mut village_map: ResMut<VillageMap>,
+    mut turn_state_query: Query<
+        (
+            &mut UnitTurnState,
+            &Movement,
+            &mut Visibility,
+            &mut Sprite,
+            &mut Transform,
+        ),
+        With<PlayerUnit>,
+    >,
+    terrains: Query<&Terrain>,
 ) {
     if let Some(TilePressedEvent(target)) = event_reader.read().last() {
         let Some(selected) = selected_unit.entity else {
             return;
         };
 
-        let Ok((mut turn_state, movement)) = turn_state_query.get_mut(selected) else {
+        let Ok((mut turn_state, movement, mut vis, mut sprite, mut transform)) =
+            turn_state_query.get_mut(selected)
+        else {
             return;
         };
 
@@ -68,22 +80,26 @@ pub fn move_unit(
             return;
         }
 
-        let Some(current_pos) = map.object.locate(selected).filter(|pos| *pos != *target) else {
+        let Some(current_pos) = village_map
+            .object
+            .locate(selected)
+            .filter(|pos| *pos != *target)
+        else {
             return;
         };
 
-        if find_all_within_distance_unweighted(current_pos, movement.0, |t| {
-            map.terrain
-                .get_neighbouring_positions_rook(t)
-                .filter(|n| map.object.get(*n).is_none())
-        })
-        .contains(target)
+        if village_map
+            .flood(current_pos, movement.0, &ROOK_MOVES, false, &terrains)
+            .contains(target)
         {
             println!("move {selected} to {target:?}");
-            map.object.set(*target, selected);
+            village_map.object.set(*target, selected);
             turn_state.used_move = true;
-            transform.get_mut(selected).unwrap().translation =
-                tile_coord_translation(target.x as f32, target.y as f32, 2.);
+            transform.translation = tile_coord_translation(target.x as f32, target.y as f32, 2.);
+            transform.scale = Vec3::ONE;
+
+            *vis = Visibility::Inherited;
+            sprite.color.set_alpha(1.0);
         }
     }
 }

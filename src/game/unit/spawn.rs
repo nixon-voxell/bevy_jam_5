@@ -70,6 +70,7 @@ fn despawn_animation(
         if despawn.progress > SPAWN_DURATION {
             if despawn.hide_only {
                 *vis = Visibility::Hidden;
+                commands.entity(entity).remove::<DespawnAnimation>();
             } else if despawn.recursive {
                 commands.entity(entity).despawn_recursive();
             } else {
