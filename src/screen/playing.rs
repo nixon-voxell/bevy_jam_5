@@ -224,7 +224,7 @@ fn enter_playing(
             ui.style()
                 .width(Val::Percent(100.))
                 .height(Val::Percent(100.))
-                .padding(UiRect::all(Val::Px(60.)))
+                .padding(UiRect::all(Val::Px(40.)))
                 .justify_content(JustifyContent::SpaceBetween);
 
             ui.row(|ui| {
@@ -273,7 +273,7 @@ fn enter_playing(
                         OpenMerchantButton,
                     ))
                     .style()
-                    .margin(UiRect::all(Val::Px(10.)))
+                    .margin(UiRect::px(10., 10., 10., 20.))
                     .border_radius(BorderRadius::all(Val::Px(50.)))
                     .width(Val::Px(100.0))
                     .height(Val::Px(100.0));
