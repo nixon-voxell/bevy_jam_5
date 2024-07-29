@@ -26,7 +26,6 @@ fn load_icon_set(asset_server: Res<AssetServer>, mut icon_set: ResMut<IconSet>) 
         "axe",
         "bandage",
         "bow",
-        "claw_mark",
         "dagger",
         "mace",
         "sword",

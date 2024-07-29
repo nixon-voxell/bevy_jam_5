@@ -71,7 +71,7 @@ pub fn update_unit_list_container(
                     .align_items(AlignItems::Center)
                     .justify_content(JustifyContent::SpaceBetween);
 
-                ui.icon("tiles/human.png")
+                ui.icon("icons/human.png")
                     .insert(PlayerUnitIcon)
                     .style()
                     .width(Val::Px(64.))

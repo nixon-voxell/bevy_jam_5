@@ -19,6 +19,7 @@ use crate::game::events::{EndDayTurn, SelectStructureTypeEvent};
 use crate::game::resources::{
     SelectedStructueType, VillageEmployment, VillageGold, VillagePopulation,
 };
+use crate::game::selection::SelectedUnit;
 use crate::game::unit::player::{add_starting_player_units, move_unit, reset_unit_turn_states};
 use crate::game::unit::AvailableUnitNames;
 use crate::game::unit_list::{
@@ -27,13 +28,14 @@ use crate::game::unit_list::{
 };
 use crate::game::WatchRes;
 use crate::game::{assets::SoundtrackKey, audio::soundtrack::PlaySoundtrack};
-use crate::modals::merchant::{exit_mechant_btn_interaction, merchant_modal_layout};
+use crate::modals::merchant::MerchantModalPlugin;
 use crate::ui::icon_set::IconSet;
 use crate::ui::interaction::apply_interaction_palette;
 use crate::ui::{palette::*, prelude::*};
 
 pub(super) fn plugin(app: &mut App) {
-    app.init_state::<GameState>()
+    app.add_plugins(MerchantModalPlugin)
+        .init_state::<GameState>()
         .enable_state_scoped_entities::<GameState>()
         .init_resource::<DisplayCache>()
         .init_resource::<AvailableUnitNames>()
@@ -43,7 +45,6 @@ pub(super) fn plugin(app: &mut App) {
         .add_event::<SelectStructureTypeEvent>()
         .add_systems(OnEnter(Screen::Playing), enter_playing)
         .add_systems(OnEnter(Screen::Playing), add_starting_player_units)
-        .add_systems(OnEnter(GameState::Merchant), merchant_modal_layout)
         .add_systems(OnExit(Screen::Playing), exit_playing)
         .add_systems(OnEnter(Screen::Playing), building_panel_layout)
         .add_systems(
@@ -114,7 +115,6 @@ pub(super) fn plugin(app: &mut App) {
         (
             // exit_btn_interaction,
             end_turn_btn_interaction,
-            exit_mechant_btn_interaction,
             fight_btn_interaction,
             open_merchant_btn_interaction,
             update_unit_list_container
@@ -245,7 +245,7 @@ fn enter_playing(mut commands: Commands, icon_set: Res<IconSet>) {
                     .insert((
                         InteractionPalette {
                             none: Color::WHITE,
-                            hovered: Color::WHITE.with_luminance(0.8),
+                            hovered: Color::WHITE.lighter(0.4),
                             pressed: Color::WHITE,
                         },
                         OpenMerchantButton,
@@ -411,10 +411,11 @@ fn open_merchant_btn_interaction(
     q_interactions: Query<&Interaction, (Changed<Interaction>, With<OpenMerchantButton>)>,
     state: Res<State<TimeOfDay>>,
     mut next_game_state: ResMut<NextState<GameState>>,
+    selected_unit: Res<SelectedUnit>,
 ) {
     for interaction in q_interactions.iter() {
         if let Interaction::Pressed = interaction {
-            if *state.get() == TimeOfDay::Day {
+            if *state.get() == TimeOfDay::Day && selected_unit.entity.is_some() {
                 next_game_state.set(GameState::Merchant);
             }
         }
