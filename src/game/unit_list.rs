@@ -110,6 +110,9 @@ pub struct InventoryListLayout;
 #[derive(Resource, Default)]
 pub struct ItemSlotIcons(pub Vec<Entity>);
 
+#[derive(Component)]
+pub struct ItemSlotIndex(pub usize);
+
 pub fn inventory_list_layout(ui: &mut UiBuilder<Entity>) -> Vec<Entity> {
     let mut out = vec![];
     ui.column(|ui| {
@@ -121,7 +124,7 @@ pub fn inventory_list_layout(ui: &mut UiBuilder<Entity>) -> Vec<Entity> {
         });
         ui.row(|ui| {
             ui.style().column_gap(Val::Px(2.));
-            for _ in 0..INVENTORY_CAPACITY {
+            for i in 0..INVENTORY_CAPACITY {
                 let id = ui
                     .container(ButtonBundle { ..default() }, |ui| {
                         ui.icon("icons/population.png")
@@ -129,12 +132,15 @@ pub fn inventory_list_layout(ui: &mut UiBuilder<Entity>) -> Vec<Entity> {
                             .width(Val::Px(48.))
                             .height(Val::Px(48.));
                     })
+                    .insert(ItemSlotIndex(i))
                     .insert((InteractionPalette {
                         none: css::BLACK.into(),
                         hovered: css::DARK_GRAY.into(),
                         pressed: css::WHITE.into(),
                     },))
                     .style()
+                    .border(UiRect::all(Val::Px(2.)))
+                    .border_color(Color::WHITE)
                     .padding(UiRect::all(Val::Px(10.0)))
                     .border_radius(BorderRadius::all(Val::Px(5.0)))
                     .id();
@@ -199,7 +205,7 @@ pub fn update_inventory_icons(
     selected_unit: Res<SelectedUnit>,
     iq: Query<&Inventory>,
     slot_icons: Res<ItemSlotIcons>,
-    mut sq: Query<(&mut Style, &Children)>,
+    mut sq: Query<(&mut Style, &mut BorderColor, &Children)>,
 ) {
     let Some(selected_entity) = selected_unit.entity else {
         return;
@@ -210,12 +216,18 @@ pub fn update_inventory_icons(
     };
 
     for (i, e) in slot_icons.0.iter().enumerate() {
-        if let Ok((mut style, children)) = sq.get_mut(*e) {
+        if let Ok((mut style, mut b, children)) = sq.get_mut(*e) {
             style.display = if i < inventory.slot_count() {
                 Display::Flex
             } else {
                 Display::None
             };
+            b.0 = if Some(i) == inventory.selected_item {
+                css::YELLOW.into()
+            } else {
+                Color::BLACK.with_alpha(0.)
+            };
+
             for c in children.iter() {
                 if let Some(item) = inventory.get(i) {
                     commands
@@ -227,6 +239,30 @@ pub fn update_inventory_icons(
                         .ui_builder(*c)
                         .style()
                         .image(ImageSource::Path("icons/population.png".to_string()));
+                }
+            }
+        }
+    }
+}
+
+pub fn select_item_btn_interaction(
+    selected_unit: Res<SelectedUnit>,
+    q_interactions: Query<(&Interaction, &ItemSlotIndex), Changed<Interaction>>,
+    mut iq: Query<&mut Inventory>,
+) {
+    let Some(entity) = selected_unit.entity else {
+        return;
+    };
+    let Ok(mut inventory) = iq.get_mut(entity) else {
+        return;
+    };
+
+    for (interaction, select) in q_interactions.iter() {
+        if let Interaction::Pressed = interaction {
+            if select.0 < inventory.slot_count() {
+                if inventory.get(select.0).is_some() {
+                    println!("select item -> {:?}", select.0);
+                    inventory.selected_item = Some(select.0);
                 }
             }
         }

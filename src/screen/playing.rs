@@ -25,9 +25,9 @@ use crate::game::selection::SelectedUnit;
 use crate::game::unit::player::{add_starting_player_units, move_unit, reset_unit_turn_states};
 use crate::game::unit::AvailableUnitNames;
 use crate::game::unit_list::{
-    inventory_list_layout, inventory_list_layout_vis, select_player_unit_btn_interaction,
-    unit_list_layout, update_inventory_icons, update_selected_unit_name_label,
-    update_unit_list_container, ItemSlotIcons, PlayerUnitList,
+    inventory_list_layout, inventory_list_layout_vis, select_item_btn_interaction,
+    select_player_unit_btn_interaction, unit_list_layout, update_inventory_icons,
+    update_selected_unit_name_label, update_unit_list_container, ItemSlotIcons, PlayerUnitList,
 };
 use crate::game::WatchRes;
 use crate::game::{assets::SoundtrackKey, audio::soundtrack::PlaySoundtrack};
@@ -151,6 +151,7 @@ pub(super) fn plugin(app: &mut App) {
             (
                 inventory_list_layout_vis.run_if(in_state(Screen::Playing)),
                 update_inventory_icons.run_if(in_state(Screen::Playing)),
+                select_item_btn_interaction.run_if(in_state(Screen::Playing)),
             ),
         );
 
