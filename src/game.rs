@@ -36,6 +36,7 @@ pub(super) fn plugin(app: &mut App) {
         selection::SelectionPlugin,
         picking::PickingPlugin,
         unit::UnitPlugin,
+        item::ItemPlugin,
     ));
 }
 
