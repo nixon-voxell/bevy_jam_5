@@ -8,8 +8,13 @@ use crate::game::constants::TEXT_SIZE;
 use crate::game::inventory::Inventory;
 use crate::game::inventory::Item;
 use crate::game::inventory::ITEM_TEMPLATES;
+use crate::game::resources::VillageGold;
 use crate::game::selection::SelectedUnit;
+use crate::game::unit::PlayerUnit;
+use crate::game::unit_list::SellItemButton;
 use crate::game::MODAL_Z_LAYER;
+use crate::screen::playing::hide_all_with;
+use crate::screen::playing::show_all_with;
 use crate::screen::playing::GameState;
 use crate::ui::icon_set::IconSet;
 use crate::ui::palette::HEADER_SIZE;
@@ -22,11 +27,16 @@ pub struct MerchantModalPlugin;
 impl Plugin for MerchantModalPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<MerchantItems>()
-            .add_systems(OnEnter(GameState::Merchant), merchant_modal_layout)
+            .add_systems(
+                OnEnter(GameState::Merchant),
+                (merchant_modal_layout, show_all_with::<SellItemButton>),
+            )
+            .add_systems(OnExit(GameState::Merchant), hide_all_with::<SellItemButton>)
             .add_systems(
                 Update,
                 (
                     exit_mechant_btn_interaction,
+                    sell_btn_interaction,
                     item_btn_interaction,
                     buy_btn_interaction,
                 ),
@@ -48,6 +58,12 @@ pub struct CostLabel;
 
 #[derive(Component)]
 pub struct ExitMerchantButton;
+
+#[derive(Component)]
+pub struct SellButton;
+
+#[derive(Component)]
+pub struct ItemBorder(pub usize);
 
 #[derive(Resource, Default, Debug)]
 pub struct MerchantItems {
@@ -216,18 +232,58 @@ fn item_btn_interaction(
 }
 
 fn buy_btn_interaction(
+    selected_unit: Res<SelectedUnit>,
+    mut iq: Query<&mut Inventory>,
     q_interactions: Query<&Interaction, (Changed<Interaction>, With<BuyButton>)>,
     mut merchant_items: ResMut<MerchantItems>,
     mut next_game_state: ResMut<NextState<GameState>>,
 ) {
+    let Some(entity) = selected_unit.entity else {
+        return;
+    };
+    let Ok(mut inventory) = iq.get_mut(entity) else {
+        return;
+    };
+    let Some(slot) = inventory.get_empty_slot() else {
+        return;
+    };
+
     for interaction in q_interactions.iter() {
         if let Interaction::Pressed = interaction {
             if let Some(selected_item) = merchant_items
                 .selection
                 .and_then(|i| merchant_items.items[i].take())
             {
+                inventory.set(slot, selected_item.clone());
                 next_game_state.set(GameState::BuildingTurn);
                 // TODO: Add item to inventory
+            }
+        }
+    }
+}
+
+fn sell_btn_interaction(
+    selected: Res<SelectedUnit>,
+    q_interactions: Query<&Interaction, (Changed<Interaction>, With<SellItemButton>)>,
+    mut iq: Query<&mut Inventory>,
+    mut next_game_state: ResMut<NextState<GameState>>,
+    mut gold: ResMut<VillageGold>,
+) {
+    let Some(entity) = selected.entity else {
+        return;
+    };
+    let Ok(mut inventory) = iq.get_mut(entity) else {
+        return;
+    };
+
+    let Some(i) = inventory.selected_item else {
+        return;
+    };
+
+    for interaction in q_interactions.iter() {
+        if let Interaction::Pressed = interaction {
+            if let Some(item) = inventory.take(i) {
+                gold.0 += item.cost / 2;
             }
         }
     }

@@ -25,3 +25,5 @@ pub const TAVERN_FONT_SIZE: f32 = 20.;
 pub const RECRUIT_COST: u32 = 40;
 
 pub const SLOT_COST: u32 = 0;
+
+pub const UNIT_LIST_ZINDEX: ZIndex = ZIndex::Global(150);

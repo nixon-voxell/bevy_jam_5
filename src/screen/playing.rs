@@ -6,7 +6,7 @@ use bevy::prelude::*;
 use sickle_ui::prelude::*;
 
 use super::Screen;
-use crate::game::constants::{INITIAL_GOLD, INITIAL_POPULATION};
+use crate::game::constants::{INITIAL_GOLD, INITIAL_POPULATION, UNIT_LIST_ZINDEX};
 use crate::game::construction::{
     build_btn_interaction, building_panel_layout, spawn_in_progress_building, update_build_panel,
     update_building_progress, update_building_progress_labels, BuildingPanel, StructureCosts,
@@ -323,6 +323,7 @@ fn enter_playing(
         .column(|ui| {
             ui.insert(StateScoped(Screen::Playing));
             ui.style()
+                .z_index(UNIT_LIST_ZINDEX)
                 .width(Val::Percent(100.))
                 .height(Val::Percent(100.))
                 .justify_content(JustifyContent::Center);
@@ -413,9 +414,9 @@ pub struct OpenMerchantButton;
 pub struct FightButton;
 
 #[derive(Resource, Default)]
-struct DisplayCache(EntityHashMap<Display>);
+pub struct DisplayCache(EntityHashMap<Display>);
 
-fn hide_all_with<T: Component>(
+pub fn hide_all_with<T: Component>(
     mut displays: ResMut<DisplayCache>,
     mut q_vis: Query<(Entity, &mut Visibility, Option<&mut Style>), With<T>>,
 ) {
@@ -428,7 +429,7 @@ fn hide_all_with<T: Component>(
     }
 }
 
-fn show_all_with<T: Component>(
+pub fn show_all_with<T: Component>(
     mut displays: ResMut<DisplayCache>,
     mut q_vis: Query<(Entity, &mut Visibility, Option<&mut Style>), With<T>>,
 ) {
