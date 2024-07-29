@@ -78,12 +78,14 @@ impl Default for MaxInventorySize {
 /// List of an entity's equipped items
 #[derive(Component, Debug)]
 pub struct Inventory {
+    pub selected_item: Option<usize>,
     item_slots: Vec<Option<Item>>,
 }
 
 impl Default for Inventory {
     fn default() -> Self {
         Self {
+            selected_item: None,
             item_slots: vec![None; 3],
         }
     }
