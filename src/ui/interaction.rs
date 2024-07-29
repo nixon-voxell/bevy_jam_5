@@ -51,7 +51,7 @@ fn apply_animation(mut commands: Commands, q_entities: InteractionQuery<Entity>)
     for (interaction, entity) in q_entities.iter() {
         commands
             .entity(entity)
-            .insert(InteractAnimation(*interaction));
+            .try_insert(InteractAnimation(*interaction));
     }
 }
 
