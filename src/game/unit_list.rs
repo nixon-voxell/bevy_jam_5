@@ -1,3 +1,4 @@
+use super::inventory::Inventory;
 use super::selection::SelectedUnit;
 use super::unit::PlayerUnit;
 use super::unit::UnitName;
@@ -106,7 +107,11 @@ pub struct SelectedUnitNameLabel;
 #[derive(Component)]
 pub struct InventoryListLayout;
 
-pub fn inventory_list_layout(ui: &mut UiBuilder<Entity>) {
+#[derive(Resource, Default)]
+pub struct ItemSlotIcons(pub Vec<Entity>);
+
+pub fn inventory_list_layout(ui: &mut UiBuilder<Entity>) -> Vec<Entity> {
+    let mut out = vec![];
     ui.column(|ui| {
         ui.insert(InventoryListLayout);
         ui.style().align_items(AlignItems::End).row_gap(Val::Px(4.));
@@ -117,23 +122,27 @@ pub fn inventory_list_layout(ui: &mut UiBuilder<Entity>) {
         ui.row(|ui| {
             ui.style().column_gap(Val::Px(2.));
             for _ in 0..INVENTORY_CAPACITY {
-                ui.container(ButtonBundle { ..default() }, |ui| {
-                    ui.icon("icons/population.png")
-                        .style()
-                        .width(Val::Px(48.))
-                        .height(Val::Px(48.));
-                })
-                .insert((InteractionPalette {
-                    none: css::BLACK.into(),
-                    hovered: css::DARK_GRAY.into(),
-                    pressed: css::WHITE.into(),
-                },))
-                .style()
-                .padding(UiRect::all(Val::Px(10.0)))
-                .border_radius(BorderRadius::all(Val::Px(5.0)));
+                let id = ui
+                    .container(ButtonBundle { ..default() }, |ui| {
+                        ui.icon("icons/population.png")
+                            .style()
+                            .width(Val::Px(48.))
+                            .height(Val::Px(48.));
+                    })
+                    .insert((InteractionPalette {
+                        none: css::BLACK.into(),
+                        hovered: css::DARK_GRAY.into(),
+                        pressed: css::WHITE.into(),
+                    },))
+                    .style()
+                    .padding(UiRect::all(Val::Px(10.0)))
+                    .border_radius(BorderRadius::all(Val::Px(5.0)))
+                    .id();
+                out.push(id);
             }
         });
     });
+    out
 }
 
 pub fn update_selected_unit_name_label(
@@ -167,7 +176,7 @@ pub fn select_player_unit_btn_interaction(
 }
 
 pub fn inventory_list_layout_vis(
-    mut selected_unit: ResMut<SelectedUnit>,
+    selected_unit: Res<SelectedUnit>,
     mut query: Query<&mut Visibility, With<InventoryListLayout>>,
     pq: Query<&PlayerUnit>,
 ) {
@@ -182,5 +191,44 @@ pub fn inventory_list_layout_vis(
 
     for mut v in query.iter_mut() {
         *v = Visibility::Hidden;
+    }
+}
+
+pub fn update_inventory_icons(
+    mut commands: Commands,
+    selected_unit: Res<SelectedUnit>,
+    iq: Query<&Inventory>,
+    slot_icons: Res<ItemSlotIcons>,
+    mut sq: Query<(&mut Style, &Children)>,
+) {
+    let Some(selected_entity) = selected_unit.entity else {
+        return;
+    };
+
+    let Ok(inventory) = iq.get(selected_entity) else {
+        return;
+    };
+
+    for (i, e) in slot_icons.0.iter().enumerate() {
+        if let Ok((mut style, children)) = sq.get_mut(*e) {
+            style.display = if i < inventory.slot_count() {
+                Display::Flex
+            } else {
+                Display::None
+            };
+            for c in children.iter() {
+                if let Some(item) = inventory.get(i) {
+                    commands
+                        .ui_builder(*c)
+                        .style()
+                        .image(ImageSource::Path(format!("icons/{}.png", item.name)));
+                } else {
+                    commands
+                        .ui_builder(*c)
+                        .style()
+                        .image(ImageSource::Path("icons/population.png".to_string()));
+                }
+            }
+        }
     }
 }

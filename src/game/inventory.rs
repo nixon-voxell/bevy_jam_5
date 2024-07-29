@@ -86,7 +86,7 @@ impl Default for Inventory {
     fn default() -> Self {
         Self {
             selected_item: None,
-            item_slots: vec![None; 3],
+            item_slots: vec![Some(ITEM_TEMPLATES[2]), None, None],
         }
     }
 }
@@ -105,7 +105,7 @@ impl Inventory {
     }
 
     pub fn get(&self, slot: usize) -> Option<Item> {
-        self.item_slots[slot]
+        self.item_slots.get(slot).copied().flatten()
     }
 
     pub fn set(&mut self, slot: usize, item: Item) -> Option<Item> {

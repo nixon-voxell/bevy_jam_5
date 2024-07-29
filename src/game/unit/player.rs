@@ -32,6 +32,7 @@ pub fn spawn_player_unit(commands: &mut Commands, name: String) -> Entity {
                 .with_hit_points(3)
                 .with_movement(3),
             MaxInventorySize(3),
+            Inventory::default(),
         ))
         .id()
 }

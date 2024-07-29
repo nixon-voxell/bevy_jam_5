@@ -26,7 +26,8 @@ use crate::game::unit::player::{add_starting_player_units, move_unit, reset_unit
 use crate::game::unit::AvailableUnitNames;
 use crate::game::unit_list::{
     inventory_list_layout, inventory_list_layout_vis, select_player_unit_btn_interaction,
-    unit_list_layout, update_selected_unit_name_label, update_unit_list_container, PlayerUnitList,
+    unit_list_layout, update_inventory_icons, update_selected_unit_name_label,
+    update_unit_list_container, ItemSlotIcons, PlayerUnitList,
 };
 use crate::game::WatchRes;
 use crate::game::{assets::SoundtrackKey, audio::soundtrack::PlaySoundtrack};
@@ -52,6 +53,7 @@ pub(super) fn plugin(app: &mut App) {
         .init_resource::<StructureCosts>()
         .init_resource::<SelectedStructueType>()
         .init_resource::<TavernSubject>()
+        .init_resource::<ItemSlotIcons>()
         .add_event::<SelectStructureTypeEvent>()
         .add_systems(OnEnter(Screen::Playing), enter_playing)
         .add_systems(OnEnter(Screen::Playing), add_starting_player_units)
@@ -146,7 +148,10 @@ pub(super) fn plugin(app: &mut App) {
         )
         .add_systems(
             Update,
-            inventory_list_layout_vis.run_if(in_state(Screen::Playing)),
+            (
+                inventory_list_layout_vis.run_if(in_state(Screen::Playing)),
+                update_inventory_icons.run_if(in_state(Screen::Playing)),
+            ),
         );
 
     app.add_systems(
@@ -206,7 +211,11 @@ fn economy_status_layout(ui: &mut UiBuilder<Entity>) {
     });
 }
 
-fn enter_playing(mut commands: Commands, icon_set: Res<IconSet>) {
+fn enter_playing(
+    mut commands: Commands,
+    icon_set: Res<IconSet>,
+    mut item_slots: ResMut<ItemSlotIcons>,
+) {
     commands.trigger(PlaySoundtrack::Key(SoundtrackKey::Gameplay));
     commands
         .ui_builder(UiRoot)
@@ -242,7 +251,9 @@ fn enter_playing(mut commands: Commands, icon_set: Res<IconSet>) {
             .style()
             .flex_grow(1.);
             // Bottom panel
-            ui.row(inventory_list_layout);
+            ui.row(|ui| {
+                item_slots.0 = inventory_list_layout(ui);
+            });
             ui.row(|ui| {
                 ui.label(LabelConfig::from("Turn Until"))
                     .insert(WatchRes::<Turn>::default())
