@@ -18,9 +18,10 @@ use super::{Directions, Health, Movement};
 
 /// Distance from border that the enemy will spawn in.
 pub const ENEMY_SPAWN_RANGE: u32 = 2;
+/// Claw animation extra duration.
+pub const CLAW_ANIM_DURATAION: f32 = 1.0;
 const SPAWN_TRIAL: usize = 10;
 const ENEMY_MOVE_SPEED: f32 = 4.0;
-const ATTACK_DURATAION: f32 = 1.0;
 
 pub struct EnemyUnitPlugin;
 
@@ -71,13 +72,14 @@ fn perform_attack(
                 texture: icon_set.get("claw_mark"),
                 ..default()
             },
-            despawn_anim: DespawnAnimation::new(translation).with_extra_progress(ATTACK_DURATAION),
+            despawn_anim: DespawnAnimation::new(translation)
+                .with_extra_progress(CLAW_ANIM_DURATAION),
         });
         commands.add_trauma(0.5);
     }
 
     enemy_attack.factor += time.delta_seconds();
-    if enemy_attack.factor >= ATTACK_DURATAION {
+    if enemy_attack.factor >= CLAW_ANIM_DURATAION {
         // Deal damage
         if let Some(mut health) = village_map
             .object
