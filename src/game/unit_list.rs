@@ -1,4 +1,5 @@
 use super::selection::SelectedUnit;
+use super::unit::PlayerUnit;
 use super::unit::UnitName;
 use super::INVENTORY_CAPACITY;
 use crate::ui::prelude::InteractionPalette;
@@ -102,8 +103,12 @@ pub fn update_unit_list_container(
 #[derive(Component)]
 pub struct SelectedUnitNameLabel;
 
+#[derive(Component)]
+pub struct InventoryListLayout;
+
 pub fn inventory_list_layout(ui: &mut UiBuilder<Entity>) {
     ui.column(|ui| {
+        ui.insert(InventoryListLayout);
         ui.style().align_items(AlignItems::End).row_gap(Val::Px(4.));
         ui.row(|ui| {
             ui.label(LabelConfig::from("unit name"))
@@ -158,5 +163,24 @@ pub fn select_player_unit_btn_interaction(
         if let Interaction::Pressed = interaction {
             selected_unit.entity = Some(select.0);
         }
+    }
+}
+
+pub fn inventory_list_layout_vis(
+    mut selected_unit: ResMut<SelectedUnit>,
+    mut query: Query<&mut Visibility, With<InventoryListLayout>>,
+    pq: Query<&PlayerUnit>,
+) {
+    if let Some(entity) = selected_unit.entity {
+        if pq.contains(entity) {
+            for mut v in query.iter_mut() {
+                *v = Visibility::Visible;
+            }
+            return;
+        }
+    }
+
+    for mut v in query.iter_mut() {
+        *v = Visibility::Hidden;
     }
 }

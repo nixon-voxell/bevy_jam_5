@@ -25,8 +25,8 @@ use crate::game::selection::SelectedUnit;
 use crate::game::unit::player::{add_starting_player_units, move_unit, reset_unit_turn_states};
 use crate::game::unit::AvailableUnitNames;
 use crate::game::unit_list::{
-    inventory_list_layout, select_player_unit_btn_interaction, unit_list_layout,
-    update_selected_unit_name_label, update_unit_list_container, PlayerUnitList,
+    inventory_list_layout, inventory_list_layout_vis, select_player_unit_btn_interaction,
+    unit_list_layout, update_selected_unit_name_label, update_unit_list_container, PlayerUnitList,
 };
 use crate::game::WatchRes;
 use crate::game::{assets::SoundtrackKey, audio::soundtrack::PlaySoundtrack};
@@ -143,6 +143,10 @@ pub(super) fn plugin(app: &mut App) {
         .add_systems(
             OnExit(GameState::BuildingTurn),
             hide_all_with::<BuildingPanel>,
+        )
+        .add_systems(
+            Update,
+            inventory_list_layout_vis.run_if(in_state(Screen::Playing)),
         );
 
     app.add_systems(
