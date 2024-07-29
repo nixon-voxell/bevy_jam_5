@@ -19,7 +19,11 @@ use crate::game::events::{EndDayTurn, SelectStructureTypeEvent};
 use crate::game::resources::{
     SelectedStructueType, VillageEmployment, VillageGold, VillagePopulation,
 };
+
 use crate::game::selection::dispatch_object_pressed;
+
+use crate::game::selection::SelectedUnit;
+
 use crate::game::unit::player::{add_starting_player_units, move_unit, reset_unit_turn_states};
 use crate::game::unit::AvailableUnitNames;
 use crate::game::unit_list::{
@@ -28,16 +32,21 @@ use crate::game::unit_list::{
 };
 use crate::game::WatchRes;
 use crate::game::{assets::SoundtrackKey, audio::soundtrack::PlaySoundtrack};
-use crate::modals::merchant::{exit_mechant_btn_interaction, merchant_modal_layout};
+
 use crate::modals::tavern::{
     enter_tavern_modal, exit_tavern_btn_interaction, tavern_button, tavern_modal_layout,
     update_slot_labels, upgrade_buttons, TavernSubject,
 };
+
+use crate::modals::merchant::MerchantModalPlugin;
+use crate::ui::icon_set::IconSet;
+
 use crate::ui::interaction::apply_interaction_palette;
 use crate::ui::{palette::*, prelude::*};
 
 pub(super) fn plugin(app: &mut App) {
-    app.init_state::<GameState>()
+    app.add_plugins(MerchantModalPlugin)
+        .init_state::<GameState>()
         .enable_state_scoped_entities::<GameState>()
         .init_resource::<DisplayCache>()
         .init_resource::<AvailableUnitNames>()
@@ -48,7 +57,6 @@ pub(super) fn plugin(app: &mut App) {
         .add_event::<SelectStructureTypeEvent>()
         .add_systems(OnEnter(Screen::Playing), enter_playing)
         .add_systems(OnEnter(Screen::Playing), add_starting_player_units)
-        .add_systems(OnEnter(GameState::Merchant), merchant_modal_layout)
         .add_systems(OnEnter(GameState::Tavern), tavern_modal_layout)
         .add_systems(
             Update,
@@ -66,7 +74,14 @@ pub(super) fn plugin(app: &mut App) {
         )
         .add_systems(
             OnEnter(GameState::Deployment),
-            hide_all_with::<EndTurnButton>,
+            (
+                hide_all_with::<EndTurnButton>,
+                hide_all_with::<OpenMerchantButton>,
+            ),
+        )
+        .add_systems(
+            OnEnter(GameState::BuildingTurn),
+            show_all_with::<OpenMerchantButton>,
         )
         .add_systems(
             Update,
@@ -124,8 +139,8 @@ pub(super) fn plugin(app: &mut App) {
         (
             // exit_btn_interaction,
             end_turn_btn_interaction,
-            exit_mechant_btn_interaction,
             fight_btn_interaction,
+            open_merchant_btn_interaction,
             update_unit_list_container
                 .run_if(in_state(Screen::Playing))
                 .before(apply_interaction_palette),
@@ -176,7 +191,7 @@ fn economy_status_layout(ui: &mut UiBuilder<Entity>) {
     });
 }
 
-fn enter_playing(mut commands: Commands) {
+fn enter_playing(mut commands: Commands, icon_set: Res<IconSet>) {
     commands.trigger(PlaySoundtrack::Key(SoundtrackKey::Gameplay));
     commands
         .ui_builder(UiRoot)
@@ -239,43 +254,68 @@ fn enter_playing(mut commands: Commands) {
 
                 ui.column(|_| {}).style().flex_grow(1.);
 
-                ui.container(ButtonBundle { ..default() }, |ui| {
-                    ui.label(LabelConfig::from("End Turn"))
-                        .insert(EndTurnButton)
-                        .style()
-                        .font_size(LABEL_SIZE);
-                })
-                .insert((
-                    InteractionPalette {
-                        none: css::RED.into(),
-                        hovered: css::DARK_RED.into(),
-                        pressed: css::INDIAN_RED.into(),
-                    },
-                    EndTurnButton,
-                ))
-                .insert(EndTurnButton)
-                .style()
-                .padding(UiRect::all(Val::Px(10.)))
-                .border_radius(BorderRadius::all(Val::Px(5.)));
+                ui.column(|ui| {
+                    ui.style()
+                        .justify_content(JustifyContent::Center)
+                        .justify_items(JustifyItems::Center);
 
-                ui.container(ButtonBundle { ..default() }, |ui| {
-                    ui.label(LabelConfig::from("Fight"))
-                        .insert(FightButton)
-                        .style()
-                        .font_size(LABEL_SIZE);
-                })
-                .insert((
-                    InteractionPalette {
-                        none: css::PURPLE.into(),
-                        hovered: css::DARK_RED.into(),
-                        pressed: css::INDIAN_RED.into(),
-                    },
-                    FightButton,
-                ))
-                .style()
-                .display(Display::None)
-                .padding(UiRect::all(Val::Px(10.)))
-                .border_radius(BorderRadius::all(Val::Px(5.)));
+                    ui.container(
+                        ButtonBundle {
+                            image: UiImage::new(icon_set.get("shop")),
+                            ..default()
+                        },
+                        |_| {},
+                    )
+                    .insert((
+                        InteractionPalette {
+                            none: Color::WHITE,
+                            hovered: Color::WHITE.lighter(0.4),
+                            pressed: Color::WHITE,
+                        },
+                        OpenMerchantButton,
+                    ))
+                    .style()
+                    .margin(UiRect::all(Val::Px(10.)))
+                    .border_radius(BorderRadius::all(Val::Px(50.)))
+                    .width(Val::Px(100.0))
+                    .height(Val::Px(100.0));
+
+                    ui.container(ButtonBundle::default(), |ui| {
+                        ui.label(LabelConfig::from("End Turn"))
+                            .style()
+                            .font_size(LABEL_SIZE);
+                    })
+                    .insert((
+                        InteractionPalette {
+                            none: css::RED.into(),
+                            hovered: css::DARK_RED.into(),
+                            pressed: css::INDIAN_RED.into(),
+                        },
+                        EndTurnButton,
+                    ))
+                    .style()
+                    .padding(UiRect::all(Val::Px(10.)))
+                    .border_radius(BorderRadius::all(Val::Px(5.)));
+
+                    ui.container(ButtonBundle { ..default() }, |ui| {
+                        ui.label(LabelConfig::from("Fight"))
+                            .insert(FightButton)
+                            .style()
+                            .font_size(LABEL_SIZE);
+                    })
+                    .insert((
+                        InteractionPalette {
+                            none: css::PURPLE.into(),
+                            hovered: css::DARK_RED.into(),
+                            pressed: css::INDIAN_RED.into(),
+                        },
+                        FightButton,
+                    ))
+                    .style()
+                    .display(Display::None)
+                    .padding(UiRect::all(Val::Px(10.)))
+                    .border_radius(BorderRadius::all(Val::Px(5.)));
+                });
             });
         })
         .insert(StateScoped(Screen::Playing));
@@ -391,6 +431,20 @@ fn fight_btn_interaction(
     }
 }
 
+fn open_merchant_btn_interaction(
+    q_interactions: Query<&Interaction, (Changed<Interaction>, With<OpenMerchantButton>)>,
+    state: Res<State<TimeOfDay>>,
+    mut next_game_state: ResMut<NextState<GameState>>,
+) {
+    for interaction in q_interactions.iter() {
+        if let Interaction::Pressed = interaction {
+            if *state.get() == TimeOfDay::Day {
+                next_game_state.set(GameState::Merchant);
+            }
+        }
+    }
+}
+
 fn exit_playing(mut commands: Commands) {
     // We could use [`StateScoped`] on the sound playing entites instead.
     commands.trigger(PlaySoundtrack::Disable);
@@ -410,6 +464,9 @@ pub enum GameState {
 
 #[derive(Component)]
 pub struct EndTurnButton;
+
+#[derive(Component)]
+pub struct OpenMerchantButton;
 
 /// When clicked end deployment
 #[derive(Component)]

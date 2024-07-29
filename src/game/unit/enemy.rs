@@ -122,7 +122,7 @@ fn move_enemies(
                 .insert(DespawnAnimation::new(transform.translation).with_recursive(true));
             village_map.object.remove_entity(enemy_entity);
         }
-        next_game_state.set(GameState::Merchant);
+        next_game_state.set(GameState::BuildingTurn);
         return;
     }
 

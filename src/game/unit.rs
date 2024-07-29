@@ -111,15 +111,22 @@ fn health_ui(
         (Entity, &HitPoints, &Health, &mut HealthIcons, &Transform),
         Or<(Changed<HitPoints>, Changed<Health>)>,
     >,
+    q_is_player: Query<(), With<PlayerUnit>>,
     mut village_map: ResMut<VillageMap>,
     icon_set: Res<IconSet>,
 ) {
     for (entity, hit_point, health, mut icons, transform) in q_hit_points.iter_mut() {
         if health.0 == 0 {
             // Object dies
-            commands
-                .entity(entity)
-                .insert(DespawnAnimation::new(transform.translation).with_recursive(true));
+            let mut despawn_animation =
+                DespawnAnimation::new(transform.translation).with_recursive(true);
+
+            if q_is_player.contains(entity) {
+                despawn_animation = despawn_animation.with_hide_only(true);
+                // Player unit will only have 1 health for the next round
+                commands.entity(entity).insert(Health(1));
+            }
+            commands.entity(entity).insert(despawn_animation);
             village_map.object.remove_entity(entity);
             return;
         }

@@ -15,7 +15,7 @@ pub const ICON_SIZE: Val = Val::Px(16.);
 
 pub const BUILDING_COSTS_PANEL_Z_INDEX: ZIndex = ZIndex::Global(10);
 
-pub const TEXT_SIZE: f32 = 20.;
+pub const TEXT_SIZE: f32 = 16.;
 pub const BIG_TEXT_SIZE: f32 = 30.;
 
 pub const UPGRADE_COST: u32 = 60;

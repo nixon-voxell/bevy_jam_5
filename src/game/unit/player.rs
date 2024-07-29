@@ -1,7 +1,11 @@
 use bevy::prelude::*;
 
 use crate::game::cycle::EndTurn;
+
 use crate::game::inventory::MaxInventorySize;
+
+use crate::game::inventory::Inventory;
+
 use crate::game::map::{VillageMap, ROOK_MOVES};
 pub use crate::game::picking::TilePressedEvent;
 use crate::game::selection::SelectedUnit;
@@ -14,9 +18,6 @@ use super::*;
 
 pub const INITIAL_PLAYER_UNITS: usize = 2;
 pub const MAX_PLAYER_UNITS: usize = 5;
-
-#[derive(Component, Default)]
-pub struct PlayerUnit;
 
 pub fn add_starting_player_units(
     mut available_names: ResMut<AvailableUnitNames>,

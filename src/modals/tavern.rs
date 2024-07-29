@@ -208,7 +208,7 @@ pub fn tavern_modal_layout(
                 .right(Val::Px(16.));
             });
         })
-        .insert(StateScoped(GameState::Merchant))
+        .insert(StateScoped(GameState::Tavern))
         .style()
         .focus_policy(FocusPolicy::Block)
         .z_index(ZIndex::Global(MODAL_Z_LAYER))
