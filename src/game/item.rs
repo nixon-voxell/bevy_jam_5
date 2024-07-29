@@ -55,7 +55,7 @@ fn apply_item_effect(
                     return;
                 };
 
-                if turn_state.used_action || turn_state.used_move == false {
+                if turn_state.used_action == false {
                     return;
                 }
 
