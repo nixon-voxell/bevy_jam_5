@@ -111,7 +111,6 @@ fn move_enemies(
     q_not_enemy_units: Query<(), Without<EnemyUnit>>,
     mut q_sprites: Query<(&mut Sprite, &mut Visibility)>,
     q_transforms: Query<&Transform, Without<EnemyUnit>>,
-    mut q_vis: Query<&mut Visibility>,
     mut next_game_state: ResMut<NextState<GameState>>,
     mut next_enemy_action_state: ResMut<NextState<EnemyActionState>>,
     mut village_map: ResMut<VillageMap>,
@@ -144,7 +143,7 @@ fn move_enemies(
 
         // Hide all thick borders
         for border in selection_map.thick_borders.values() {
-            if let Ok(mut vis) = q_vis.get_mut(*border) {
+            if let Ok((_, mut vis)) = q_sprites.get_mut(*border) {
                 *vis = Visibility::Hidden;
             }
         }
