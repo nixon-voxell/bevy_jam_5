@@ -216,20 +216,10 @@ fn item_btn_interaction(
 }
 
 fn buy_btn_interaction(
-    mut commands: Commands,
     q_interactions: Query<&Interaction, (Changed<Interaction>, With<BuyButton>)>,
-    mut q_inventories: Query<&mut Inventory>,
     mut merchant_items: ResMut<MerchantItems>,
     mut next_game_state: ResMut<NextState<GameState>>,
-    selected_unit: Res<SelectedUnit>,
 ) {
-    let Some(selected_unit) = selected_unit.entity else {
-        return;
-    };
-    let Ok(mut inventory) = q_inventories.get_mut(selected_unit) else {
-        return;
-    };
-
     for interaction in q_interactions.iter() {
         if let Interaction::Pressed = interaction {
             if let Some(selected_item) = merchant_items
@@ -237,17 +227,7 @@ fn buy_btn_interaction(
                 .and_then(|i| merchant_items.items[i].take())
             {
                 next_game_state.set(GameState::BuildingTurn);
-
-                if let Some(index) = inventory.get_empty_slot() {
-                    let item_id = commands
-                        .entity(selected_unit)
-                        .with_children(|builder| {
-                            // builder.spawn()
-                        })
-                        .id();
-
-                    inventory.set(index, item_id);
-                }
+                // TODO: Add item to inventory
             }
         }
     }

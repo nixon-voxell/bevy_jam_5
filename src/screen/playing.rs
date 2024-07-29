@@ -411,11 +411,10 @@ fn open_merchant_btn_interaction(
     q_interactions: Query<&Interaction, (Changed<Interaction>, With<OpenMerchantButton>)>,
     state: Res<State<TimeOfDay>>,
     mut next_game_state: ResMut<NextState<GameState>>,
-    selected_unit: Res<SelectedUnit>,
 ) {
     for interaction in q_interactions.iter() {
         if let Interaction::Pressed = interaction {
-            if *state.get() == TimeOfDay::Day && selected_unit.entity.is_some() {
+            if *state.get() == TimeOfDay::Day {
                 next_game_state.set(GameState::Merchant);
             }
         }

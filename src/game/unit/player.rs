@@ -33,7 +33,6 @@ pub fn add_starting_player_units(
                     .with_health(3)
                     .with_hit_points(3)
                     .with_movement(3),
-                Inventory::default(),
             ))
             .id();
         player_unit_list.0.push(id);
