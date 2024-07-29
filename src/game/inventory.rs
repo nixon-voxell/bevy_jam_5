@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 /// Maximum number of the items a character can
 #[derive(Component, Debug)]
-pub struct MaxInventorySize(pub usize);
+pub struct MaxInventorySize(pub u32);
 
 impl Default for MaxInventorySize {
     fn default() -> Self {

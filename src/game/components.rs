@@ -52,3 +52,14 @@ pub struct BuildingProgressLabel;
 
 #[derive(Component)]
 pub struct ConstructionWorkers(pub u32);
+
+#[derive(Component)]
+pub struct Tavern;
+#[derive(Component)]
+pub struct House;
+
+#[derive(Component)]
+pub struct Blacksmith;
+
+#[derive(Component)]
+pub struct ArcherTower;

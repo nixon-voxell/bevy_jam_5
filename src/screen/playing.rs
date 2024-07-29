@@ -19,6 +19,7 @@ use crate::game::events::{EndDayTurn, SelectStructureTypeEvent};
 use crate::game::resources::{
     SelectedStructueType, VillageEmployment, VillageGold, VillagePopulation,
 };
+use crate::game::selection::dispatch_object_pressed;
 use crate::game::unit::player::{add_starting_player_units, move_unit, reset_unit_turn_states};
 use crate::game::unit::AvailableUnitNames;
 use crate::game::unit_list::{
@@ -28,6 +29,10 @@ use crate::game::unit_list::{
 use crate::game::WatchRes;
 use crate::game::{assets::SoundtrackKey, audio::soundtrack::PlaySoundtrack};
 use crate::modals::merchant::{exit_mechant_btn_interaction, merchant_modal_layout};
+use crate::modals::tavern::{
+    enter_tavern_modal, exit_tavern_btn_interaction, tavern_button, tavern_modal_layout,
+    update_slot_labels, upgrade_buttons, TavernSubject,
+};
 use crate::ui::interaction::apply_interaction_palette;
 use crate::ui::{palette::*, prelude::*};
 
@@ -39,10 +44,16 @@ pub(super) fn plugin(app: &mut App) {
         .init_resource::<PlayerUnitList>()
         .init_resource::<StructureCosts>()
         .init_resource::<SelectedStructueType>()
+        .init_resource::<TavernSubject>()
         .add_event::<SelectStructureTypeEvent>()
         .add_systems(OnEnter(Screen::Playing), enter_playing)
         .add_systems(OnEnter(Screen::Playing), add_starting_player_units)
         .add_systems(OnEnter(GameState::Merchant), merchant_modal_layout)
+        .add_systems(OnEnter(GameState::Tavern), tavern_modal_layout)
+        .add_systems(
+            Update,
+            exit_tavern_btn_interaction.run_if(in_state(GameState::Tavern)),
+        )
         .add_systems(OnExit(Screen::Playing), exit_playing)
         .add_systems(OnEnter(Screen::Playing), building_panel_layout)
         .add_systems(
@@ -99,6 +110,13 @@ pub(super) fn plugin(app: &mut App) {
                     .run_if(in_state(Screen::Playing))
                     .after(update_building_progress),
             ),
+        )
+        .add_systems(Update, enter_tavern_modal.after(dispatch_object_pressed))
+        .add_systems(
+            Update,
+            (tavern_button, upgrade_buttons, update_slot_labels)
+                .chain()
+                .run_if(in_state(GameState::Tavern)),
         );
 
     app.add_systems(
