@@ -1,8 +1,13 @@
 use super::deployment::deploy_unit;
 use super::level::Terrain;
 use super::map::VillageMap;
+use super::picking::dispatch_pressed_tile;
 use super::picking::PickedTile;
+
+use super::picking::TilePressedEvent;
+
 use super::unit::EnemyUnit;
+
 use super::unit::Movement;
 use super::unit::UnitTurnState;
 use crate::game::map::ROOK_MOVES;
@@ -22,6 +27,7 @@ impl Plugin for SelectionPlugin {
             .init_resource::<SelectionMap>()
             .init_resource::<SelectedUnit>()
             .add_event::<SelectionEvent>()
+            .add_event::<ObjectPressedEvent>()
             .add_systems(
                 Update,
                 (
@@ -236,6 +242,22 @@ pub fn on_selection(
                     commands.entity(entity).despawn();
                 }
             }
+        }
+    }
+}
+
+#[derive(Event, Copy, Clone, PartialEq)]
+pub struct ObjectPressedEvent(pub Entity);
+
+pub fn dispatch_object_pressed(
+    map: Res<VillageMap>,
+    mut events: EventReader<TilePressedEvent>,
+    mut dispatcher: EventWriter<ObjectPressedEvent>,
+) {
+    for TilePressedEvent(tile) in events.read().copied() {
+        if let Some(entity) = map.object.get(tile) {
+            println!("object pressed -> {entity:?}");
+            dispatcher.send(ObjectPressedEvent(entity));
         }
     }
 }

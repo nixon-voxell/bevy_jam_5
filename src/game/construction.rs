@@ -6,9 +6,13 @@ use sickle_ui::prelude::*;
 use crate::screen::Screen;
 use crate::ui::prelude::InteractionPalette;
 
+use super::components::ArcherTower;
+use super::components::Blacksmith;
 use super::components::BuildingProgressLabel;
 use super::components::ConstructionWorkers;
+use super::components::House;
 use super::components::RemainingConstructionTurns;
+use super::components::Tavern;
 use super::constants::BIG_TEXT_SIZE;
 use super::constants::ICON_SIZE;
 use super::constants::TEXT_SIZE;
@@ -263,6 +267,9 @@ pub fn update_build_panel(
     }
 }
 
+#[derive(Component)]
+pub struct BuildingSite;
+
 pub fn spawn_in_progress_building(
     mut commands: Commands,
     mut events: EventReader<TilePressedEvent>,
@@ -324,6 +331,7 @@ pub fn spawn_in_progress_building(
                 structure_type,
                 RemainingConstructionTurns(cost.turns),
                 ConstructionWorkers(cost.workers),
+                BuildingSite,
             ))
             .with_children(|builder| {
                 builder.spawn((
@@ -382,24 +390,47 @@ pub fn update_building_progress(
                     continue;
                 };
                 let object_translation = tile_coord_translation(tile.x as f32, tile.y as f32, 2.);
-                let object_entity = commands
-                    .spawn((
-                        SpriteBundle {
-                            sprite: Sprite {
-                                anchor: TILE_ANCHOR,
-                                ..Default::default()
-                            },
-                            texture: tile_set.get(s.tile_texture()),
-                            transform: Transform::from_translation(object_translation),
-                            ..default()
+                let mut object_entity = commands.spawn((
+                    SpriteBundle {
+                        sprite: Sprite {
+                            anchor: TILE_ANCHOR,
+                            ..Default::default()
                         },
-                        PickableTile,
-                        StateScoped(Screen::Playing),
-                        StructureBundle::default(),
-                        SpawnAnimation::new(object_translation),
-                    ))
-                    .id();
-                village_map.object.set(tile, object_entity);
+                        texture: tile_set.get(s.tile_texture()),
+                        transform: Transform::from_translation(object_translation),
+                        ..default()
+                    },
+                    PickableTile,
+                    StateScoped(Screen::Playing),
+                    StructureBundle::default(),
+                    SpawnAnimation::new(object_translation),
+                    s.clone(),
+                ));
+                println!("building structure type = {s:?}");
+                println!("entity = {:?}", object_entity.id());
+                match s {
+                    StructureType::Tavern => {
+                        println!("Insert Tavern");
+                        object_entity.insert(Tavern);
+                    }
+                    StructureType::SmallHouse => {
+                        object_entity.insert(House);
+                    }
+                    StructureType::House => {
+                        object_entity.insert(House);
+                    }
+                    StructureType::StrongHouse => {
+                        object_entity.insert(House);
+                    }
+                    StructureType::ArcherTower => {
+                        object_entity.insert(ArcherTower);
+                    }
+                    StructureType::Blacksmith => {
+                        object_entity.insert(Blacksmith);
+                    }
+                };
+
+                village_map.object.set(tile, object_entity.id());
             }
         }
     }

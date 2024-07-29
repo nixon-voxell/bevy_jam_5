@@ -9,6 +9,7 @@ use crate::screen::Screen;
 use super::deployment::deploy_unit;
 use super::level::TileBorder;
 use super::map::VillageMap;
+use super::selection::dispatch_object_pressed;
 use super::selection::SelectionMap;
 use super::tile_set::TILE_HALF_HEIGHT;
 use super::tile_set::TILE_WIDTH;
@@ -28,6 +29,7 @@ impl Plugin for PickingPlugin {
                     pick_tile,
                     show_border_on_tile_pick,
                     dispatch_pressed_tile,
+                    dispatch_object_pressed,
                     deploy_unit.run_if(in_state(GameState::Deployment)),
                 )
                     .chain()
@@ -44,12 +46,6 @@ pub fn pick_tile(
     tiles_query: Query<(Entity, &GlobalTransform), With<PickableTile>>,
 ) {
     let mut picked_set = false;
-    // for previous in picked_tile_entity.0.drain(..) {
-    //     sprite_query
-    //         .get_mut(previous)
-    //         .map(|mut sprite| sprite.color = Color::WHITE)
-    //         .ok();
-    // }
 
     picked_tile_entity.0.clear();
 
@@ -138,7 +134,7 @@ pub fn find_picked_point(
     }
 }
 
-#[derive(Event, Debug)]
+#[derive(Event, Debug, Copy, Clone)]
 pub struct TilePressedEvent(pub IVec2);
 
 pub fn dispatch_pressed_tile(

@@ -1,9 +1,13 @@
 use bevy::prelude::*;
 
 use crate::game::cycle::EndTurn;
+
+use crate::game::inventory::MaxInventorySize;
+
 use crate::game::inventory::Inventory;
+
 use crate::game::map::{VillageMap, ROOK_MOVES};
-use crate::game::picking::TilePressedEvent;
+pub use crate::game::picking::TilePressedEvent;
 use crate::game::selection::SelectedUnit;
 use crate::game::tile_set::tile_coord_translation;
 use crate::game::unit_list::PlayerUnitList;
@@ -33,10 +37,10 @@ pub fn add_starting_player_units(
                     .with_health(3)
                     .with_hit_points(3)
                     .with_movement(3),
+                MaxInventorySize(3),
             ))
             .id();
         player_unit_list.0.push(id);
-        println!("add name: {name} ({id})");
     }
 }
 
@@ -48,16 +52,13 @@ pub fn move_unit(
     mut transform: Query<&mut Transform>,
 ) {
     if let Some(TilePressedEvent(target)) = event_reader.read().last() {
-        println!("tile pressed -> {target:?}");
         let Some(selected) = selected_unit.entity else {
             return;
         };
 
-        println!("selected -> {selected:?}");
         let Ok((mut turn_state, movement)) = turn_state_query.get_mut(selected) else {
             return;
         };
-        println!("turn state -> {turn_state:?}");
 
         if turn_state.used_move || movement.0 == 0 {
             return;
@@ -66,8 +67,6 @@ pub fn move_unit(
         let Some(current_pos) = map.object.locate(selected).filter(|pos| *pos != *target) else {
             return;
         };
-
-        println!("current_pose = {current_pos}");
 
         if find_all_within_distance_unweighted(current_pos, movement.0, |t| {
             map.terrain
@@ -88,12 +87,15 @@ pub fn move_unit(
 pub fn reset_unit_turn_states(
     mut events: EventReader<EndTurn>,
     mut query: Query<&mut UnitTurnState>,
+    state: Res<State<GameState>>,
     mut next_game_state: ResMut<NextState<GameState>>,
 ) {
     for _ in events.read() {
         for mut turn_state in query.iter_mut() {
             turn_state.reset();
-            next_game_state.set(GameState::EnemyTurn);
+            if *state.get() == GameState::BattleTurn {
+                next_game_state.set(GameState::EnemyTurn);
+            }
         }
     }
 }

@@ -130,6 +130,7 @@ fn move_enemies(
         q_enemy_units.iter_mut().find(|(.., path)| path.is_some())
     else {
         next_enemy_action_state.set(EnemyActionState::Attack);
+        println!("end enemy set BattleTurn");
         next_game_state.set(GameState::BattleTurn);
         return;
     };
