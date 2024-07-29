@@ -68,7 +68,7 @@ pub fn update_unit_list_container(
                     .border(UiRect::all(Val::Px(2.)))
                     .column_gap(Val::Px(4.))
                     .width(Val::Percent(100.))
-                    .padding(UiRect::all(Val::Px(4.)));
+                    .padding(UiRect::axes(Val::Px(10.), Val::Px(6.)));
                 ui.style()
                     .align_items(AlignItems::Center)
                     .justify_content(JustifyContent::SpaceBetween);
@@ -76,8 +76,8 @@ pub fn update_unit_list_container(
                 ui.icon("icons/human.png")
                     .insert(PlayerUnitIcon)
                     .style()
-                    .width(Val::Px(64.))
-                    .height(Val::Px(64.));
+                    .width(Val::Px(16.))
+                    .height(Val::Px(24.));
 
                 ui.row(|ui| {
                     ui.style().padding(UiRect::all(Val::Px(4.)));
