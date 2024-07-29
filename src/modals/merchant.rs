@@ -255,10 +255,11 @@ fn buy_btn_interaction(
                 .selection
                 .and_then(|i| merchant_items.items[i].take())
             {
-                gold.0 = gold.0.saturating_sub(selected_item.cost);
-                inventory.set(slot, *selected_item);
-                next_game_state.set(GameState::BuildingTurn);
-                // TODO: Add item to inventory
+                if selected_item.cost <= gold.0 {
+                    gold.0 = gold.0.saturating_sub(selected_item.cost);
+                    inventory.set(slot, *selected_item);
+                    next_game_state.set(GameState::BuildingTurn);
+                }
             }
         }
     }
