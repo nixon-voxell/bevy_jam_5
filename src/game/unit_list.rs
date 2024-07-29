@@ -3,6 +3,7 @@ use super::selection::SelectedUnit;
 use super::unit::PlayerUnit;
 use super::unit::UnitName;
 use super::INVENTORY_CAPACITY;
+use crate::ui::palette::LABEL_SIZE;
 use crate::ui::prelude::InteractionPalette;
 use bevy::color::palettes::css;
 use bevy::prelude::*;
@@ -113,6 +114,9 @@ pub struct ItemSlotIcons(pub Vec<Entity>);
 #[derive(Component)]
 pub struct ItemSlotIndex(pub usize);
 
+#[derive(Component)]
+pub struct SellItemButton;
+
 pub fn inventory_list_layout(ui: &mut UiBuilder<Entity>) -> Vec<Entity> {
     let mut out = vec![];
     ui.column(|ui| {
@@ -146,6 +150,29 @@ pub fn inventory_list_layout(ui: &mut UiBuilder<Entity>) -> Vec<Entity> {
                     .id();
                 out.push(id);
             }
+        });
+        ui.row(|ui| {
+            ui.row(|ui| {
+                ui.style()
+                    .position_type(PositionType::Absolute)
+                    .margin(UiRect::top(Val::Percent(50.)));
+                ui.container(ButtonBundle::default(), |ui| {
+                    ui.label(LabelConfig::from("Sell item"))
+                        .style()
+                        .font_size(LABEL_SIZE);
+                })
+                .insert((
+                    InteractionPalette {
+                        none: css::RED.into(),
+                        hovered: css::DARK_RED.into(),
+                        pressed: css::INDIAN_RED.into(),
+                    },
+                    SellItemButton,
+                ))
+                .style()
+                .padding(UiRect::all(Val::Px(10.)))
+                .border_radius(BorderRadius::all(Val::Px(5.)));
+            });
         });
     });
     out
