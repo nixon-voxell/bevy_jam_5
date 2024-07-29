@@ -39,7 +39,7 @@ pub struct TileBorder;
 #[derive(Component)]
 pub struct TileThickBorder;
 
-fn load_level(
+pub fn load_level(
     mut commands: Commands,
     mut village_camera_query: Query<&mut Transform, With<VillageCamera>>,
     enemies_query: Query<(), With<EnemyUnit>>,

@@ -13,10 +13,7 @@ pub struct SpawnUnitPlugin;
 
 impl Plugin for SpawnUnitPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(
-            PostUpdate,
-            (spawn_animation, despawn_animation).run_if(in_state(Screen::Playing)),
-        );
+        app.add_systems(PostUpdate, (spawn_animation, despawn_animation));
     }
 }
 
