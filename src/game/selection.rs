@@ -1,9 +1,7 @@
 use super::components::GroundTileLayer;
 use super::deployment::deploy_unit;
-use super::level::Terrain;
 use super::map::MapPos;
 use super::map::VillageMap;
-use super::picking::dispatch_pressed_tile;
 use super::picking::PickedTile;
 
 use super::picking::TilePressedEvent;
@@ -124,7 +122,6 @@ pub fn show_selected_tiles(
 
 fn color_selected_tiles(
     selected_tiles: Res<SelectedTiles>,
-    village_map: Res<VillageMap>,
     mut query: Query<(&mut Sprite, &MapPos), With<GroundTileLayer>>,
 ) {
     for (mut s, p) in query.iter_mut() {

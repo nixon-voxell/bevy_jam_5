@@ -6,7 +6,6 @@ use crate::game::inventory::MaxInventorySize;
 
 use crate::game::inventory::Inventory;
 
-use crate::game::level::Terrain;
 use crate::game::map::{VillageMap, ROOK_MOVES};
 pub use crate::game::picking::TilePressedEvent;
 use crate::game::selection::SelectedUnit;
@@ -17,7 +16,6 @@ use crate::screen::playing::GameState;
 use super::*;
 
 pub const INITIAL_PLAYER_UNITS: usize = 2;
-pub const MAX_PLAYER_UNITS: usize = 5;
 
 pub fn spawn_player_unit(commands: &mut Commands, name: String) -> Entity {
     commands
@@ -63,7 +61,6 @@ pub fn move_unit(
         ),
         With<PlayerUnit>,
     >,
-    terrains: Query<&Terrain>,
 ) {
     if let Some(TilePressedEvent(target)) = event_reader.read().last() {
         let Some(selected) = selected_unit.entity else {

@@ -83,7 +83,7 @@ pub fn load_level(
             let object_translation = tile_coord_translation(xf, yf, 2.0);
 
             let (xi, yi) = (x as i32, y as i32);
-            let mut ground_entity = commands.spawn((
+            commands.spawn((
                 SpriteBundle {
                     sprite: Sprite {
                         anchor: TILE_ANCHOR,
@@ -131,6 +131,7 @@ pub fn load_level(
                             ..default()
                         },
                         StateScoped(Screen::Playing),
+                        MapPos(IVec2::new(xi, yi)),
                         edge,
                     ))
                     .id();
@@ -157,6 +158,7 @@ pub fn load_level(
                         ..default()
                     },
                     StateScoped(Screen::Playing),
+                    MapPos(IVec2::new(xi, yi)),
                     TileBorder,
                 ))
                 .id();
@@ -179,6 +181,7 @@ pub fn load_level(
                         ..default()
                     },
                     StateScoped(Screen::Playing),
+                    MapPos(IVec2::new(xi, yi)),
                     TileThickBorder,
                 ))
                 .id();
