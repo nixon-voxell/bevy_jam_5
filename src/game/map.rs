@@ -1,8 +1,9 @@
 use std::collections::VecDeque;
+use std::sync::TryLockError;
 
-use bevy::math::UVec2;
 use bevy::prelude::*;
 use bevy::utils::HashSet;
+use bevy::{math::UVec2, utils::HashMap};
 use bimap::{BiHashMap, Overwritten};
 use pathfinding::directed::astar::astar;
 
@@ -30,11 +31,14 @@ pub const KING_MOVES: [IVec2; 8] = [
     NORTH, NORTHEAST, EAST, SOUTHEAST, SOUTH, SOUTHWEST, WEST, NORTHWEST,
 ];
 
+#[derive(Component, Debug, Default, Deref, DerefMut, Copy, Clone)]
+pub struct MapPos(pub IVec2);
+
 #[derive(Resource, Default)]
 pub struct VillageMap {
     pub size: UVec2,
     pub heat_map: Vec<u32>,
-    pub terrain: TileMap,
+    pub terrain: HashMap<IVec2, Terrain>,
     pub object: TileMap,
     pub deployment_zone: HashSet<IVec2>,
 }
@@ -44,7 +48,7 @@ impl VillageMap {
         VillageMap {
             size,
             heat_map: Vec::new(),
-            terrain: TileMap::new(size.as_ivec2()),
+            terrain: Default::default(),
             object: TileMap::new(size.as_ivec2()),
             deployment_zone: HashSet::default(),
         }
@@ -56,6 +60,14 @@ impl VillageMap {
 
     pub fn is_out_of_bounds(&self, coord: IVec2) -> bool {
         coord.cmplt(IVec2::ZERO).any() || coord.cmpge(self.isize()).any()
+    }
+
+    pub fn get_terrain(&self, coord: IVec2) -> Option<Terrain> {
+        self.terrain.get(&coord).copied()
+    }
+
+    pub fn set_terrain(&mut self, coord: IVec2, terrain: Terrain) -> Option<Terrain> {
+        self.terrain.insert(coord, terrain)
     }
 
     /// Create a path from start to target while avoiding obstacles.
@@ -85,11 +97,7 @@ impl VillageMap {
                     }
 
                     // Check eligibility of moving on top of water tile
-                    if let Some(terrain) = self
-                        .terrain
-                        .get(final_coord)
-                        .and_then(|e| q_terrains.get(e).ok())
-                    {
+                    if let Some(terrain) = self.get_terrain(final_coord) {
                         match terrain {
                             Terrain::Water if is_airborne == false => return None,
                             _ => return Some((final_coord, 1)),
@@ -114,7 +122,6 @@ impl VillageMap {
         max_distance: u32,
         directions: &[IVec2],
         is_airborne: bool,
-        q_terrains: &Query<&Terrain>,
     ) -> HashSet<IVec2> {
         find_all_within_distance_unweighted(start, max_distance, |tile_coord| {
             directions.iter().filter_map(move |dir| {
@@ -130,11 +137,7 @@ impl VillageMap {
                 }
 
                 // Check eligibility of moving on top of water tile
-                if let Some(terrain) = self
-                    .terrain
-                    .get(final_coord)
-                    .and_then(|e| q_terrains.get(e).ok())
-                {
+                if let Some(terrain) = self.get_terrain(final_coord) {
                     match terrain {
                         Terrain::Water if is_airborne == false => return None,
                         _ => return Some(final_coord),
@@ -166,10 +169,9 @@ impl VillageMap {
         max_distance: u32,
         directions: &[IVec2],
         is_airborne: bool,
-        q_terrains: &Query<&Terrain>,
     ) -> Option<IVec2> {
         let mut tiles = self
-            .flood(start, max_distance, directions, is_airborne, q_terrains)
+            .flood(start, max_distance, directions, is_airborne)
             .iter()
             .cloned()
             .collect::<Vec<_>>();

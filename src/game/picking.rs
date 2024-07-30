@@ -8,6 +8,7 @@ use crate::screen::Screen;
 
 use super::deployment::deploy_unit;
 use super::level::TileBorder;
+use super::map::MapPos;
 use super::map::VillageMap;
 use super::selection::dispatch_object_pressed;
 use super::selection::SelectionMap;
@@ -43,17 +44,26 @@ pub fn pick_tile(
     mut picked_tile_entity: ResMut<PickedTileEntities>,
     mut picked_tile: ResMut<PickedTile>,
     village_map: Res<VillageMap>,
-    tiles_query: Query<(Entity, &GlobalTransform), With<PickableTile>>,
+    tiles_query: Query<(Entity, &GlobalTransform, &MapPos), With<PickableTile>>,
 ) {
     let mut picked_set = false;
 
     picked_tile_entity.0.clear();
 
     if let Some(point) = picked_point.0 {
-        for (e, ..) in tiles_query
+        for (e, _, _, map_pos) in tiles_query
             .iter()
-            .map(|(e, t)| (e, (point - t.translation().xy()).abs(), t.translation().z))
-            .filter(|(_, r, _)| is_point_in_triangle(r.x, r.y, 0.5 * TILE_WIDTH, TILE_HALF_HEIGHT))
+            .map(|(e, t, &map_pos)| {
+                (
+                    e,
+                    (point - t.translation().xy()).abs(),
+                    t.translation().z,
+                    map_pos,
+                )
+            })
+            .filter(|(_, r, _, _)| {
+                is_point_in_triangle(r.x, r.y, 0.5 * TILE_WIDTH, TILE_HALF_HEIGHT)
+            })
         {
             // sprite_query
             //     .get_mut(e)
@@ -61,10 +71,8 @@ pub fn pick_tile(
             //     .ok();
             picked_tile_entity.0.push(e);
 
-            if let Some(tile) = village_map.terrain.locate(e) {
-                picked_tile.0 = Some(tile);
-                picked_set = true;
-            }
+            picked_tile.0 = Some(map_pos.0);
+            picked_set = true;
         }
     }
 

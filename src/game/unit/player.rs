@@ -12,7 +12,6 @@ pub use crate::game::picking::TilePressedEvent;
 use crate::game::selection::SelectedUnit;
 use crate::game::tile_set::tile_coord_translation;
 use crate::game::unit_list::PlayerUnitList;
-use crate::path_finding::find_all_within_distance_unweighted;
 use crate::screen::playing::GameState;
 
 use super::*;
@@ -90,7 +89,7 @@ pub fn move_unit(
         };
 
         if village_map
-            .flood(current_pos, movement.0, &ROOK_MOVES, false, &terrains)
+            .flood(current_pos, movement.0, &ROOK_MOVES, false)
             .contains(target)
         {
             println!("move {selected} to {target:?}");

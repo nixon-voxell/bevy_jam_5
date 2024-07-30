@@ -3,6 +3,7 @@
 use bevy::color::palettes::css::{GREEN, YELLOW};
 use bevy::prelude::*;
 
+use crate::game::map::MapPos;
 use crate::game::unit::spawn::SpawnAnimation;
 use crate::game::unit::StructureBundle;
 use crate::{game::components::GroundTileLayer, screen::Screen, VillageCamera};
@@ -92,26 +93,22 @@ pub fn load_level(
                     transform: Transform::from_translation(ground_translation),
                     ..default()
                 },
+                MapPos(IVec2::new(xi, yi)),
                 PickableTile,
                 GroundTileLayer,
                 StateScoped(Screen::Playing),
             ));
-            match ground_tile_name.as_str() {
-                "grassblock" => {
-                    ground_entity.insert(Terrain::Grass);
+            let terrain = match ground_tile_name.as_str() {
+                "grassblock" => Terrain::Grass,
+                "gravelblock" => Terrain::Gravel,
+                "waterblock" => Terrain::Water,
+                _ => {
+                    warn!("Spawning unknown tile: {}", ground_tile_name);
+                    Terrain::Gravel
                 }
-                "gravelblock" => {
-                    ground_entity.insert(Terrain::Gravel);
-                }
-                "waterblock" => {
-                    ground_entity.insert(Terrain::Water);
-                }
-                _ => warn!("Spawning unknown tile: {}", ground_tile_name),
             };
 
-            village_map
-                .terrain
-                .set(IVec2::new(xi, yi), ground_entity.id());
+            village_map.set_terrain(IVec2::new(xi, yi), terrain);
 
             // Edges
             let mut ids = [Entity::PLACEHOLDER; 4];

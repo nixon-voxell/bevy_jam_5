@@ -242,13 +242,9 @@ fn find_movement_path(
         };
 
         let is_airborne = airborne.is_some();
-        let Some(best_tile) = village_map.get_best_tile(
-            enemy_tile,
-            movement.0,
-            &directions.0,
-            is_airborne,
-            &q_terrains,
-        ) else {
+        let Some(best_tile) =
+            village_map.get_best_tile(enemy_tile, movement.0, &directions.0, is_airborne)
+        else {
             continue;
         };
 
@@ -321,11 +317,7 @@ fn spawn_enemies(
                 continue;
             }
 
-            let Some(terrain) = village_map
-                .terrain
-                .get(tile_coord)
-                .and_then(|e| q_terrains.get(e).ok())
-            else {
+            let Some(terrain) = village_map.get_terrain(tile_coord) else {
                 error!("Unable to get terrain from tile coordinate: {tile_coord:?}");
                 return;
             };

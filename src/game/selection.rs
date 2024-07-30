@@ -1,5 +1,7 @@
+use super::components::GroundTileLayer;
 use super::deployment::deploy_unit;
 use super::level::Terrain;
+use super::map::MapPos;
 use super::map::VillageMap;
 use super::picking::dispatch_pressed_tile;
 use super::picking::PickedTile;
@@ -123,28 +125,19 @@ pub fn show_selected_tiles(
 fn color_selected_tiles(
     selected_tiles: Res<SelectedTiles>,
     village_map: Res<VillageMap>,
-    mut query: Query<&mut Sprite>,
+    mut query: Query<(&mut Sprite, &MapPos), With<GroundTileLayer>>,
 ) {
-    for x in 0..village_map.size.x {
-        for y in 0..village_map.size.y {
-            let tile = IVec2::new(x as i32, y as i32);
-            if let Some(entity) = village_map.terrain.get(tile) {
-                if let Ok(mut sprite) = query.get_mut(entity) {
-                    let color = if selected_tiles.tiles.contains(&tile) {
-                        selected_tiles.color
-                    } else {
-                        Color::WHITE
-                    };
-                    sprite.color = color;
-                }
-            }
-        }
+    for (mut s, p) in query.iter_mut() {
+        s.color = if selected_tiles.tiles.contains(&p.0) {
+            selected_tiles.color
+        } else {
+            Color::WHITE
+        };
     }
 }
 
 pub fn show_movement_range(
     q_movements: Query<(&Movement, &UnitTurnState)>,
-    q_terrains: Query<&Terrain>,
     q_enemies: Query<(), With<EnemyUnit>>,
     selected_unit: Res<SelectedUnit>,
     mut selected_tiles: ResMut<SelectedTiles>,
@@ -164,7 +157,7 @@ pub fn show_movement_range(
         return;
     }
 
-    let tiles = village_map.flood(tile, movement.0, &ROOK_MOVES, false, &q_terrains);
+    let tiles = village_map.flood(tile, movement.0, &ROOK_MOVES, false);
     selected_tiles.tiles = tiles;
     match q_enemies.contains(entity) {
         true => selected_tiles.color = css::INDIAN_RED.into(),
