@@ -77,7 +77,6 @@ impl VillageMap {
         target: &IVec2,
         directions: &[IVec2],
         is_airborne: bool,
-        q_terrains: &Query<&Terrain>,
     ) -> Option<(Vec<IVec2>, i32)> {
         astar(
             start,

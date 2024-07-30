@@ -230,7 +230,6 @@ fn find_movement_path(
         (Entity, &Movement, &Directions, Option<&IsAirborne>),
         With<EnemyUnit>,
     >,
-    q_terrains: Query<&Terrain>,
     mut village_map: ResMut<VillageMap>,
 ) {
     // Regenerate heat map to check for player units as well.
@@ -248,13 +247,9 @@ fn find_movement_path(
             continue;
         };
 
-        let Some((path, _)) = village_map.pathfind(
-            &enemy_tile,
-            &best_tile,
-            &directions.0,
-            is_airborne,
-            &q_terrains,
-        ) else {
+        let Some((path, _)) =
+            village_map.pathfind(&enemy_tile, &best_tile, &directions.0, is_airborne)
+        else {
             continue;
         };
 
@@ -266,7 +261,6 @@ fn find_movement_path(
 
 fn spawn_enemies(
     mut commands: Commands,
-    q_terrains: Query<&Terrain>,
     mut village_map: ResMut<VillageMap>,
     season: Res<Season>,
     tile_set: Res<TileSet>,
