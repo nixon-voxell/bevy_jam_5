@@ -1,11 +1,3 @@
-use bevy::app::Plugin;
-use bevy::prelude::*;
-use bevy::window::PrimaryWindow;
-use sickle_ui::prelude::SetLeftExt;
-
-use crate::screen::playing::GameState;
-use crate::screen::Screen;
-
 use super::deployment::deploy_unit;
 use super::level::TileBorder;
 use super::map::MapPos;
@@ -14,6 +6,11 @@ use super::selection::dispatch_object_pressed;
 use super::selection::SelectionMap;
 use super::tile_set::TILE_HALF_HEIGHT;
 use super::tile_set::TILE_WIDTH;
+use crate::screen::playing::GameState;
+use crate::screen::Screen;
+use bevy::app::Plugin;
+use bevy::prelude::*;
+use bevy::window::PrimaryWindow;
 
 pub struct PickingPlugin;
 
@@ -162,4 +159,34 @@ fn is_point_in_triangle(x: f32, y: f32, w: f32, h: f32) -> bool {
         return false;
     }
     y <= h - (h / w) * x
+}
+
+#[derive(Debug, Default, Copy, Clone, Eq, PartialEq)]
+pub struct PickState {
+    hovered: Option<IVec2>,
+    pressed: Option<IVec2>,
+}
+
+#[derive(Resource, Default, Debug)]
+pub struct PickStatus {
+    previous: PickState,
+    current: PickState,
+}
+
+pub fn update_pick_status(
+    mut pickstatus: ResMut<PickStatus>,
+    mouse_state: ResMut<ButtonInput<MouseButton>>,
+    picked_tile: Res<PickedTile>,
+) {
+    pickstatus.previous = pickstatus.current;
+
+    pickstatus.current.hovered = picked_tile.0;
+
+    if mouse_state.just_released(MouseButton::Left) {
+        pickstatus.current.pressed = None;
+    }
+
+    if mouse_state.just_pressed(MouseButton::Left) {
+        pickstatus.current.pressed = picked_tile.0;
+    }
 }

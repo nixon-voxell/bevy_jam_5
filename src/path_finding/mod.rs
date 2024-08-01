@@ -1,3 +1,5 @@
+pub mod map_position;
+
 use std::cmp::Reverse;
 
 use bevy::math::IVec2;
