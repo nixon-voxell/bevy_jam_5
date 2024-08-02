@@ -1,6 +1,6 @@
 //! The screen state for the main game loop.
 
-use bevy::color::palettes::css::{self, WHEAT};
+use bevy::color::palettes::css;
 use bevy::ecs::entity::EntityHashMap;
 use bevy::prelude::*;
 use sickle_ui::prelude::*;
@@ -21,7 +21,6 @@ use crate::game::resources::{
 };
 
 use crate::game::selection::dispatch_object_pressed;
-use crate::game::selection::SelectedUnit;
 use crate::game::unit::player::{add_starting_player_units, move_unit, reset_unit_turn_states};
 use crate::game::unit::AvailableUnitNames;
 use crate::game::unit_list::{
