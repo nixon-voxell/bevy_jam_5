@@ -299,7 +299,6 @@ pub struct TileRectIter {
     current_y: i32,
     min_x: i32,
     max_x: i32,
-    min_y: i32,
     max_y: i32,
 }
 
@@ -332,7 +331,6 @@ impl IntoIterator for TileRect {
             current_y: min.y(),
             min_x: min.x(),
             max_x: max.x(),
-            min_y: min.y(),
             max_y: max.y(),
         }
     }
