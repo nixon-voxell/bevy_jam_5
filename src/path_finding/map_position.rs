@@ -133,11 +133,11 @@ impl Tile {
     }
 
     pub const fn y(self) -> i32 {
-        self.0
+        self.1
     }
 
     pub fn step(self, dir: TileStep) -> Self {
-        Self(self.x() + dir.meridean(), self.y() + dir.parallel())
+        Self(self.x() + dir.parallel(), self.y() + dir.meridean())
     }
 
     pub const fn splat(value: i32) -> Self {
@@ -229,7 +229,7 @@ impl TileDim {
     }
 
     pub const fn y(self) -> i32 {
-        self.0
+        self.1
     }
 
     pub const fn abs(self) -> Self {
@@ -248,6 +248,12 @@ impl TileDim {
 impl From<IVec2> for Tile {
     fn from(value: IVec2) -> Self {
         Tile(value.x, value.y)
+    }
+}
+
+impl From<IVec2> for TileDim {
+    fn from(value: IVec2) -> Self {
+        TileDim(value.x, value.y)
     }
 }
 
@@ -280,7 +286,7 @@ impl TileRect {
     }
 
     pub fn size(self) -> TileDim {
-        self.0.difference(self.1).abs()
+        (self.max().to_ivec2() - self.min().to_ivec2() + IVec2::ONE).into()
     }
 
     pub fn area(self) -> i32 {
@@ -333,5 +339,114 @@ impl IntoIterator for TileRect {
             max_x: max.x(),
             max_y: max.y(),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_tile_step_index() {
+        assert_eq!(TileStep::North.index(), 0);
+        assert_eq!(TileStep::East.index(), 2);
+        assert_eq!(TileStep::SouthWest.index(), 5);
+    }
+
+    #[test]
+    fn test_tile_step_turns() {
+        assert_eq!(TileStep::North.turn_left_45(), TileStep::NorthWest);
+        assert_eq!(TileStep::North.turn_right_45(), TileStep::NorthEast);
+        assert_eq!(TileStep::North.turn_left_90(), TileStep::West);
+        assert_eq!(TileStep::North.turn_right_90(), TileStep::East);
+    }
+
+    #[test]
+    fn test_tile_step_opposite() {
+        assert_eq!(TileStep::North.opposite(), TileStep::South);
+        assert_eq!(TileStep::East.opposite(), TileStep::West);
+        assert_eq!(TileStep::SouthWest.opposite(), TileStep::NorthEast);
+    }
+
+    #[test]
+    fn test_tile_step_meridean_parallel() {
+        assert_eq!(TileStep::North.meridean(), -1);
+        assert_eq!(TileStep::North.parallel(), 0);
+        assert_eq!(TileStep::East.meridean(), 0);
+        assert_eq!(TileStep::East.parallel(), 1);
+    }
+
+    #[test]
+    fn test_tile_operations() {
+        let tile = Tile(1, 2);
+        let step = TileStep::East;
+        let new_tile = tile.step(step);
+        assert_eq!(new_tile, Tile(2, 2));
+    }
+
+    #[test]
+    fn test_tile_min_max() {
+        let tile1 = Tile(1, 3);
+        let tile2 = Tile(2, 2);
+        assert_eq!(tile1.min(tile2), Tile(1, 2));
+        assert_eq!(tile1.max(tile2), Tile(2, 3));
+    }
+
+    #[test]
+    fn test_tile_distance() {
+        let tile1 = Tile(1, 2);
+        let tile2 = Tile(4, 6);
+        assert_eq!(tile1.distance_rook(tile2), 7);
+        assert_eq!(tile1.distance_squared(tile2), 25);
+        assert_eq!(tile1.distance_straight(tile2), 5.0);
+    }
+
+    #[test]
+    fn test_path_operations() {
+        let mut path = Path::default();
+        path.step(TileStep::North);
+        path.step(TileStep::East);
+        assert_eq!(path.len(), 2);
+
+        let start_tile = Tile(0, 0);
+        let tiles: Vec<Tile> = path.follow(start_tile).collect();
+        assert_eq!(tiles, vec![Tile(0, -1), Tile(1, -1)]);
+    }
+
+    #[test]
+    fn test_path_reverse() {
+        let path = Path(vec![TileStep::North, TileStep::East]);
+        let reversed_path = path.reverse();
+        assert_eq!(
+            reversed_path.iter().collect::<Vec<_>>(),
+            vec![TileStep::West, TileStep::South]
+        );
+    }
+
+    #[test]
+    fn test_tile_rect_min_max() {
+        let rect = TileRect(Tile(1, 2), Tile(4, 6));
+        assert_eq!(rect.min(), Tile(1, 2));
+        assert_eq!(rect.max(), Tile(4, 6));
+    }
+
+    #[test]
+    fn test_tile_rect_area() {
+        let rect = TileRect(Tile(1, 2), Tile(4, 6));
+        assert_eq!(rect.area(), 20);
+    }
+
+    #[test]
+    fn test_tile_rect_contains() {
+        let rect = TileRect(Tile(1, 2), Tile(4, 6));
+        assert!(rect.contains(Tile(2, 3)));
+        assert!(!rect.contains(Tile(5, 7)));
+    }
+
+    #[test]
+    fn test_tile_rect_iterator() {
+        let rect = TileRect(Tile(1, 2), Tile(2, 3));
+        let tiles: Vec<Tile> = rect.into_iter().collect();
+        assert_eq!(tiles, vec![Tile(1, 2), Tile(2, 2), Tile(1, 3), Tile(2, 3)]);
     }
 }
