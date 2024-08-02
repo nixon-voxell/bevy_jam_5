@@ -205,7 +205,6 @@ impl VillageMap {
     /// 5, 4, 5, 4, 3, 4, 5, 6, 7, 8,
     /// 6, 5, 6, 5, 4, 5, 6, 7, 8, 9,
     pub fn generate_heat_map(&mut self, is_enemy: impl Fn(Entity) -> bool) {
-        println!("map size = {:?}", self.size);
         // Mark max as unvisted
         self.heat_map = vec![u32::MAX; (self.size.x() * self.size.y()) as usize];
         let mut stack = VecDeque::new();
@@ -509,7 +508,7 @@ mod tests {
         let directions = &Direction::ALL;
 
         let flooded_tiles = village_map.flood(start, 3, directions, false);
-        println!("flooded_tiles = {flooded_tiles:?}");
+
         assert_eq!(flooded_tiles.len(), 2);
         assert!(flooded_tiles.contains(&Tile(0, 0)));
         assert!(flooded_tiles.contains(&Tile(0, 1)));

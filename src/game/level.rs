@@ -177,7 +177,6 @@ pub fn load_level(
     }
 
     village_map.generate_heat_map(|e| enemies_query.contains(e));
-    println!("{:?}", village_map.heat_map);
     commands.insert_resource(village_map);
     commands.insert_resource(selection_map)
 }
