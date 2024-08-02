@@ -1,16 +1,14 @@
-use std::collections::VecDeque;
-use std::sync::TryLockError;
-
 use bevy::prelude::*;
+use bevy::utils::HashMap;
 use bevy::utils::HashSet;
-use bevy::{math::UVec2, utils::HashMap};
 use bimap::{BiHashMap, Overwritten};
 use pathfinding::directed::astar::astar;
+use std::collections::VecDeque;
 
 use crate::path_finding::find_all_within_distance_unweighted;
 use crate::path_finding::map_position::{Tile, TileDim, TileRect, TileStep};
 
-use super::{level::Terrain, unit::EnemyUnit};
+use super::level::Terrain;
 
 // On screen 0,0 is top middle tile,
 // y increases left-down, x increases right-down
@@ -53,7 +51,7 @@ impl VillageMap {
     }
 
     pub fn bounds(&self) -> TileRect {
-        TileRect(Tile::ZERO, Tile(self.size.x(), self.size.y()))
+        TileRect(Tile::ZERO, Tile(self.size.x() - 1, self.size.y() - 1))
     }
 
     pub fn size(&self) -> TileDim {
@@ -98,14 +96,10 @@ impl VillageMap {
                     }
 
                     // Check eligibility of moving on top of water tile
-                    if let Some(terrain) = self.get_terrain(final_coord) {
-                        match terrain {
-                            Terrain::Water if is_airborne == false => return None,
-                            _ => return Some((final_coord, 1)),
-                        }
+                    match self.get_terrain(final_coord) {
+                        Some(Terrain::Water) if is_airborne == false => return None,
+                        _ => return Some((final_coord, 1)),
                     }
-
-                    None
                 })
             },
             // heuristic
@@ -127,7 +121,6 @@ impl VillageMap {
         find_all_within_distance_unweighted(start, max_distance, |tile_coord| {
             directions.iter().filter_map(move |dir| {
                 let final_coord = tile_coord.step(*dir);
-
                 if self.is_out_of_bounds(final_coord) {
                     return None;
                 }
@@ -138,14 +131,10 @@ impl VillageMap {
                 }
 
                 // Check eligibility of moving on top of water tile
-                if let Some(terrain) = self.get_terrain(final_coord) {
-                    match terrain {
-                        Terrain::Water if is_airborne == false => return None,
-                        _ => return Some(final_coord),
-                    }
+                match self.get_terrain(final_coord) {
+                    Some(Terrain::Water) if !is_airborne => return None,
+                    _ => return Some(final_coord),
                 }
-
-                None
             })
         })
     }
@@ -176,9 +165,29 @@ impl VillageMap {
             .iter()
             .cloned()
             .collect::<Vec<_>>();
+
         Self::sort_tiles_by_distance(&mut tiles, start);
         self.sort_tiles_by_heat(&mut tiles);
         tiles.first().copied()
+    }
+
+    /// Get worst tile based on heat map.
+    pub fn get_worst_tile(
+        &self,
+        start: Tile,
+        max_distance: u32,
+        directions: &[TileStep],
+        is_airborne: bool,
+    ) -> Option<Tile> {
+        let mut tiles = self
+            .flood(start, max_distance, directions, is_airborne)
+            .iter()
+            .cloned()
+            .collect::<Vec<_>>();
+
+        Self::sort_tiles_by_distance(&mut tiles, start);
+        self.sort_tiles_by_heat(&mut tiles);
+        tiles.last().copied()
     }
 
     /// Generate heat map based on [`Self::object`].
@@ -196,6 +205,7 @@ impl VillageMap {
     /// 5, 4, 5, 4, 3, 4, 5, 6, 7, 8,
     /// 6, 5, 6, 5, 4, 5, 6, 7, 8, 9,
     pub fn generate_heat_map(&mut self, is_enemy: impl Fn(Entity) -> bool) {
+        println!("map size = {:?}", self.size);
         // Mark max as unvisted
         self.heat_map = vec![u32::MAX; (self.size.x() * self.size.y()) as usize];
         let mut stack = VecDeque::new();
@@ -248,7 +258,7 @@ pub struct TileMap {
 
 impl TileMap {
     pub fn new(size: TileDim) -> TileMap {
-        assert!(Tile::ZERO.to_ivec2().cmplt(size.to_ivec2()).all());
+        assert!(0 < size.x() && 0 < size.y());
         TileMap {
             size,
             map: BiHashMap::default(),
@@ -315,5 +325,276 @@ impl TileMap {
             .copied()
             .map(move |translation| position.step(translation))
             .filter(|target| self.bounds().contains(*target))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_village_map_creation() {
+        let size = TileDim(10, 10);
+        let village_map = VillageMap::new(size);
+        assert_eq!(village_map.size(), size);
+        assert!(village_map.terrain.is_empty());
+        assert!(village_map.deployment_zone.is_empty());
+    }
+
+    #[test]
+    fn test_village_map_bounds() {
+        let size = TileDim(10, 10);
+        let village_map = VillageMap::new(size);
+        let bounds = village_map.bounds();
+        assert_eq!(bounds.min(), Tile::ZERO);
+        assert_eq!(bounds.max(), Tile(9, 9));
+    }
+
+    #[test]
+    fn test_village_map_is_out_of_bounds() {
+        let size = TileDim(10, 10);
+        let village_map = VillageMap::new(size);
+        assert!(village_map.is_out_of_bounds(Tile(11, 10)));
+        assert!(!village_map.is_out_of_bounds(Tile(5, 5)));
+    }
+
+    #[test]
+    fn test_village_map_terrain() {
+        let size = TileDim(10, 10);
+        let mut village_map = VillageMap::new(size);
+        let tile = Tile(1, 1);
+        village_map.set_terrain(tile, Terrain::Water);
+        assert_eq!(village_map.get_terrain(tile), Some(Terrain::Water));
+    }
+
+    #[test]
+    fn test_tile_map_creation() {
+        let size = TileDim(10, 10);
+        let tile_map = TileMap::new(size);
+        assert_eq!(tile_map.size(), size);
+        assert!(tile_map.map.is_empty());
+    }
+
+    #[test]
+    fn test_tile_map_bounds() {
+        let size = TileDim(10, 10);
+        let tile_map = TileMap::new(size);
+        let bounds = tile_map.bounds();
+        assert_eq!(bounds.min(), Tile::ZERO);
+        assert_eq!(bounds.max(), Tile(9, 9));
+    }
+
+    #[test]
+    fn test_tile_map_is_occupied() {
+        let size = TileDim(10, 10);
+        let mut tile_map = TileMap::new(size);
+        let tile = Tile(1, 1);
+        let entity = Entity::from_raw(1);
+        tile_map.set(tile, entity);
+        assert!(tile_map.is_occupied(tile));
+        assert!(!tile_map.is_occupied(Tile(2, 2)));
+    }
+
+    #[test]
+    fn test_tile_map_get_set_remove() {
+        let size = TileDim(10, 10);
+        let mut tile_map = TileMap::new(size);
+        let tile = Tile(1, 1);
+        let entity = Entity::from_raw(1);
+        tile_map.set(tile, entity);
+        assert_eq!(tile_map.get(tile), Some(entity));
+        assert_eq!(tile_map.remove(tile), Some(entity));
+        assert_eq!(tile_map.get(tile), None);
+    }
+
+    #[test]
+    fn test_tile_map_get_neighbouring_positions_rook() {
+        let size = TileDim(10, 10);
+        let tile_map = TileMap::new(size);
+        let tile = Tile(1, 1);
+        let neighbours: Vec<Tile> = tile_map.get_neighbouring_positions_rook(tile).collect();
+        assert_eq!(neighbours.len(), 4);
+        let expected = vec![Tile(0, 1), Tile(1, 0), Tile(1, 2), Tile(2, 1)];
+        for n in neighbours {
+            assert!(expected.contains(&n));
+        }
+    }
+
+    #[test]
+    fn test_tile_map_get_neighbouring_positions_king() {
+        let size = TileDim(10, 10);
+        let tile_map = TileMap::new(size);
+        let tile = Tile(1, 1);
+        let neighbours: Vec<Tile> = tile_map.get_neighbouring_positions_king(tile).collect();
+        assert_eq!(neighbours.len(), 8);
+        let expected = vec![
+            Tile(0, 1),
+            Tile(1, 0),
+            Tile(1, 2),
+            Tile(2, 1),
+            Tile(0, 0),
+            Tile(2, 0),
+            Tile(0, 2),
+            Tile(2, 2),
+        ];
+        for n in neighbours {
+            assert!(expected.contains(&n));
+        }
+    }
+
+    #[test]
+    fn test_village_map_pathfind_trivial() {
+        let size = TileDim(10, 10);
+        let village_map = VillageMap::new(size);
+        let start = Tile(3, 3);
+        let target = Tile(3, 3);
+        let directions = &TileStep::ALL;
+
+        let path = village_map.pathfind(&start, &target, directions, false);
+        assert!(path.is_some());
+        let (tiles, cost) = path.unwrap();
+        assert_eq!(tiles.first().unwrap(), &start);
+        assert_eq!(tiles.last().unwrap(), &target);
+        assert_eq!(cost, tiles.len() as i32 - 1);
+    }
+
+    #[test]
+    fn test_village_map_pathfind_one_step() {
+        let size = TileDim(1, 2);
+        let village_map = VillageMap::new(size);
+        let start = Tile::ZERO;
+        let target = start.step(TileStep::South);
+        let directions = &TileStep::ALL;
+
+        let path = village_map.pathfind(&start, &target, directions, false);
+        assert!(path.is_some());
+        let (tiles, cost) = path.unwrap();
+        assert_eq!(tiles.first().unwrap(), &start);
+        assert_eq!(tiles.last().unwrap(), &target);
+        assert_eq!(cost, tiles.len() as i32 - 1);
+    }
+
+    #[test]
+    fn test_village_map_pathfind() {
+        let size = TileDim(10, 10);
+        let village_map = VillageMap::new(size);
+        let start = Tile(0, 0);
+        let target = Tile(3, 3);
+        let directions = &TileStep::ALL;
+
+        let path = village_map.pathfind(&start, &target, directions, false);
+        assert!(path.is_some());
+        let (tiles, cost) = path.unwrap();
+        assert_eq!(tiles.last().unwrap(), &target);
+        assert_eq!(cost, tiles.len() as i32 - 1);
+    }
+
+    #[test]
+    fn test_village_map_flood_single_tile() {
+        let size = TileDim(1, 1);
+        let village_map = VillageMap::new(size);
+        let start = Tile(0, 0);
+        let directions = &TileStep::ALL;
+
+        let flooded_tiles = village_map.flood(start, 3, directions, false);
+        assert!(flooded_tiles.len() == 1);
+        assert!(flooded_tiles.contains(&Tile(0, 0)));
+    }
+
+    #[test]
+    fn test_village_map_flood_two_meridean() {
+        let size = TileDim(1, 2);
+        let village_map = VillageMap::new(size);
+        let start = Tile(0, 0);
+        let directions = &TileStep::ALL;
+
+        let flooded_tiles = village_map.flood(start, 3, directions, false);
+        println!("flooded_tiles = {flooded_tiles:?}");
+        assert_eq!(flooded_tiles.len(), 2);
+        assert!(flooded_tiles.contains(&Tile(0, 0)));
+        assert!(flooded_tiles.contains(&Tile(0, 1)));
+    }
+
+    #[test]
+    fn test_village_map_flood_two_parallel() {
+        let size = TileDim(2, 1);
+        let village_map = VillageMap::new(size);
+        let start = Tile(0, 0);
+        let directions = &TileStep::ALL;
+
+        let flooded_tiles = village_map.flood(start, 3, directions, false);
+        assert_eq!(flooded_tiles.len(), 2);
+        assert!(flooded_tiles.contains(&Tile(0, 0)));
+        assert!(flooded_tiles.contains(&Tile(1, 0)));
+    }
+
+    #[test]
+    fn test_village_map_flood_three_x_two() {
+        let size = TileDim(3, 2);
+        let village_map = VillageMap::new(size);
+        let start = Tile(0, 0);
+        let directions = &TileStep::ALL;
+
+        let flooded_tiles = village_map.flood(start, 3, directions, false);
+        println!("flooded_tiles = {flooded_tiles:?}");
+        assert_eq!(flooded_tiles.len(), 6);
+    }
+
+    #[test]
+    fn test_village_map_flood() {
+        let size = TileDim(10, 10);
+        let village_map = VillageMap::new(size);
+        let start = Tile(0, 0);
+        let directions = &TileStep::ALL;
+
+        let flooded_tiles = village_map.flood(start, 3, directions, false);
+        assert!(flooded_tiles.contains(&Tile(3, 3)));
+    }
+
+    #[test]
+    fn test_village_map_sort_tiles_by_distance() {
+        let target = Tile(0, 0);
+        let mut tiles = vec![Tile(1, 1), Tile(0, 2), Tile(2, 2), Tile(3, 3)];
+        VillageMap::sort_tiles_by_distance(&mut tiles, target);
+        assert_eq!(tiles, vec![Tile(1, 1), Tile(0, 2), Tile(2, 2), Tile(3, 3)]);
+    }
+
+    #[test]
+    fn test_village_map_sort_tiles_by_heat() {
+        let mut village_map = VillageMap::new(TileDim(10, 10));
+        village_map.heat_map = (0..100).collect();
+        let mut tiles = vec![Tile(1, 1), Tile(2, 2), Tile(3, 3), Tile(4, 4)];
+        village_map.sort_tiles_by_heat(&mut tiles);
+        assert_eq!(tiles, vec![Tile(1, 1), Tile(2, 2), Tile(3, 3), Tile(4, 4)]);
+    }
+
+    #[test]
+    fn test_village_map_get_worst_tile() {
+        let mut village_map = VillageMap::new(TileDim(10, 10));
+        village_map.heat_map = (0..100).collect();
+        let start = Tile(0, 0);
+        let directions = &TileStep::ALL;
+        let worst_tile = village_map.get_worst_tile(start, 3, directions, false);
+        assert_eq!(worst_tile, Some(Tile(3, 3)));
+    }
+
+    #[test]
+    fn test_village_map_get_best_tile_trivial() {
+        let mut village_map = VillageMap::new(TileDim(1, 2));
+        village_map.heat_map = vec![1, 0];
+        let start = Tile(0, 0);
+        let directions = &TileStep::ALL;
+        let best_tile = village_map.get_best_tile(start, 3, directions, false);
+        assert_eq!(best_tile, Some(Tile(0, 1)));
+    }
+
+    #[test]
+    fn test_village_map_generate_heat_map() {
+        let mut village_map = VillageMap::new(TileDim(3, 3));
+        let entity = Entity::from_raw(1);
+        village_map.object.set(Tile(2, 2), entity);
+        village_map.generate_heat_map(|_| false);
+        assert_eq!(village_map.heat_map[0], 4);
+        assert_eq!(village_map.heat_map[8], 0);
     }
 }
