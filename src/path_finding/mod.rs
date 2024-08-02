@@ -1,10 +1,10 @@
-pub mod map_position;
+pub mod tiles;
 
 use std::cmp::Reverse;
 
 use bevy::utils::HashSet;
-use map_position::Tile;
 use priority_queue::PriorityQueue;
+use tiles::Tile;
 
 /// Find all tiles that are within a certain distance of a given tile
 pub fn find_all_within_distance<N, I>(start: Tile, max_distance: u32, navigator: N) -> HashSet<Tile>

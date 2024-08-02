@@ -6,7 +6,7 @@ use pathfinding::directed::astar::astar;
 use std::collections::VecDeque;
 
 use crate::path_finding::find_all_within_distance_unweighted;
-use crate::path_finding::map_position::{Tile, TileDim, TileRect, TileStep};
+use crate::path_finding::tiles::{Direction, Tile, TileDim, TileRect};
 
 use super::level::Terrain;
 
@@ -75,7 +75,7 @@ impl VillageMap {
         &self,
         start: &Tile,
         target: &Tile,
-        directions: &[TileStep],
+        directions: &[Direction],
         is_airborne: bool,
     ) -> Option<(Vec<Tile>, i32)> {
         astar(
@@ -115,7 +115,7 @@ impl VillageMap {
         &self,
         start: Tile,
         max_distance: u32,
-        directions: &[TileStep],
+        directions: &[Direction],
         is_airborne: bool,
     ) -> HashSet<Tile> {
         find_all_within_distance_unweighted(start, max_distance, |tile_coord| {
@@ -157,7 +157,7 @@ impl VillageMap {
         &self,
         start: Tile,
         max_distance: u32,
-        directions: &[TileStep],
+        directions: &[Direction],
         is_airborne: bool,
     ) -> Option<Tile> {
         let mut tiles = self
@@ -176,7 +176,7 @@ impl VillageMap {
         &self,
         start: Tile,
         max_distance: u32,
-        directions: &[TileStep],
+        directions: &[Direction],
         is_airborne: bool,
     ) -> Option<Tile> {
         let mut tiles = self
@@ -230,7 +230,7 @@ impl VillageMap {
             let index = (tile_coord.x() + tile_coord.y() * self.size.x() as i32) as usize;
             let curr_heat = self.heat_map[index];
 
-            for offset in TileStep::ROOK.iter() {
+            for offset in Direction::ROOK.iter() {
                 let flood_coord = tile_coord.step(*offset);
                 if self.is_out_of_bounds(flood_coord) {
                     continue;
@@ -309,7 +309,7 @@ impl TileMap {
         &self,
         position: Tile,
     ) -> impl Iterator<Item = Tile> + '_ {
-        TileStep::ROOK
+        Direction::ROOK
             .iter()
             .copied()
             .map(move |translation| position.step(translation))
@@ -320,7 +320,7 @@ impl TileMap {
         &self,
         position: Tile,
     ) -> impl Iterator<Item = Tile> + '_ {
-        TileStep::ALL
+        Direction::ALL
             .iter()
             .copied()
             .map(move |translation| position.step(translation))
@@ -448,7 +448,7 @@ mod tests {
         let village_map = VillageMap::new(size);
         let start = Tile(3, 3);
         let target = Tile(3, 3);
-        let directions = &TileStep::ALL;
+        let directions = &Direction::ALL;
 
         let path = village_map.pathfind(&start, &target, directions, false);
         assert!(path.is_some());
@@ -463,8 +463,8 @@ mod tests {
         let size = TileDim(1, 2);
         let village_map = VillageMap::new(size);
         let start = Tile::ZERO;
-        let target = start.step(TileStep::South);
-        let directions = &TileStep::ALL;
+        let target = start.step(Direction::South);
+        let directions = &Direction::ALL;
 
         let path = village_map.pathfind(&start, &target, directions, false);
         assert!(path.is_some());
@@ -480,7 +480,7 @@ mod tests {
         let village_map = VillageMap::new(size);
         let start = Tile(0, 0);
         let target = Tile(3, 3);
-        let directions = &TileStep::ALL;
+        let directions = &Direction::ALL;
 
         let path = village_map.pathfind(&start, &target, directions, false);
         assert!(path.is_some());
@@ -494,7 +494,7 @@ mod tests {
         let size = TileDim(1, 1);
         let village_map = VillageMap::new(size);
         let start = Tile(0, 0);
-        let directions = &TileStep::ALL;
+        let directions = &Direction::ALL;
 
         let flooded_tiles = village_map.flood(start, 3, directions, false);
         assert!(flooded_tiles.len() == 1);
@@ -506,7 +506,7 @@ mod tests {
         let size = TileDim(1, 2);
         let village_map = VillageMap::new(size);
         let start = Tile(0, 0);
-        let directions = &TileStep::ALL;
+        let directions = &Direction::ALL;
 
         let flooded_tiles = village_map.flood(start, 3, directions, false);
         println!("flooded_tiles = {flooded_tiles:?}");
@@ -520,7 +520,7 @@ mod tests {
         let size = TileDim(2, 1);
         let village_map = VillageMap::new(size);
         let start = Tile(0, 0);
-        let directions = &TileStep::ALL;
+        let directions = &Direction::ALL;
 
         let flooded_tiles = village_map.flood(start, 3, directions, false);
         assert_eq!(flooded_tiles.len(), 2);
@@ -533,7 +533,7 @@ mod tests {
         let size = TileDim(3, 2);
         let village_map = VillageMap::new(size);
         let start = Tile(0, 0);
-        let directions = &TileStep::ALL;
+        let directions = &Direction::ALL;
 
         let flooded_tiles = village_map.flood(start, 3, directions, false);
         println!("flooded_tiles = {flooded_tiles:?}");
@@ -545,7 +545,7 @@ mod tests {
         let size = TileDim(10, 10);
         let village_map = VillageMap::new(size);
         let start = Tile(0, 0);
-        let directions = &TileStep::ALL;
+        let directions = &Direction::ALL;
 
         let flooded_tiles = village_map.flood(start, 3, directions, false);
         assert!(flooded_tiles.contains(&Tile(3, 3)));
@@ -573,7 +573,7 @@ mod tests {
         let mut village_map = VillageMap::new(TileDim(10, 10));
         village_map.heat_map = (0..100).collect();
         let start = Tile(0, 0);
-        let directions = &TileStep::ALL;
+        let directions = &Direction::ALL;
         let worst_tile = village_map.get_worst_tile(start, 3, directions, false);
         assert_eq!(worst_tile, Some(Tile(3, 3)));
     }
@@ -583,7 +583,7 @@ mod tests {
         let mut village_map = VillageMap::new(TileDim(1, 2));
         village_map.heat_map = vec![1, 0];
         let start = Tile(0, 0);
-        let directions = &TileStep::ALL;
+        let directions = &Direction::ALL;
         let best_tile = village_map.get_best_tile(start, 3, directions, false);
         assert_eq!(best_tile, Some(Tile(0, 1)));
     }

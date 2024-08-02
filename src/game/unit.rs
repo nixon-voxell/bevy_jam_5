@@ -1,4 +1,4 @@
-use crate::path_finding::map_position::TileStep;
+use crate::path_finding::tiles::Direction;
 use crate::screen::Screen;
 use crate::ui::icon_set::IconSet;
 use bevy::prelude::*;
@@ -212,7 +212,7 @@ pub struct IsAirborne;
 
 /// Directions a unit can move.
 #[derive(Component, Default, Clone, Debug)]
-pub struct Directions(pub Vec<TileStep>);
+pub struct Directions(pub Vec<Direction>);
 
 /// Has unit moved or performed an action yet.
 /// Needs to be reset to default after each turn (Not good?).
@@ -249,7 +249,7 @@ impl<T: Component> UnitBundle<T>
 where
     T: Default,
 {
-    pub fn new(name: &str, directions: Vec<TileStep>) -> Self {
+    pub fn new(name: &str, directions: Vec<Direction>) -> Self {
         Self {
             name: UnitName(String::from(name)),
             hit_points: MaxHealth(2),

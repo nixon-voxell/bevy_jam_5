@@ -11,8 +11,8 @@ use super::unit::EnemyUnit;
 use super::unit::Movement;
 use super::unit::UnitTurnState;
 
-use crate::path_finding::map_position::Tile;
-use crate::path_finding::map_position::TileStep;
+use crate::path_finding::tiles::Direction;
+use crate::path_finding::tiles::Tile;
 use crate::screen::playing::GameState;
 use crate::screen::Screen;
 use bevy::color::palettes::css;
@@ -33,7 +33,7 @@ impl Plugin for SelectionPlugin {
             .add_systems(
                 Update,
                 (
-                    show_selected_tiles.run_if(resource_changed::<SelectedTiles>),
+                    //show_selected_tiles.run_if(resource_changed::<SelectedTiles>),
                     color_selected_tiles.run_if(resource_changed::<SelectedTiles>),
                     set_selected_unit
                         .run_if(in_state(Screen::Playing))
@@ -69,57 +69,8 @@ pub struct SelectedTiles {
 
 #[derive(Resource, Default)]
 pub struct SelectionMap {
-    pub edges: HashMap<Tile, [Entity; 4]>,
     pub borders: HashMap<Tile, Entity>,
     pub thick_borders: HashMap<Tile, Entity>,
-}
-
-#[derive(Component, Copy, Clone, Debug)]
-pub enum SelectionEdge {
-    North,
-    East,
-    South,
-    West,
-}
-
-impl SelectionEdge {
-    pub const ALL: [Self; 4] = [Self::North, Self::East, Self::South, Self::West];
-
-    pub fn get_scalar(&self) -> Vec2 {
-        match self {
-            SelectionEdge::North => Vec2::ONE,
-            SelectionEdge::East => vec2(1., -1.),
-            SelectionEdge::South => -Vec2::ONE,
-            SelectionEdge::West => vec2(-1., 1.),
-        }
-    }
-}
-
-pub fn show_selected_tiles(
-    selected_tiles: Res<SelectedTiles>,
-    tile_ids: Res<SelectionMap>,
-    mut query: Query<(&mut Sprite, &mut Visibility), With<SelectionEdge>>,
-) {
-    for (_, mut vis) in query.iter_mut() {
-        vis.set_if_neq(Visibility::Hidden);
-    }
-
-    for &tile in selected_tiles.tiles.iter() {
-        let Some(s) = tile_ids.edges.get(&tile) else {
-            continue;
-        };
-        let neighbours = TileStep::ROOK
-            .map(|m| tile.step(m))
-            .map(|n| selected_tiles.tiles.contains(&n));
-        for (i, a) in neighbours.into_iter().enumerate() {
-            if !a {
-                if let Ok((mut sprite, mut vis)) = query.get_mut(s[i]) {
-                    sprite.color = selected_tiles.color;
-                    *vis = Visibility::Visible;
-                }
-            }
-        }
-    }
 }
 
 fn color_selected_tiles(
@@ -156,7 +107,7 @@ pub fn show_movement_range(
         return;
     }
 
-    let tiles = village_map.flood(tile, movement.0, &TileStep::ROOK, false);
+    let tiles = village_map.flood(tile, movement.0, &Direction::ROOK, false);
     selected_tiles.tiles = tiles;
     match q_enemies.contains(entity) {
         true => selected_tiles.color = css::INDIAN_RED.into(),

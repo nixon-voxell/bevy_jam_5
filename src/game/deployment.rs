@@ -1,4 +1,4 @@
-use crate::path_finding::map_position::Tile;
+use crate::path_finding::tiles::Tile;
 use crate::screen::Screen;
 
 use super::map::VillageMap;

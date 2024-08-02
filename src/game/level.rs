@@ -1,18 +1,15 @@
 //! Spawn the main level by triggering other observers.
 
-use bevy::color::palettes::css::{GREEN, YELLOW};
+use bevy::color::palettes::css::YELLOW;
 use bevy::prelude::*;
 
 use crate::game::unit::spawn::SpawnAnimation;
 use crate::game::unit::StructureBundle;
-use crate::path_finding::map_position::{Tile, TileDim};
+use crate::path_finding::tiles::{Tile, TileDim};
 use crate::{game::components::GroundTileLayer, screen::Screen, VillageCamera};
 
 use super::unit::EnemyUnit;
-use super::{
-    picking::PickableTile,
-    selection::{SelectionEdge, SelectionMap},
-};
+use super::{picking::PickableTile, selection::SelectionMap};
 
 use self::level_asset::{LevelAsset, LevelAssetPlugin, Levels};
 
@@ -110,36 +107,6 @@ pub fn load_level(
 
             village_map.set_terrain(Tile(xi, yi), terrain);
 
-            // Edges
-            let mut ids = [Entity::PLACEHOLDER; 4];
-            for (i, edge) in SelectionEdge::ALL.into_iter().enumerate() {
-                let id = commands
-                    .spawn((
-                        SpriteBundle {
-                            sprite: Sprite {
-                                anchor: TILE_ANCHOR,
-                                color: GREEN.into(),
-                                ..Default::default()
-                            },
-                            texture: tile_set.get("edge"),
-                            transform: Transform {
-                                translation: edge_translation,
-                                scale: edge.get_scalar().extend(1.),
-                                ..Default::default()
-                            },
-                            visibility: Visibility::Hidden,
-                            ..default()
-                        },
-                        StateScoped(Screen::Playing),
-                        Tile(xi, yi),
-                        edge,
-                    ))
-                    .id();
-                ids[i] = id;
-
-                ids[i] = id;
-            }
-            selection_map.edges.insert(Tile(xi, yi), ids);
             // Border
             let id = commands
                 .spawn((

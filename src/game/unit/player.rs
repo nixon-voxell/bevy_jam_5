@@ -11,7 +11,7 @@ pub use crate::game::picking::TilePressedEvent;
 use crate::game::selection::SelectedUnit;
 use crate::game::tile_set::tile_coord_translation;
 use crate::game::unit_list::PlayerUnitList;
-use crate::path_finding::map_position::TileStep;
+use crate::path_finding::tiles::Direction;
 use crate::screen::playing::GameState;
 
 use super::*;
@@ -25,7 +25,7 @@ pub fn spawn_player_unit(commands: &mut Commands, name: String) -> Entity {
                 visibility: Visibility::Hidden,
                 ..default()
             },
-            UnitBundle::<PlayerUnit>::new(&name, TileStep::ALL.into())
+            UnitBundle::<PlayerUnit>::new(&name, Direction::ALL.into())
                 .with_health(3)
                 .with_hit_points(3)
                 .with_movement(3),
@@ -87,7 +87,7 @@ pub fn move_unit(
         };
 
         if village_map
-            .flood(current_pos, movement.0, &TileStep::ROOK, false)
+            .flood(current_pos, movement.0, &Direction::ROOK, false)
             .contains(target)
         {
             println!("move {selected} to {target:?}");

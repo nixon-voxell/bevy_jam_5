@@ -9,7 +9,7 @@ use crate::{
             spawn::DespawnAnimation,
         },
     },
-    path_finding::{find_all_within_distance_unweighted, map_position::Tile},
+    path_finding::{find_all_within_distance_unweighted, tiles::Tile},
     screen::{playing::GameState, Screen},
     ui::icon_set::IconSet,
 };

@@ -18,6 +18,7 @@ pub mod item;
 pub mod level;
 pub mod map;
 mod picking;
+pub mod rendering;
 pub mod resources;
 pub mod selection;
 pub mod systems;
@@ -37,6 +38,7 @@ pub(super) fn plugin(app: &mut App) {
         picking::PickingPlugin,
         unit::UnitPlugin,
         item::ItemPlugin,
+        rendering::MapRenderingPlugin,
     ));
 }
 

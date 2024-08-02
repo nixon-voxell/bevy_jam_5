@@ -2,9 +2,8 @@ use std::ops::{Add, Sub};
 
 use bevy::prelude::*;
 
-#[derive(Component, Default, Debug, Copy, Clone, PartialEq, Eq, Hash)]
-pub enum TileStep {
-    #[default]
+#[derive(Component, Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum Direction {
     North,
     NorthEast,
     East,
@@ -15,106 +14,122 @@ pub enum TileStep {
     NorthWest,
 }
 
-impl TileStep {
+#[derive(Component, Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum Edge {
+    North,
+    East,
+    South,
+    West,
+}
+
+#[derive(Component, Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum Corner {
+    NorthEast,
+    SouthEast,
+    SouthWest,
+    NorthWest,
+}
+
+impl Direction {
     pub const fn index(self) -> usize {
         match self {
-            TileStep::North => 0,
-            TileStep::NorthEast => 1,
-            TileStep::East => 2,
-            TileStep::SouthEast => 3,
-            TileStep::South => 4,
-            TileStep::SouthWest => 5,
-            TileStep::West => 6,
-            TileStep::NorthWest => 7,
+            Direction::North => 0,
+            Direction::NorthEast => 1,
+            Direction::East => 2,
+            Direction::SouthEast => 3,
+            Direction::South => 4,
+            Direction::SouthWest => 5,
+            Direction::West => 6,
+            Direction::NorthWest => 7,
         }
     }
 
     pub const ALL: [Self; 8] = [
-        TileStep::North,
-        TileStep::NorthEast,
-        TileStep::East,
-        TileStep::SouthEast,
-        TileStep::South,
-        TileStep::SouthWest,
-        TileStep::West,
-        TileStep::NorthWest,
+        Direction::North,
+        Direction::NorthEast,
+        Direction::East,
+        Direction::SouthEast,
+        Direction::South,
+        Direction::SouthWest,
+        Direction::West,
+        Direction::NorthWest,
     ];
 
     pub const ROOK: [Self; 4] = [
-        TileStep::North,
-        TileStep::East,
-        TileStep::South,
-        TileStep::West,
+        Direction::North,
+        Direction::East,
+        Direction::South,
+        Direction::West,
     ];
 
     pub const DIAGONALS: [Self; 4] = [
-        TileStep::NorthEast,
-        TileStep::SouthEast,
-        TileStep::SouthWest,
-        TileStep::NorthWest,
+        Direction::NorthEast,
+        Direction::SouthEast,
+        Direction::SouthWest,
+        Direction::NorthWest,
     ];
 
     pub const fn meridean(self) -> i32 {
         match self {
-            TileStep::North => -1,
-            TileStep::NorthEast => -1,
-            TileStep::East => 0,
-            TileStep::SouthEast => 1,
-            TileStep::South => 1,
-            TileStep::SouthWest => 1,
-            TileStep::West => 0,
-            TileStep::NorthWest => -1,
+            Direction::North => -1,
+            Direction::NorthEast => -1,
+            Direction::East => 0,
+            Direction::SouthEast => 1,
+            Direction::South => 1,
+            Direction::SouthWest => 1,
+            Direction::West => 0,
+            Direction::NorthWest => -1,
         }
     }
 
     pub const fn parallel(self) -> i32 {
         match self {
-            TileStep::North => 0,
-            TileStep::NorthEast => 1,
-            TileStep::East => 1,
-            TileStep::SouthEast => 1,
-            TileStep::South => 0,
-            TileStep::SouthWest => -1,
-            TileStep::West => -1,
-            TileStep::NorthWest => -1,
+            Direction::North => 0,
+            Direction::NorthEast => 1,
+            Direction::East => 1,
+            Direction::SouthEast => 1,
+            Direction::South => 0,
+            Direction::SouthWest => -1,
+            Direction::West => -1,
+            Direction::NorthWest => -1,
         }
     }
 
     pub const fn opposite(self) -> Self {
         match self {
-            TileStep::North => TileStep::South,
-            TileStep::NorthEast => TileStep::SouthWest,
-            TileStep::East => TileStep::West,
-            TileStep::SouthEast => TileStep::SouthWest,
-            TileStep::South => TileStep::North,
-            TileStep::SouthWest => TileStep::NorthEast,
-            TileStep::West => TileStep::East,
-            TileStep::NorthWest => TileStep::SouthEast,
+            Direction::North => Direction::South,
+            Direction::NorthEast => Direction::SouthWest,
+            Direction::East => Direction::West,
+            Direction::SouthEast => Direction::SouthWest,
+            Direction::South => Direction::North,
+            Direction::SouthWest => Direction::NorthEast,
+            Direction::West => Direction::East,
+            Direction::NorthWest => Direction::SouthEast,
         }
     }
 
     pub const fn from_index(index: usize) -> Self {
-        TileStep::ALL[index % 8]
+        Direction::ALL[index % 8]
     }
 
     pub const fn turn_left_45(self) -> Self {
         let index = (self.index() + 7) % 8;
-        TileStep::from_index(index)
+        Direction::from_index(index)
     }
 
     pub const fn turn_right_45(self) -> Self {
         let index = (self.index() + 1) % 8;
-        TileStep::from_index(index)
+        Direction::from_index(index)
     }
 
     pub const fn turn_left_90(self) -> Self {
         let index = (self.index() + 6) % 8;
-        TileStep::from_index(index)
+        Direction::from_index(index)
     }
 
     pub const fn turn_right_90(self) -> Self {
         let index = (self.index() + 2) % 8;
-        TileStep::from_index(index)
+        Direction::from_index(index)
     }
 
     pub fn repeat(self, steps: u32) -> Path {
@@ -136,7 +151,7 @@ impl Tile {
         self.1
     }
 
-    pub fn step(self, dir: TileStep) -> Self {
+    pub fn step(self, dir: Direction) -> Self {
         Self(self.x() + dir.parallel(), self.y() + dir.meridean())
     }
 
@@ -182,14 +197,14 @@ impl Tile {
 }
 
 #[derive(Component, Default, Clone, PartialEq, Debug, Eq, Hash)]
-pub struct Path(Vec<TileStep>);
+pub struct Path(Vec<Direction>);
 
 impl Path {
     pub fn len(&self) -> usize {
         self.0.len()
     }
 
-    pub fn iter<'a>(&'a self) -> impl Iterator<Item = TileStep> + 'a {
+    pub fn iter<'a>(&'a self) -> impl Iterator<Item = Direction> + 'a {
         self.0.iter().copied()
     }
 
@@ -200,7 +215,7 @@ impl Path {
         })
     }
 
-    pub fn step(&mut self, step: TileStep) {
+    pub fn step(&mut self, step: Direction) {
         self.0.push(step)
     }
 
@@ -348,38 +363,38 @@ mod tests {
 
     #[test]
     fn test_tile_step_index() {
-        assert_eq!(TileStep::North.index(), 0);
-        assert_eq!(TileStep::East.index(), 2);
-        assert_eq!(TileStep::SouthWest.index(), 5);
+        assert_eq!(Direction::North.index(), 0);
+        assert_eq!(Direction::East.index(), 2);
+        assert_eq!(Direction::SouthWest.index(), 5);
     }
 
     #[test]
     fn test_tile_step_turns() {
-        assert_eq!(TileStep::North.turn_left_45(), TileStep::NorthWest);
-        assert_eq!(TileStep::North.turn_right_45(), TileStep::NorthEast);
-        assert_eq!(TileStep::North.turn_left_90(), TileStep::West);
-        assert_eq!(TileStep::North.turn_right_90(), TileStep::East);
+        assert_eq!(Direction::North.turn_left_45(), Direction::NorthWest);
+        assert_eq!(Direction::North.turn_right_45(), Direction::NorthEast);
+        assert_eq!(Direction::North.turn_left_90(), Direction::West);
+        assert_eq!(Direction::North.turn_right_90(), Direction::East);
     }
 
     #[test]
     fn test_tile_step_opposite() {
-        assert_eq!(TileStep::North.opposite(), TileStep::South);
-        assert_eq!(TileStep::East.opposite(), TileStep::West);
-        assert_eq!(TileStep::SouthWest.opposite(), TileStep::NorthEast);
+        assert_eq!(Direction::North.opposite(), Direction::South);
+        assert_eq!(Direction::East.opposite(), Direction::West);
+        assert_eq!(Direction::SouthWest.opposite(), Direction::NorthEast);
     }
 
     #[test]
     fn test_tile_step_meridean_parallel() {
-        assert_eq!(TileStep::North.meridean(), -1);
-        assert_eq!(TileStep::North.parallel(), 0);
-        assert_eq!(TileStep::East.meridean(), 0);
-        assert_eq!(TileStep::East.parallel(), 1);
+        assert_eq!(Direction::North.meridean(), -1);
+        assert_eq!(Direction::North.parallel(), 0);
+        assert_eq!(Direction::East.meridean(), 0);
+        assert_eq!(Direction::East.parallel(), 1);
     }
 
     #[test]
     fn test_tile_operations() {
         let tile = Tile(1, 2);
-        let step = TileStep::East;
+        let step = Direction::East;
         let new_tile = tile.step(step);
         assert_eq!(new_tile, Tile(2, 2));
     }
@@ -404,8 +419,8 @@ mod tests {
     #[test]
     fn test_path_operations() {
         let mut path = Path::default();
-        path.step(TileStep::North);
-        path.step(TileStep::East);
+        path.step(Direction::North);
+        path.step(Direction::East);
         assert_eq!(path.len(), 2);
 
         let start_tile = Tile(0, 0);
@@ -415,11 +430,11 @@ mod tests {
 
     #[test]
     fn test_path_reverse() {
-        let path = Path(vec![TileStep::North, TileStep::East]);
+        let path = Path(vec![Direction::North, Direction::East]);
         let reversed_path = path.reverse();
         assert_eq!(
             reversed_path.iter().collect::<Vec<_>>(),
-            vec![TileStep::West, TileStep::South]
+            vec![Direction::West, Direction::South]
         );
     }
 
