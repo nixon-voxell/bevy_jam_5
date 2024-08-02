@@ -46,6 +46,8 @@ fn load_tiles(asset_server: Res<AssetServer>, mut tile_set: ResMut<TileSet>) {
         "border",
         "tower",
         "tavern",
+        "nw_corner",
+        "ne_corner",
     ];
 
     for &tile in TILES {

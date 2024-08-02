@@ -3,6 +3,7 @@ use super::selection::SelectedTiles;
 use super::tile_set::tile_coord_translation;
 use super::tile_set::TileSet;
 use super::tile_set::TILE_ANCHOR;
+use crate::path_finding::tiles::Corner;
 use crate::path_finding::tiles::Edge;
 use crate::path_finding::tiles::Tile;
 use crate::screen::Screen;
@@ -64,6 +65,8 @@ fn spawn_selected_tiles(
     tile_set: Res<TileSet>,
 ) {
     let edge_image = tile_set.get("edge");
+    let nw_corner_image = tile_set.get("nw_corner");
+    let ne_corner_image = tile_set.get("ne_corner");
     for tile in selected.tiles.iter().copied() {
         let border_edges = Edge::ALL
             .iter()
@@ -87,6 +90,36 @@ fn spawn_selected_tiles(
                         ..Default::default()
                     },
                     texture: edge_image.clone(),
+                    transform: Transform {
+                        translation: tile_to_camera(tile, 1.),
+                        scale: scalar.extend(1.),
+                        ..Default::default()
+                    },
+                    ..default()
+                },
+                TemporarySprite,
+            ));
+        }
+
+        let corners = Corner::ALL.iter().filter(|c| {
+            let t = tile.step(c.direction());
+            !selected.tiles.contains(&t)
+        });
+        for corner in corners {
+            let (image, scalar) = match corner {
+                Corner::NorthEast => (&ne_corner_image, Vec2::ONE),
+                Corner::SouthEast => (&nw_corner_image, -Vec2::ONE),
+                Corner::SouthWest => (&ne_corner_image, -Vec2::ONE),
+                Corner::NorthWest => (&nw_corner_image, Vec2::ONE),
+            };
+            commands.spawn((
+                SpriteBundle {
+                    sprite: Sprite {
+                        anchor: TILE_ANCHOR,
+                        color: selected.color,
+                        ..Default::default()
+                    },
+                    texture: image.clone(),
                     transform: Transform {
                         translation: tile_to_camera(tile, 1.),
                         scale: scalar.extend(1.),
