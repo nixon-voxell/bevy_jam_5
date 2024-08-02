@@ -22,12 +22,34 @@ pub enum Edge {
     West,
 }
 
+impl Edge {
+    pub fn direction(&self) -> Direction {
+        match self {
+            Edge::North => Direction::North,
+            Edge::East => Direction::East,
+            Edge::South => Direction::South,
+            Edge::West => Direction::West,
+        }
+    }
+}
+
 #[derive(Component, Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum Corner {
     NorthEast,
     SouthEast,
     SouthWest,
     NorthWest,
+}
+
+impl Corner {
+    pub fn direction(&self) -> Direction {
+        match self {
+            Corner::NorthEast => Direction::NorthEast,
+            Corner::SouthEast => Direction::SouthEast,
+            Corner::SouthWest => Direction::SouthWest,
+            Corner::NorthWest => Direction::NorthWest,
+        }
+    }
 }
 
 impl Direction {
