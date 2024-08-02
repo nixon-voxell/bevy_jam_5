@@ -23,6 +23,8 @@ pub enum Edge {
 }
 
 impl Edge {
+    pub const ALL: [Self; 4] = [Self::North, Self::East, Self::South, Self::West];
+
     pub fn direction(&self) -> Direction {
         match self {
             Edge::North => Direction::North,
@@ -42,6 +44,13 @@ pub enum Corner {
 }
 
 impl Corner {
+    pub const ALL: [Self; 4] = [
+        Self::NorthEast,
+        Self::SouthEast,
+        Self::SouthWest,
+        Self::NorthWest,
+    ];
+
     pub fn direction(&self) -> Direction {
         match self {
             Corner::NorthEast => Direction::NorthEast,

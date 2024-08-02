@@ -1,10 +1,8 @@
-use bevy::color::palettes::css::GREEN;
+use crate::path_finding::tiles::Edge;
+use crate::path_finding::tiles::Tile;
+use crate::screen::Screen;
 use bevy::math::vec2;
 use bevy::prelude::*;
-
-use crate::path_finding::tiles::Tile;
-use crate::path_finding::tiles::Direction;
-use crate::screen::Screen;
 
 use super::selection::SelectedTiles;
 use super::tile_set::tile_coord_translation;
@@ -43,17 +41,19 @@ fn show_selected_tiles(
 ) {
     let edge_image = tile_set.get("edge");
     for tile in selected.tiles.iter().copied() {
-        let border_edges = Direction::ROOK.iter().filter(|s| {
-            let t = tile.step(**s);
-            !selected.tiles.contains(&t)
-        });
+        let border_edges = Edge::ALL
+            .iter()
+            .filter(|e| {
+                let t = tile.step(e.direction());
+                !selected.tiles.contains(&t)
+            })
+            .copied();
         for edge in border_edges {
             let scalar = match edge {
-                Direction::North => Vec2::ONE,
-                Direction::East => vec2(1., -1.),
-                Direction::South => -Vec2::ONE,
-                Direction::West => vec2(-1., 1.),
-                _ => Vec2::ZERO,
+                Edge::North => Vec2::ONE,
+                Edge::East => vec2(1., -1.),
+                Edge::South => -Vec2::ONE,
+                Edge::West => vec2(-1., 1.),
             };
             commands.spawn((
                 SpriteBundle {
