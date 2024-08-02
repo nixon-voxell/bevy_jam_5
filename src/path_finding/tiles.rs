@@ -166,6 +166,23 @@ impl Direction {
     pub fn repeat(self, steps: u32) -> Path {
         Path(vec![self; steps as usize])
     }
+
+    pub fn is_edge(self) -> bool {
+        matches!(
+            self,
+            Direction::North | Direction::East | Direction::South | Direction::West
+        )
+    }
+
+    pub fn is_diagonal(self) -> bool {
+        matches!(
+            self,
+            Direction::NorthEast
+                | Direction::SouthEast
+                | Direction::SouthWest
+                | Direction::NorthWest
+        )
+    }
 }
 
 #[derive(Component, Default, Debug, Copy, Clone, PartialEq, Eq, Hash)]
