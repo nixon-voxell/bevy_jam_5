@@ -1,3 +1,5 @@
+use bevy::color::palettes::tailwind::YELLOW_300;
+use bevy::color::Color;
 use bevy::ui::Val;
 use bevy::ui::ZIndex;
 
@@ -27,3 +29,5 @@ pub const RECRUIT_COST: u32 = 40;
 pub const SLOT_COST: u32 = 0;
 
 pub const UNIT_LIST_ZINDEX: ZIndex = ZIndex::Global(150);
+
+pub const CURSOR_COLOR: bevy::prelude::Srgba = YELLOW_300;

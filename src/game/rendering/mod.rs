@@ -1,4 +1,6 @@
+use super::constants::CURSOR_COLOR;
 use super::map::VillageMap;
+use super::picking::PickedTile;
 use super::selection::SelectedTiles;
 use super::tile_set::tile_coord_translation;
 use super::tile_set::TileSet;
@@ -7,6 +9,9 @@ use crate::path_finding::tiles::Corner;
 use crate::path_finding::tiles::Edge;
 use crate::path_finding::tiles::Tile;
 use crate::screen::Screen;
+use bevy::color::palettes::tailwind::YELLOW_400;
+use bevy::color::palettes::tailwind::YELLOW_900;
+use bevy::color::palettes::tailwind::YELLOW_950;
 use bevy::math::vec2;
 use bevy::prelude::*;
 
@@ -39,9 +44,12 @@ impl Plugin for MapRenderingPlugin {
             )
             .add_systems(
                 PostUpdate,
-                (spawn_selected_tiles,)
-                    .run_if(in_state(Screen::Playing))
-                    .run_if(|layers: Res<ShowLayers>| layers.show_selected_area),
+                (
+                    spawn_selected_tiles
+                        .run_if(|layers: Res<ShowLayers>| layers.show_selected_area),
+                    spawn_tile_cursor,
+                )
+                    .run_if(in_state(Screen::Playing)),
             );
     }
 }
@@ -150,6 +158,28 @@ fn spawn_tile_coord_labels(mut commands: Commands, map: Res<VillageMap>) {
                 },
 
                 ..Default::default()
+            },
+            TemporarySprite,
+        ));
+    }
+}
+
+fn spawn_tile_cursor(mut commands: Commands, picked_tile: Res<PickedTile>, tile_set: Res<TileSet>) {
+    let image = tile_set.get("border");
+    if let Some(tile) = picked_tile.0 {
+        commands.spawn((
+            SpriteBundle {
+                sprite: Sprite {
+                    anchor: TILE_ANCHOR,
+                    color: CURSOR_COLOR.into(),
+                    ..Default::default()
+                },
+                texture: image.clone(),
+                transform: Transform {
+                    translation: tile_to_camera(tile, 1.1),
+                    ..Default::default()
+                },
+                ..default()
             },
             TemporarySprite,
         ));

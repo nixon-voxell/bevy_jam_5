@@ -24,7 +24,6 @@ impl Plugin for PickingPlugin {
                 (
                     find_picked_point,
                     pick_tile,
-                    show_border_on_tile_pick,
                     dispatch_pressed_tile,
                     dispatch_object_pressed,
                     deploy_unit.run_if(in_state(GameState::Deployment)),
@@ -60,10 +59,6 @@ pub fn pick_tile(
                 is_point_in_triangle(r.x, r.y, 0.5 * TILE_WIDTH, TILE_HALF_HEIGHT)
             })
         {
-            // sprite_query
-            //     .get_mut(e)
-            //     .map(|mut sprite| sprite.color = Color::srgb(1., 0., 0.))
-            //     .ok();
             picked_tile_entity.0.push(e);
 
             picked_tile.0 = Some(map_pos);
@@ -74,36 +69,6 @@ pub fn pick_tile(
     if !picked_set {
         picked_tile.0 = None;
     }
-}
-
-pub fn show_border_on_tile_pick(
-    mut previous: Local<Option<Tile>>,
-    picked_tile: Res<PickedTile>,
-    mut query: Query<&mut Visibility, With<TileBorder>>,
-    selection_map: Res<SelectionMap>,
-) {
-    if let Some(tile) = picked_tile.0 {
-        if Some(tile) != *previous {
-            if let Some(prev_ent) = previous
-                .and_then(|prev_tile| selection_map.borders.get(&prev_tile))
-                .copied()
-            {
-                if let Ok(mut v) = query.get_mut(prev_ent) {
-                    v.set_if_neq(Visibility::Hidden);
-                }
-            }
-            if let Some(entity) = selection_map.borders.get(&tile) {
-                if let Ok(mut v) = query.get_mut(*entity) {
-                    v.set_if_neq(Visibility::Visible);
-                }
-            }
-        }
-    } else {
-        for mut v in query.iter_mut() {
-            v.set_if_neq(Visibility::Hidden);
-        }
-    }
-    *previous = picked_tile.0;
 }
 
 #[derive(Component)]
