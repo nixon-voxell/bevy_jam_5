@@ -318,7 +318,7 @@ pub fn spawn_in_progress_building(
         gold.0 -= cost.gold;
         working_population.0 += cost.workers;
 
-        let object_translation = tile_coord_translation(tile.x as f32, tile.y as f32, 2.0);
+        let object_translation = tile_coord_translation(tile.x() as f32, tile.y() as f32, 2.0);
         let id = commands
             .spawn((
                 SpriteBundle {
@@ -393,7 +393,8 @@ pub fn update_building_progress(
                 let Some(tile) = village_map.object.locate(e) else {
                     continue;
                 };
-                let object_translation = tile_coord_translation(tile.x as f32, tile.y as f32, 2.);
+                let object_translation =
+                    tile_coord_translation(tile.x() as f32, tile.y() as f32, 2.);
                 let mut object_entity = commands.spawn((
                     SpriteBundle {
                         sprite: Sprite {

@@ -29,6 +29,7 @@ fn play_sfx(
 #[derive(Event)]
 pub enum PlaySfx {
     Key(SfxKey),
+    #[allow(unused)]
     RandomStep,
 }
 

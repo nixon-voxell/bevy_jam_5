@@ -3,9 +3,9 @@
 use bevy::color::palettes::css::{GREEN, YELLOW};
 use bevy::prelude::*;
 
-use crate::game::map::MapPos;
 use crate::game::unit::spawn::SpawnAnimation;
 use crate::game::unit::StructureBundle;
+use crate::path_finding::map_position::{Tile, TileDim};
 use crate::{game::components::GroundTileLayer, screen::Screen, VillageCamera};
 
 use super::unit::EnemyUnit;
@@ -58,7 +58,7 @@ pub fn load_level(
     };
 
     let mut selection_map = SelectionMap::default();
-    let mut village_map = VillageMap::new(UVec2::splat(level_asset.size as u32));
+    let mut village_map = VillageMap::new(TileDim::splat(level_asset.size as i32));
 
     let camera_translation = Vec3::new(
         0.0,
@@ -93,7 +93,7 @@ pub fn load_level(
                     transform: Transform::from_translation(ground_translation),
                     ..default()
                 },
-                MapPos(IVec2::new(xi, yi)),
+                Tile(xi, yi),
                 PickableTile,
                 GroundTileLayer,
                 StateScoped(Screen::Playing),
@@ -108,7 +108,7 @@ pub fn load_level(
                 }
             };
 
-            village_map.set_terrain(IVec2::new(xi, yi), terrain);
+            village_map.set_terrain(Tile(xi, yi), terrain);
 
             // Edges
             let mut ids = [Entity::PLACEHOLDER; 4];
@@ -131,7 +131,7 @@ pub fn load_level(
                             ..default()
                         },
                         StateScoped(Screen::Playing),
-                        MapPos(IVec2::new(xi, yi)),
+                        Tile(xi, yi),
                         edge,
                     ))
                     .id();
@@ -139,7 +139,7 @@ pub fn load_level(
 
                 ids[i] = id;
             }
-            selection_map.edges.insert(IVec2::new(xi, yi), ids);
+            selection_map.edges.insert(Tile(xi, yi), ids);
             // Border
             let id = commands
                 .spawn((
@@ -158,11 +158,11 @@ pub fn load_level(
                         ..default()
                     },
                     StateScoped(Screen::Playing),
-                    MapPos(IVec2::new(xi, yi)),
+                    Tile(xi, yi),
                     TileBorder,
                 ))
                 .id();
-            selection_map.borders.insert(IVec2::new(xi, yi), id);
+            selection_map.borders.insert(Tile(xi, yi), id);
             // Thick border
             let id = commands
                 .spawn((
@@ -181,11 +181,11 @@ pub fn load_level(
                         ..default()
                     },
                     StateScoped(Screen::Playing),
-                    MapPos(IVec2::new(xi, yi)),
+                    Tile(xi, yi),
                     TileThickBorder,
                 ))
                 .id();
-            selection_map.thick_borders.insert(IVec2::new(xi, yi), id);
+            selection_map.thick_borders.insert(Tile(xi, yi), id);
 
             if object_tile_name != "empty" {
                 let object_entity = commands.spawn((
@@ -204,9 +204,7 @@ pub fn load_level(
                     SpawnAnimation::new(object_translation),
                 ));
 
-                village_map
-                    .object
-                    .set(IVec2::new(xi, yi), object_entity.id());
+                village_map.object.set(Tile(xi, yi), object_entity.id());
             }
         }
     }

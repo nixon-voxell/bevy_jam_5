@@ -2,21 +2,17 @@ pub mod map_position;
 
 use std::cmp::Reverse;
 
-use bevy::math::IVec2;
 use bevy::utils::HashSet;
+use map_position::Tile;
 use priority_queue::PriorityQueue;
 
 /// Find all tiles that are within a certain distance of a given tile
-pub fn find_all_within_distance<N, I>(
-    start: IVec2,
-    max_distance: u32,
-    navigator: N,
-) -> HashSet<IVec2>
+pub fn find_all_within_distance<N, I>(start: Tile, max_distance: u32, navigator: N) -> HashSet<Tile>
 where
-    N: Fn(IVec2) -> I,
-    I: IntoIterator<Item = (IVec2, u32)>,
+    N: Fn(Tile) -> I,
+    I: IntoIterator<Item = (Tile, u32)>,
 {
-    let mut open_set: PriorityQueue<IVec2, Reverse<u32>> = PriorityQueue::new();
+    let mut open_set: PriorityQueue<Tile, Reverse<u32>> = PriorityQueue::new();
     open_set.push(start, Reverse(0));
     let mut visited = HashSet::default();
     visited.insert(start);
@@ -36,13 +32,13 @@ where
 
 /// Find all tiles that are within a certain distance of a given tile, all moves have the same cost
 pub fn find_all_within_distance_unweighted<N, I>(
-    start: IVec2,
+    start: Tile,
     max_distance: u32,
     navigator: N,
-) -> HashSet<IVec2>
+) -> HashSet<Tile>
 where
-    N: Fn(IVec2) -> I,
-    I: IntoIterator<Item = IVec2>,
+    N: Fn(Tile) -> I,
+    I: IntoIterator<Item = Tile>,
 {
     find_all_within_distance(start, max_distance, |position| {
         navigator(position).into_iter().map(|target| (target, 1))

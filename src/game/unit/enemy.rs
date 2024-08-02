@@ -3,12 +3,13 @@ use bevy_trauma_shake::TraumaCommands;
 
 use crate::game::cycle::{Season, TimeOfDay, Turn, TURN_PER_DAY};
 use crate::game::level::Terrain;
-use crate::game::map::{VillageMap, KING_MOVES, ROOK_MOVES};
+use crate::game::map::VillageMap;
 use crate::game::selection::SelectionMap;
 use crate::game::tile_set::{tile_coord_translation, TileSet, TILE_ANCHOR};
 use crate::game::unit::spawn::SpawnAnimation;
 use crate::game::unit::{EnemyUnit, IsAirborne, UnitBundle};
 use crate::game::unit_list::PlayerUnitList;
+use crate::path_finding::map_position::{Tile, TileStep};
 use crate::screen::playing::GameState;
 use crate::screen::Screen;
 use crate::ui::icon_set::IconSet;
@@ -61,7 +62,7 @@ fn perform_attack(
     };
 
     if enemy_attack.factor == 0.0 {
-        let tile = enemy_attack.tile.as_vec2();
+        let tile = enemy_attack.tile.to_ivec2().as_vec2();
         let translation = tile_coord_translation(tile.x, tile.y, 3.0);
         commands.spawn(ClawMarkBundle {
             sprite: SpriteBundle {
@@ -169,7 +170,7 @@ fn move_enemies(
             // Already in the best tile, find surroundings to attack!
             // for direction in enemy.
             for direction in directions.0.iter() {
-                let attack_tile = enemy_tile.saturating_add(*direction);
+                let attack_tile = enemy_tile.step(*direction);
                 let Some(attack_entity) = village_map.object.get(attack_tile) else {
                     continue;
                 };
@@ -198,8 +199,8 @@ fn move_enemies(
         return;
     }
 
-    let current_tile = path.path[path.index].as_vec2();
-    let target_tile = path.path[path.index + 1].as_vec2();
+    let current_tile = path.path[path.index].to_ivec2().as_vec2();
+    let target_tile = path.path[path.index + 1].to_ivec2().as_vec2();
 
     let diff = target_tile - current_tile;
     let length = diff.length();
@@ -266,12 +267,12 @@ fn spawn_enemies(
     tile_set: Res<TileSet>,
 ) {
     debug_assert!(
-        village_map.size.x == village_map.size.y,
+        village_map.size.x() == village_map.size.y(),
         "Map is not square."
     );
-    let width = village_map.size.x;
+    let width = village_map.size.x();
 
-    if ENEMY_SPAWN_RANGE * 2 > width {
+    if ENEMY_SPAWN_RANGE * 2 > width as u32 {
         warn!("Enemy spawn range ({ENEMY_SPAWN_RANGE} * 2) is larger than map size: {width}");
         return;
     }
@@ -302,9 +303,11 @@ fn spawn_enemies(
     };
 
     for enemy in enemies {
-        let mut tile_coord = IVec2::ZERO;
+        let mut tile_coord = Tile::ZERO;
         for _ in 0..SPAWN_TRIAL {
-            tile_coord = random_border_tile_coord(width, ENEMY_SPAWN_RANGE).as_ivec2();
+            tile_coord = random_border_tile_coord(width as u32, ENEMY_SPAWN_RANGE)
+                .as_ivec2()
+                .into();
 
             // There is something blocking the spawning location
             if village_map.object.get(tile_coord).is_some() {
@@ -323,7 +326,7 @@ fn spawn_enemies(
             }
         }
 
-        let translation = tile_coord_translation(tile_coord.x as f32, tile_coord.y as f32, 2.0);
+        let translation = tile_coord_translation(tile_coord.x() as f32, tile_coord.y() as f32, 2.0);
         let mut enemy_entity = commands.spawn((
             SpriteBundle {
                 sprite: Sprite {
@@ -376,7 +379,7 @@ pub struct EnemySpawn {
     pub hit_points: u32,
     pub movement: u32,
     pub is_airborne: bool,
-    pub directions: &'static [IVec2],
+    pub directions: &'static [TileStep],
 }
 
 impl EnemySpawn {
@@ -385,27 +388,27 @@ impl EnemySpawn {
         hit_points: 3,
         movement: 3,
         is_airborne: false,
-        directions: &ROOK_MOVES,
+        directions: &TileStep::ROOK,
     };
     pub const SLIME: Self = Self {
         name: "slime",
         hit_points: 4,
         movement: 2,
         is_airborne: false,
-        directions: &ROOK_MOVES,
+        directions: &TileStep::ROOK,
     };
     pub const BAT: Self = Self {
         name: "bat",
         hit_points: 2,
         movement: 4,
         is_airborne: true,
-        directions: &KING_MOVES,
+        directions: &TileStep::ALL,
     };
 }
 
 #[derive(Component, Default, Debug, Clone)]
 pub struct TilePath {
-    pub path: Vec<IVec2>,
+    pub path: Vec<Tile>,
     /// Current path index that the entity is located at.
     pub index: usize,
     /// Animation factor between 2 tiles.
@@ -413,20 +416,20 @@ pub struct TilePath {
 }
 
 impl TilePath {
-    pub fn new(path: Vec<IVec2>) -> Self {
+    pub fn new(path: Vec<Tile>) -> Self {
         Self { path, ..default() }
     }
 }
 
 #[derive(Component, Default, Debug, Clone)]
 pub struct EnemyAttack {
-    tile: IVec2,
+    tile: Tile,
     /// Animation factor.
     factor: f32,
 }
 
 impl EnemyAttack {
-    pub fn new(tile: IVec2) -> Self {
+    pub fn new(tile: Tile) -> Self {
         Self { tile, ..default() }
     }
 }

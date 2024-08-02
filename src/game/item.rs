@@ -9,7 +9,7 @@ use crate::{
             spawn::DespawnAnimation,
         },
     },
-    path_finding::find_all_within_distance_unweighted,
+    path_finding::{find_all_within_distance_unweighted, map_position::Tile},
     screen::{playing::GameState, Screen},
     ui::icon_set::IconSet,
 };
@@ -41,7 +41,7 @@ impl Plugin for ItemPlugin {
 #[derive(Resource, Default)]
 pub struct InventorySelection {
     pub selection: Option<(Item, Entity, usize)>,
-    pub tile: IVec2,
+    pub tile: Tile,
 }
 
 fn show_attack_range(
@@ -62,7 +62,7 @@ fn show_attack_range(
 
             let possible_action_tiles =
                 find_all_within_distance_unweighted(tile, item.range, |t| {
-                    item.directions.iter().copied().map(move |d| t + d)
+                    item.directions.iter().copied().map(move |d| t.step(d))
                 });
 
             selection_tiles.tiles = possible_action_tiles;
@@ -134,7 +134,7 @@ fn apply_item_effect(
 
     let possible_action_tiles =
         find_all_within_distance_unweighted(inventory_selection.tile, item.range, |t| {
-            item.directions.iter().copied().map(move |d| t + d)
+            item.directions.iter().copied().map(move |d| t.step(d))
         });
 
     if possible_action_tiles.contains(&target_tile) {
@@ -145,7 +145,7 @@ fn apply_item_effect(
                 health.0 = health.0.saturating_sub(item.health_effect.unsigned_abs());
 
                 let translation =
-                    tile_coord_translation(target_tile.x as f32, target_tile.y as f32, 3.0);
+                    tile_coord_translation(target_tile.x() as f32, target_tile.y() as f32, 3.0);
                 commands.spawn(ClawMarkBundle {
                     sprite: SpriteBundle {
                         sprite: Sprite {

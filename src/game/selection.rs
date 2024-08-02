@@ -1,6 +1,6 @@
 use super::components::GroundTileLayer;
 use super::deployment::deploy_unit;
-use super::map::MapPos;
+
 use super::map::VillageMap;
 use super::picking::PickedTile;
 
@@ -10,7 +10,9 @@ use super::unit::EnemyUnit;
 
 use super::unit::Movement;
 use super::unit::UnitTurnState;
-use crate::game::map::ROOK_MOVES;
+
+use crate::path_finding::map_position::Tile;
+use crate::path_finding::map_position::TileStep;
 use crate::screen::playing::GameState;
 use crate::screen::Screen;
 use bevy::color::palettes::css;
@@ -62,14 +64,14 @@ impl SelectedUnit {
 #[derive(Resource, Default)]
 pub struct SelectedTiles {
     pub color: Color,
-    pub tiles: HashSet<IVec2>,
+    pub tiles: HashSet<Tile>,
 }
 
 #[derive(Resource, Default)]
 pub struct SelectionMap {
-    pub edges: HashMap<IVec2, [Entity; 4]>,
-    pub borders: HashMap<IVec2, Entity>,
-    pub thick_borders: HashMap<IVec2, Entity>,
+    pub edges: HashMap<Tile, [Entity; 4]>,
+    pub borders: HashMap<Tile, Entity>,
+    pub thick_borders: HashMap<Tile, Entity>,
 }
 
 #[derive(Component, Copy, Clone, Debug)]
@@ -106,8 +108,8 @@ pub fn show_selected_tiles(
         let Some(s) = tile_ids.edges.get(&tile) else {
             continue;
         };
-        let neighbours = ROOK_MOVES
-            .map(|m| tile + m)
+        let neighbours = TileStep::ROOK
+            .map(|m| tile.step(m))
             .map(|n| selected_tiles.tiles.contains(&n));
         for (i, a) in neighbours.into_iter().enumerate() {
             if !a {
@@ -122,10 +124,10 @@ pub fn show_selected_tiles(
 
 fn color_selected_tiles(
     selected_tiles: Res<SelectedTiles>,
-    mut query: Query<(&mut Sprite, &MapPos), With<GroundTileLayer>>,
+    mut query: Query<(&mut Sprite, &Tile), With<GroundTileLayer>>,
 ) {
-    for (mut s, p) in query.iter_mut() {
-        s.color = if selected_tiles.tiles.contains(&p.0) {
+    for (mut s, tile) in query.iter_mut() {
+        s.color = if selected_tiles.tiles.contains(tile) {
             selected_tiles.color
         } else {
             Color::WHITE
@@ -154,7 +156,7 @@ pub fn show_movement_range(
         return;
     }
 
-    let tiles = village_map.flood(tile, movement.0, &ROOK_MOVES, false);
+    let tiles = village_map.flood(tile, movement.0, &TileStep::ROOK, false);
     selected_tiles.tiles = tiles;
     match q_enemies.contains(entity) {
         true => selected_tiles.color = css::INDIAN_RED.into(),

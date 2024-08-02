@@ -1,11 +1,10 @@
 use super::deployment::deploy_unit;
 use super::level::TileBorder;
-use super::map::MapPos;
-use super::map::VillageMap;
 use super::selection::dispatch_object_pressed;
 use super::selection::SelectionMap;
 use super::tile_set::TILE_HALF_HEIGHT;
 use super::tile_set::TILE_WIDTH;
+use crate::path_finding::map_position::Tile;
 use crate::screen::playing::GameState;
 use crate::screen::Screen;
 use bevy::app::Plugin;
@@ -40,8 +39,7 @@ pub fn pick_tile(
     picked_point: Res<PickedPoint>,
     mut picked_tile_entity: ResMut<PickedTileEntities>,
     mut picked_tile: ResMut<PickedTile>,
-    village_map: Res<VillageMap>,
-    tiles_query: Query<(Entity, &GlobalTransform, &MapPos), With<PickableTile>>,
+    tiles_query: Query<(Entity, &GlobalTransform, &Tile), With<PickableTile>>,
 ) {
     let mut picked_set = false;
 
@@ -68,7 +66,7 @@ pub fn pick_tile(
             //     .ok();
             picked_tile_entity.0.push(e);
 
-            picked_tile.0 = Some(map_pos.0);
+            picked_tile.0 = Some(map_pos);
             picked_set = true;
         }
     }
@@ -79,7 +77,7 @@ pub fn pick_tile(
 }
 
 pub fn show_border_on_tile_pick(
-    mut previous: Local<Option<IVec2>>,
+    mut previous: Local<Option<Tile>>,
     picked_tile: Res<PickedTile>,
     mut query: Query<&mut Visibility, With<TileBorder>>,
     selection_map: Res<SelectionMap>,
@@ -115,7 +113,7 @@ pub struct PickableTile;
 pub struct PickedTileEntities(pub Vec<Entity>);
 
 #[derive(Resource, Default, Debug)]
-pub struct PickedTile(pub Option<IVec2>);
+pub struct PickedTile(pub Option<Tile>);
 
 #[derive(Resource, Default)]
 pub struct PickedPoint(pub Option<Vec2>);
@@ -140,7 +138,7 @@ pub fn find_picked_point(
 }
 
 #[derive(Event, Debug, Copy, Clone)]
-pub struct TilePressedEvent(pub IVec2);
+pub struct TilePressedEvent(pub Tile);
 
 pub fn dispatch_pressed_tile(
     picked_tile: Res<PickedTile>,
@@ -163,8 +161,8 @@ fn is_point_in_triangle(x: f32, y: f32, w: f32, h: f32) -> bool {
 
 #[derive(Debug, Default, Copy, Clone, Eq, PartialEq)]
 pub struct PickState {
-    hovered: Option<IVec2>,
-    pressed: Option<IVec2>,
+    hovered: Option<Tile>,
+    pressed: Option<Tile>,
 }
 
 #[derive(Resource, Default, Debug)]

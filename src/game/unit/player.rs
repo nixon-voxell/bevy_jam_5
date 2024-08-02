@@ -6,11 +6,12 @@ use crate::game::inventory::MaxInventorySize;
 
 use crate::game::inventory::Inventory;
 
-use crate::game::map::{VillageMap, ROOK_MOVES};
+use crate::game::map::VillageMap;
 pub use crate::game::picking::TilePressedEvent;
 use crate::game::selection::SelectedUnit;
 use crate::game::tile_set::tile_coord_translation;
 use crate::game::unit_list::PlayerUnitList;
+use crate::path_finding::map_position::TileStep;
 use crate::screen::playing::GameState;
 
 use super::*;
@@ -24,7 +25,7 @@ pub fn spawn_player_unit(commands: &mut Commands, name: String) -> Entity {
                 visibility: Visibility::Hidden,
                 ..default()
             },
-            UnitBundle::<PlayerUnit>::new(&name, ROOK_MOVES.to_vec())
+            UnitBundle::<PlayerUnit>::new(&name, TileStep::ALL.into())
                 .with_health(3)
                 .with_hit_points(3)
                 .with_movement(3),
@@ -86,13 +87,14 @@ pub fn move_unit(
         };
 
         if village_map
-            .flood(current_pos, movement.0, &ROOK_MOVES, false)
+            .flood(current_pos, movement.0, &TileStep::ROOK, false)
             .contains(target)
         {
             println!("move {selected} to {target:?}");
             village_map.object.set(*target, selected);
             turn_state.used_move = true;
-            transform.translation = tile_coord_translation(target.x as f32, target.y as f32, 2.);
+            transform.translation =
+                tile_coord_translation(target.x() as f32, target.y() as f32, 2.);
             transform.scale = Vec3::ONE;
 
             *vis = Visibility::Inherited;

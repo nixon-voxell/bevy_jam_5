@@ -1,3 +1,4 @@
+use crate::path_finding::map_position::Tile;
 use crate::screen::Screen;
 
 use super::map::VillageMap;
@@ -20,14 +21,15 @@ pub fn deployment_setup(
     let r = IRect::from_corners(
         IVec2::ZERO,
         IVec2 {
-            x: size.x as i32,
-            y: size.y as i32,
+            x: size.x() as i32,
+            y: size.y() as i32,
         },
     )
     .inflate(-3);
     for x in r.min.x..r.max.x {
         for y in r.min.y..r.max.y {
-            village_map.deployment_zone.insert(IVec2::new(x, y));
+            let value = Tile(x, y);
+            village_map.deployment_zone.insert(value);
         }
     }
 }
@@ -71,7 +73,7 @@ pub fn deploy_unit(
                 && !village_map.object.is_occupied(*target_tile)
             {
                 let translation =
-                    tile_coord_translation(target_tile.x as f32, target_tile.y as f32, 2.0);
+                    tile_coord_translation(target_tile.x() as f32, target_tile.y() as f32, 2.0);
                 commands.entity(entity_to_deploy).insert((
                     SpriteBundle {
                         sprite: Sprite {
@@ -85,7 +87,7 @@ pub fn deploy_unit(
                     StateScoped(Screen::Playing),
                 ));
                 village_map.object.set(*target_tile, entity_to_deploy);
-                println!("Placing {} at {}", entity_to_deploy, target_tile);
+                println!("Placing {} at {:?}", entity_to_deploy, target_tile);
                 if let Some(next_unit) = player_unit_list
                     .0
                     .iter()
