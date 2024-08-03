@@ -9,9 +9,6 @@ use crate::path_finding::tiles::Corner;
 use crate::path_finding::tiles::Edge;
 use crate::path_finding::tiles::Tile;
 use crate::screen::Screen;
-use bevy::color::palettes::tailwind::YELLOW_400;
-use bevy::color::palettes::tailwind::YELLOW_900;
-use bevy::color::palettes::tailwind::YELLOW_950;
 use bevy::math::vec2;
 use bevy::prelude::*;
 
