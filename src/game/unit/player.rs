@@ -90,7 +90,6 @@ pub fn move_unit(
             .flood(current_pos, movement.0, &Direction::ROOK, false)
             .contains(target)
         {
-            println!("move {selected} to {target:?}");
             village_map.object.set(*target, selected);
             turn_state.used_move = true;
             transform.translation =
