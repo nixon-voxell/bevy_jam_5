@@ -44,6 +44,7 @@ pub fn load_level(
     mut levels: ResMut<Levels>,
     level_assets: Res<Assets<LevelAsset>>,
     tile_set: Res<TileSet>,
+    asset_server: Res<AssetServer>,
 ) {
     // Choose a random level
     let level_index = rand::random::<usize>() % levels.0.len();

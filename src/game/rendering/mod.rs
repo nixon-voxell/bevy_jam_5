@@ -1,10 +1,14 @@
+use super::components::ArcherTower;
 use super::constants::CURSOR_COLOR;
+use super::construction::StructureType;
 use super::map::VillageMap;
 use super::picking::PickedTile;
 use super::selection::SelectedTiles;
+use super::selection::SelectedUnit;
 use super::tile_set::tile_coord_translation;
 use super::tile_set::TileSet;
 use super::tile_set::TILE_ANCHOR;
+use crate::path_finding::tiles;
 use crate::path_finding::tiles::Corner;
 use crate::path_finding::tiles::Edge;
 use crate::path_finding::tiles::Tile;
@@ -32,7 +36,7 @@ pub struct MapRenderingPlugin;
 impl Plugin for MapRenderingPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<ShowLayers>()
-            .add_systems(First, despawn_temporary_sprites)
+            .add_systems(PreUpdate, despawn_temporary_sprites)
             .add_systems(
                 Update,
                 spawn_tile_coord_labels
@@ -42,6 +46,7 @@ impl Plugin for MapRenderingPlugin {
             .add_systems(
                 PostUpdate,
                 (
+                    spawn_arrow_sprites,
                     spawn_selected_tiles
                         .run_if(|layers: Res<ShowLayers>| layers.show_selected_area),
                     spawn_tile_cursor,
@@ -180,5 +185,71 @@ fn spawn_tile_cursor(mut commands: Commands, picked_tile: Res<PickedTile>, tile_
             },
             TemporarySprite,
         ));
+    }
+}
+
+/// This doesn't draw anything, not sure why
+fn spawn_arrow_sprites(
+    mut commands: Commands,
+    selected: Res<SelectedUnit>,
+    village_map: Res<VillageMap>,
+    query: Query<&Tile, With<ArcherTower>>,
+    asset_server: Res<AssetServer>,
+    tile_set: Res<TileSet>,
+) {
+    let Some(selected_entity) = selected.entity else {
+        return;
+    };
+    let Ok(tile) = query.get(selected_entity) else {
+        return;
+    };
+    for (edge, direction) in Edge::ALL.into_iter().map(|e| (e, e.direction())) {
+        let mut cursor = tile.step(direction);
+        while village_map.bounds().contains(cursor) && !village_map.object.is_occupied(cursor) {
+            let (flip_x, flip_y) = match edge {
+                Edge::North => (false, false),
+                Edge::East => (false, true),
+                Edge::South => (true, true),
+                Edge::West => (true, false),
+            };
+            commands.spawn((
+                SpriteBundle {
+                    sprite: Sprite {
+                        color: Color::WHITE,
+                        flip_x,
+                        flip_y,
+                        ..Default::default()
+                    },
+                    texture: asset_server.load("tiles/arrow.png"),
+                    transform: Transform {
+                        translation: tile_to_camera(cursor, 1.2) + 45. * Vec3::Y,
+                        scale: Vec3::new(2., 2., 1.),
+                        ..default()
+                    },
+                    ..default()
+                },
+                TemporarySprite,
+            ));
+
+            commands.spawn((
+                SpriteBundle {
+                    sprite: Sprite {
+                        flip_x,
+                        flip_y,
+                        color: Color::srgba(0.2, 0.2, 0.2, 0.8),
+                        ..Default::default()
+                    },
+                    texture: asset_server.load("tiles/arrow.png"),
+                    transform: Transform {
+                        translation: tile_to_camera(cursor, 1.1),
+                        scale: Vec3::new(2., 2., 1.),
+                        ..default()
+                    },
+                    ..Default::default()
+                },
+                TemporarySprite,
+            ));
+            cursor = cursor.step(direction);
+        }
     }
 }

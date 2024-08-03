@@ -405,6 +405,7 @@ pub fn update_building_progress(
                         transform: Transform::from_translation(object_translation),
                         ..default()
                     },
+                    tile,
                     PickableTile,
                     StateScoped(Screen::Playing),
                     StructureBundle::default(),
