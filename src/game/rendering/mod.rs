@@ -188,7 +188,6 @@ fn spawn_tile_cursor(mut commands: Commands, picked_tile: Res<PickedTile>, tile_
     }
 }
 
-/// This doesn't draw anything, not sure why
 fn spawn_arrow_sprites(
     mut commands: Commands,
     selected: Res<SelectedUnit>,
