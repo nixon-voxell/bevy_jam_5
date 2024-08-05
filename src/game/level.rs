@@ -6,7 +6,7 @@ use bevy::prelude::*;
 use crate::game::unit::spawn::SpawnAnimation;
 use crate::game::unit::StructureBundle;
 use crate::path_finding::tiles::{Tile, TileDim};
-use crate::{game::components::GroundTileLayer, screen::Screen, VillageCamera};
+use crate::{screen::Screen, VillageCamera};
 
 use super::unit::EnemyUnit;
 use super::{picking::PickableTile, selection::SelectionMap};
@@ -44,7 +44,6 @@ pub fn load_level(
     mut levels: ResMut<Levels>,
     level_assets: Res<Assets<LevelAsset>>,
     tile_set: Res<TileSet>,
-    asset_server: Res<AssetServer>,
 ) {
     // Choose a random level
     let level_index = rand::random::<usize>() % levels.0.len();
