@@ -177,3 +177,25 @@ pub enum Terrain {
     /// Tile is water (land units cannot be on top of this tile).
     Water,
 }
+
+impl Terrain {
+    pub fn is_walkable(self) -> bool {
+        match self {
+            Terrain::Grass => true,
+            Terrain::Gravel => true,
+            Terrain::Water => false,
+        }
+    }
+
+    pub fn is_swimmable(self) -> bool {
+        match self {
+            Terrain::Grass => false,
+            Terrain::Gravel => false,
+            Terrain::Water => true,
+        }
+    }
+
+    pub fn is_flyable(self) -> bool {
+        true
+    }
+}

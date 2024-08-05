@@ -9,7 +9,7 @@ use crate::game::tile_set::{tile_coord_translation, TileSet, TILE_ANCHOR};
 use crate::game::unit::spawn::SpawnAnimation;
 use crate::game::unit::{EnemyUnit, IsAirborne, UnitBundle};
 use crate::game::unit_list::PlayerUnitList;
-use crate::path_finding::tiles::{Tile, Direction};
+use crate::path_finding::tiles::{Direction, Tile};
 use crate::screen::playing::GameState;
 use crate::screen::Screen;
 use crate::ui::icon_set::IconSet;
@@ -89,7 +89,7 @@ fn perform_attack(
             .filter(|e| q_not_enemy_units.contains(*e))
             .and_then(|e| q_health.get_mut(e).ok())
         {
-            health.0 = health.0.saturating_sub(1);
+            health.value = health.value.saturating_sub(1);
         }
         // Hide marked tile
         if let Some(mut vis) = selection_map
@@ -337,7 +337,7 @@ fn spawn_enemies(
                 ..default()
             },
             UnitBundle::<EnemyUnit>::new(enemy.name, enemy.directions.to_vec())
-                .with_hit_points(enemy.hit_points)
+                .with_health(enemy.hit_points)
                 .with_health(enemy.hit_points)
                 .with_movement(enemy.movement),
             SpawnAnimation::new(translation),

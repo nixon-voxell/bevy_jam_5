@@ -3,6 +3,8 @@ use bevy::prelude::*;
 use bevy::utils::HashMap;
 use sickle_ui::prelude::*;
 
+use crate::path_finding::is_any_path;
+use crate::path_finding::tiles::Tile;
 use crate::screen::Screen;
 use crate::ui::prelude::InteractionPalette;
 
@@ -298,6 +300,25 @@ pub fn spawn_in_progress_building(
         return;
     };
 
+    if village_map.object.is_occupied(*tile) {
+        return;
+    }
+
+    if !is_any_path(Tile::ZERO, *tile, |t| {
+        village_map
+            .object
+            .get_neighbouring_positions_rook(t)
+            .filter(|&n| {
+                village_map
+                    .get_terrain(n)
+                    .map(|t| t.is_walkable())
+                    .unwrap_or(false)
+                    && !village_map.object.is_occupied(n)
+            })
+    }) {
+        return;
+    }
+
     if cost.is_exclusive {
         for s in structure_query.iter() {
             if *s == structure_type {
@@ -306,69 +327,67 @@ pub fn spawn_in_progress_building(
         }
     }
 
-    if !village_map.object.is_occupied(*tile) {
-        if gold.0 < cost.gold {
-            return;
-        }
-
-        if population.0 < working_population.0 + cost.workers {
-            return;
-        }
-
-        gold.0 -= cost.gold;
-        working_population.0 += cost.workers;
-
-        let object_translation = tile_coord_translation(tile.x() as f32, tile.y() as f32, 2.0);
-        let id = commands
-            .spawn((
-                SpriteBundle {
-                    sprite: Sprite {
-                        anchor: TILE_ANCHOR,
-                        color: Color::WHITE.with_alpha(0.85),
-                        ..Default::default()
-                    },
-                    transform: Transform::from_translation(object_translation),
-                    texture: tile_set.get(structure_type.tile_texture()),
-                    ..default()
-                },
-                StateScoped(Screen::Playing),
-                structure_type,
-                RemainingConstructionTurns(cost.turns),
-                ConstructionWorkers(cost.workers),
-                BuildingSite,
-            ))
-            .with_children(|builder| {
-                builder.spawn((
-                    Text2dBundle {
-                        text: Text::from_section(
-                            cost.turns.to_string(),
-                            TextStyle {
-                                font_size: 100.,
-                                ..Default::default()
-                            },
-                        ),
-                        transform: Transform::from_translation(0.01 * Vec3::Z),
-                        ..Default::default()
-                    },
-                    BuildingProgressLabel,
-                ));
-            })
-            .with_children(|builder| {
-                builder.spawn((SpriteBundle {
-                    sprite: Sprite {
-                        anchor: super::tile_set::TILE_ANCHOR,
-                        color: Color::WHITE.with_alpha(0.75),
-                        ..Default::default()
-                    },
-                    transform: Transform::from_translation(-0.01 * Vec3::Z),
-                    texture: tile_set.get("border_thick"),
-                    ..Default::default()
-                },));
-            })
-            .id();
-
-        village_map.object.set(*tile, id);
+    if gold.0 < cost.gold {
+        return;
     }
+
+    if population.0 < working_population.0 + cost.workers {
+        return;
+    }
+
+    gold.0 -= cost.gold;
+    working_population.0 += cost.workers;
+
+    let object_translation = tile_coord_translation(tile.x() as f32, tile.y() as f32, 2.0);
+    let id = commands
+        .spawn((
+            SpriteBundle {
+                sprite: Sprite {
+                    anchor: TILE_ANCHOR,
+                    color: Color::WHITE.with_alpha(0.85),
+                    ..Default::default()
+                },
+                transform: Transform::from_translation(object_translation),
+                texture: tile_set.get(structure_type.tile_texture()),
+                ..default()
+            },
+            StateScoped(Screen::Playing),
+            structure_type,
+            RemainingConstructionTurns(cost.turns),
+            ConstructionWorkers(cost.workers),
+            BuildingSite,
+        ))
+        .with_children(|builder| {
+            builder.spawn((
+                Text2dBundle {
+                    text: Text::from_section(
+                        cost.turns.to_string(),
+                        TextStyle {
+                            font_size: 100.,
+                            ..Default::default()
+                        },
+                    ),
+                    transform: Transform::from_translation(0.01 * Vec3::Z),
+                    ..Default::default()
+                },
+                BuildingProgressLabel,
+            ));
+        })
+        .with_children(|builder| {
+            builder.spawn((SpriteBundle {
+                sprite: Sprite {
+                    anchor: super::tile_set::TILE_ANCHOR,
+                    color: Color::WHITE.with_alpha(0.75),
+                    ..Default::default()
+                },
+                transform: Transform::from_translation(-0.01 * Vec3::Z),
+                texture: tile_set.get("border_thick"),
+                ..Default::default()
+            },));
+        })
+        .id();
+
+    village_map.object.set(*tile, id);
 }
 
 pub fn update_building_progress(

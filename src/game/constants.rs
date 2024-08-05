@@ -1,13 +1,12 @@
 use bevy::color::palettes::css::GREEN_YELLOW;
 use bevy::color::palettes::tailwind::YELLOW_300;
-use bevy::color::Color;
 use bevy::ui::Val;
 use bevy::ui::ZIndex;
 
 //pub const INITIAL_GOLD: u32 = 50;
-pub const INITIAL_GOLD: u32 = 100;
+pub const INITIAL_GOLD: u32 = 1000;
 //pub const INITIAL_POPULATION: u32 = 25;
-pub const INITIAL_POPULATION: u32 = 25;
+pub const INITIAL_POPULATION: u32 = 125;
 
 pub const HOUSE_POPULATION_CAPACITY: u32 = 10;
 

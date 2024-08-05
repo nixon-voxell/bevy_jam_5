@@ -140,9 +140,11 @@ fn apply_item_effect(
     if possible_action_tiles.contains(&target_tile) {
         if let Ok(mut health) = q_healths.get_mut(target_entity) {
             if item.health_effect > 0 {
-                health.0 += item.health_effect as u32;
+                health.value += item.health_effect as u32;
             } else {
-                health.0 = health.0.saturating_sub(item.health_effect.unsigned_abs());
+                health.value = health
+                    .value
+                    .saturating_sub(item.health_effect.unsigned_abs());
 
                 let translation =
                     tile_coord_translation(target_tile.x() as f32, target_tile.y() as f32, 3.0);
@@ -160,7 +162,7 @@ fn apply_item_effect(
                 });
                 commands.add_trauma(0.5);
 
-                if health.0 == 0 {
+                if health.value == 0 {
                     village_map.object.remove_entity(target_entity);
                 }
             }

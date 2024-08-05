@@ -105,16 +105,13 @@ impl Plugin for UnitPlugin {
 
 fn health_ui(
     mut commands: Commands,
-    mut q_hit_points: Query<
-        (Entity, &MaxHealth, &Health, &mut HealthIcons, &Transform),
-        Or<(Changed<MaxHealth>, Changed<Health>)>,
-    >,
+    mut q_hit_points: Query<(Entity, &Health, &mut HealthIcons, &Transform), Changed<Health>>,
     q_is_player: Query<(), With<PlayerUnit>>,
     mut village_map: ResMut<VillageMap>,
     icon_set: Res<IconSet>,
 ) {
-    for (entity, hit_point, health, mut icons, transform) in q_hit_points.iter_mut() {
-        if health.0 == 0 {
+    for (entity, health, mut icons, transform) in q_hit_points.iter_mut() {
+        if health.value == 0 {
             // Object dies
             let mut despawn_animation =
                 DespawnAnimation::new(transform.translation).with_recursive(true);
@@ -122,7 +119,10 @@ fn health_ui(
             if q_is_player.contains(entity) {
                 despawn_animation = despawn_animation.with_hide_only(true);
                 // Player unit will only have 1 health for the next round
-                commands.entity(entity).insert(Health(1));
+                commands.entity(entity).insert(Health {
+                    value: 1,
+                    ..*health
+                });
             }
             commands.entity(entity).insert(despawn_animation);
             village_map.object.remove_entity(entity);
@@ -138,13 +138,13 @@ fn health_ui(
 
         // Spawn health icons
         commands.entity(entity).with_children(|builder| {
-            let hit_pointf = hit_point.0 as f32;
+            let hit_pointf = health.value as f32;
             let start_x = -HIT_POINT_SIZE.x * hit_pointf * 0.5;
 
-            for index in 0..hit_point.0 {
+            for index in 0..health.value {
                 let indexf = index as f32;
 
-                let color = match index < health.0 {
+                let color = match index < health.value {
                     true => Srgba::RED,
                     false => Srgba::gray(0.2),
                 };
@@ -178,13 +178,36 @@ fn health_ui(
     }
 }
 
-/// Amount of damage a unit can take before dying.
-#[derive(Component, Copy, Clone, Debug, Deref, DerefMut, PartialEq)]
-pub struct MaxHealth(pub u32);
-
 /// Amount of health the unity current has.
-#[derive(Component, Copy, Clone, Debug, Deref, DerefMut, PartialEq)]
-pub struct Health(pub u32);
+#[derive(Component, Copy, Clone, Debug, PartialEq)]
+pub struct Health {
+    pub value: u32,
+    pub max: u32,
+}
+
+impl Health {
+    fn new(value: u32) -> Self {
+        Self { value, max: value }
+    }
+
+    fn is_full(self) -> bool {
+        self.value == self.max
+    }
+
+    fn is_empty(self) -> bool {
+        self.value == 0
+    }
+
+    fn heal(mut self, value: u32) -> u32 {
+        self.value = (self.value + value).min(self.max);
+        self.value
+    }
+
+    fn hurt(mut self, value: u32) -> u32 {
+        self.value = self.value.saturating_sub(value);
+        self.value
+    }
+}
 
 /// Health icon marker.
 #[derive(Component)]
@@ -234,7 +257,6 @@ pub struct UnitName(pub String);
 #[derive(Bundle)]
 pub struct UnitBundle<T: Component> {
     pub name: UnitName,
-    pub hit_points: MaxHealth,
     pub health: Health,
     pub health_icons: HealthIcons,
     pub movement: Movement,
@@ -252,8 +274,7 @@ where
     pub fn new(name: &str, directions: Vec<Direction>) -> Self {
         Self {
             name: UnitName(String::from(name)),
-            hit_points: MaxHealth(2),
-            health: Health(2),
+            health: Health::new(2),
             health_icons: HealthIcons::default(),
             movement: Movement(2),
             turn_state: UnitTurnState::default(),
@@ -265,13 +286,8 @@ where
 }
 
 impl<T: Component> UnitBundle<T> {
-    pub fn with_hit_points(mut self, hit_points: u32) -> Self {
-        self.hit_points = MaxHealth(hit_points);
-        self
-    }
-
-    pub fn with_health(mut self, health: u32) -> Self {
-        self.health = Health(health);
+    pub fn with_health(mut self, value: u32) -> Self {
+        self.health = Health::new(value);
         self
     }
 
@@ -287,7 +303,6 @@ pub struct Structure;
 
 #[derive(Bundle)]
 pub struct StructureBundle {
-    pub hit_points: MaxHealth,
     pub health: Health,
     pub health_icons: HealthIcons,
     pub structure: Structure,
@@ -298,8 +313,7 @@ pub struct StructureBundle {
 impl Default for StructureBundle {
     fn default() -> Self {
         Self {
-            hit_points: MaxHealth(2),
-            health: Health(2),
+            health: Health::new(2),
             health_icons: HealthIcons::default(),
             structure: Structure,
             layer_marker: ObjectTileLayer,

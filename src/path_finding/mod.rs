@@ -45,6 +45,8 @@ where
     })
 }
 
+/// Returns true if there exists at least one path from start to dest.
+/// Otherwise false.
 pub fn is_any_path<N, I>(start: Tile, dest: Tile, navigator: N) -> bool
 where
     N: Fn(Tile) -> I,

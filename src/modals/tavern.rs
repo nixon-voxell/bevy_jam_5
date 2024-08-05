@@ -6,7 +6,6 @@ use sickle_ui::prelude::*;
 use crate::game::components::Tavern;
 use crate::game::constants::BIG_TEXT_SIZE;
 use crate::game::constants::RECRUIT_COST;
-use crate::game::constants::SLOT_COST;
 use crate::game::constants::TAVERN_FONT_SIZE;
 use crate::game::constants::UPGRADE_COST;
 use crate::game::inventory::Inventory;
@@ -16,13 +15,11 @@ use crate::game::selection::ObjectPressedEvent;
 use crate::game::unit::player::spawn_player_unit;
 use crate::game::unit::AvailableUnitNames;
 use crate::game::unit::Health;
-use crate::game::unit::MaxHealth;
 use crate::game::unit::Movement;
 use crate::game::unit::UnitName;
 use crate::game::unit_list::PlayerUnitList;
 use crate::game::MODAL_Z_LAYER;
 use crate::screen::playing::GameState;
-use crate::spawn_camera;
 use crate::ui::palette::LABEL_SIZE;
 use crate::ui::prelude::InteractionPalette;
 
@@ -322,7 +319,7 @@ impl Default for TavernSubject {
 
 pub fn update_slot_labels(
     subject: Res<TavernSubject>,
-    query: Query<(&UnitName, &Movement, &MaxHealth, &MaxInventorySize)>,
+    query: Query<(&UnitName, &Movement, &Health, &MaxInventorySize)>,
     mut n_query: Query<
         &mut Text,
         (
@@ -369,7 +366,7 @@ pub fn update_slot_labels(
             t.sections[0].value = format!("{}", m.0);
         }
         for mut t in h_query.iter_mut() {
-            t.sections[0].value = format!("{}", h.0);
+            t.sections[0].value = format!("{}", h.value);
         }
         for mut t in s_query.iter_mut() {
             t.sections[0].value = format!("{}", s.0);
@@ -381,9 +378,9 @@ pub fn upgrade_buttons(
     mut gold: ResMut<VillageGold>,
     subject: Res<TavernSubject>,
     upgrade_query: Query<(&Interaction, &TavernUpgrade), Changed<Interaction>>,
-    mut stats_query: Query<(&mut Movement, &mut Health, &mut MaxHealth, &mut Inventory)>,
+    mut stats_query: Query<(&mut Movement, &mut Health, &mut Inventory)>,
 ) {
-    let Ok((mut m, mut h, mut mh, mut s)) = stats_query.get_mut(subject.0) else {
+    let Ok((mut m, mut h, mut s)) = stats_query.get_mut(subject.0) else {
         return;
     };
 
@@ -399,8 +396,8 @@ pub fn upgrade_buttons(
                 if match u {
                     TavernUpgrade::AddMovement => upgrade(&mut m.0),
                     TavernUpgrade::AddHealth => {
-                        if upgrade(&mut mh.0) {
-                            h.0 = (h.0 + 1).min(mh.0);
+                        if upgrade(&mut h.max) {
+                            h.value = (h.value + 1).min(h.max);
                             true
                         } else {
                             false

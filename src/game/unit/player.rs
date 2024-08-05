@@ -27,7 +27,6 @@ pub fn spawn_player_unit(commands: &mut Commands, name: String) -> Entity {
             },
             UnitBundle::<PlayerUnit>::new(&name, Direction::ALL.into())
                 .with_health(3)
-                .with_hit_points(3)
                 .with_movement(3),
             MaxInventorySize(3),
             Inventory::default(),

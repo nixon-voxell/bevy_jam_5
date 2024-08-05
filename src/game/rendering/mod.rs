@@ -10,6 +10,7 @@ use super::selection::SelectedUnit;
 use super::tile_set::tile_coord_translation;
 use super::tile_set::TileSet;
 use super::tile_set::TILE_ANCHOR;
+use super::unit::Health;
 use crate::path_finding::tiles::Corner;
 use crate::path_finding::tiles::Edge;
 use crate::path_finding::tiles::Tile;
@@ -330,5 +331,11 @@ fn draw_terrain(
             GroundTileLayer,
             TemporarySprite,
         ));
+    }
+}
+
+pub fn draw_health(query: Query<(&Tile, &Health)>) {
+    for (tile, health) in query.iter() {
+        if health.value != health.max {}
     }
 }

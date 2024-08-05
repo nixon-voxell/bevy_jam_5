@@ -1,7 +1,5 @@
 use bevy::prelude::*;
 
-use crate::screen::Screen;
-
 /// Starting translation offset at spawn.
 const SPAWN_START_OFFSET: Vec3 = Vec3::new(0.0, 300.0, 0.0);
 /// Starting scale at spawn.
