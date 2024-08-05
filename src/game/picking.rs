@@ -1,7 +1,6 @@
 use super::deployment::deploy_unit;
-use super::level::TileBorder;
+use super::map::VillageMap;
 use super::selection::dispatch_object_pressed;
-use super::selection::SelectionMap;
 use super::tile_set::TILE_HALF_HEIGHT;
 use super::tile_set::TILE_WIDTH;
 use crate::path_finding::tiles::Tile;
@@ -15,14 +14,15 @@ pub struct PickingPlugin;
 
 impl Plugin for PickingPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<PickedTileEntities>()
+        app.init_resource::<PickedPointWorldCamera>()
+            .init_resource::<PickedPointWorld>()
             .init_resource::<PickedTile>()
-            .init_resource::<PickedPoint>()
             .add_event::<TilePressedEvent>()
             .add_systems(
                 Update,
                 (
-                    find_picked_point,
+                    pointer_coords_to_world_camera_coords,
+                    world_camera_picked_point_to_tile_coords,
                     pick_tile,
                     dispatch_pressed_tile,
                     dispatch_object_pressed,
@@ -34,72 +34,72 @@ impl Plugin for PickingPlugin {
     }
 }
 
-pub fn pick_tile(
-    picked_point: Res<PickedPoint>,
-    mut picked_tile_entity: ResMut<PickedTileEntities>,
-    mut picked_tile: ResMut<PickedTile>,
-    tiles_query: Query<(Entity, &GlobalTransform, &Tile), With<PickableTile>>,
-) {
-    let mut picked_set = false;
-
-    picked_tile_entity.0.clear();
-
-    if let Some(point) = picked_point.0 {
-        for (e, _, _, map_pos) in tiles_query
-            .iter()
-            .map(|(e, t, &map_pos)| {
-                (
-                    e,
-                    (point - t.translation().xy()).abs(),
-                    t.translation().z,
-                    map_pos,
-                )
-            })
-            .filter(|(_, r, _, _)| {
-                is_point_in_triangle(r.x, r.y, 0.5 * TILE_WIDTH, TILE_HALF_HEIGHT)
-            })
-        {
-            picked_tile_entity.0.push(e);
-
-            picked_tile.0 = Some(map_pos);
-            picked_set = true;
-        }
-    }
-
-    if !picked_set {
-        picked_tile.0 = None;
-    }
-}
-
 #[derive(Component)]
 pub struct PickableTile;
 
-#[derive(Resource, Default, Debug)]
-pub struct PickedTileEntities(pub Vec<Entity>);
+#[derive(Resource, Default, Debug, PartialEq)]
+pub struct PickedPointWorldCamera(pub Option<Vec2>);
 
-#[derive(Resource, Default, Debug)]
+// The position of the pointer in fractional world tile coordinates.
+#[derive(Resource, Default, Debug, PartialEq)]
+pub struct PickedPointWorld(pub Option<Vec2>);
+
+// The tile currently hovered by the mouse pointer
+#[derive(Resource, Default, Debug, Eq, PartialEq)]
 pub struct PickedTile(pub Option<Tile>);
 
-#[derive(Resource, Default)]
-pub struct PickedPoint(pub Option<Vec2>);
-
-pub fn find_picked_point(
-    mut picked_point: ResMut<PickedPoint>,
+/// If the pointer is over the game window,
+/// set `WorldCameraPick` to the pointers position in world camera coords,
+/// otherwise set `WorldCameraPick` to None
+pub fn pointer_coords_to_world_camera_coords(
     q_window: Query<&Window, With<PrimaryWindow>>,
     q_camera: Query<(&Camera, &GlobalTransform)>,
+    mut picked_point: ResMut<PickedPointWorldCamera>,
 ) {
     let (camera, camera_transform) = q_camera.single();
     let window = q_window.single();
 
-    if let Some(world_position) = window
-        .cursor_position()
-        .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
-        .map(|ray| ray.origin.truncate())
-    {
-        picked_point.0 = Some(world_position);
-    } else {
-        picked_point.0 = None;
-    }
+    picked_point.set_if_neq(PickedPointWorldCamera(
+        if let Some(world_position) = window
+            .cursor_position()
+            .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
+            .map(|ray| ray.origin.truncate())
+        {
+            Some(world_position)
+        } else {
+            None
+        },
+    ));
+}
+
+/// Converts world camera coords to fractional (possibly negative) world tile coordinates
+pub fn world_camera_picked_point_to_tile_coords(
+    camera_point: Res<PickedPointWorldCamera>,
+    mut world_point: ResMut<PickedPointWorld>,
+) {
+    world_point.set_if_neq(PickedPointWorld(camera_point.0.map(|p| {
+        let tile_width = TILE_WIDTH;
+        let tile_half_height = TILE_HALF_HEIGHT;
+        let x =
+            (-tile_half_height * p.x - (tile_width / 2.0) * p.y) / (tile_width * tile_half_height);
+        let y =
+            (tile_half_height * p.x - (tile_width / 2.0) * p.y) / (tile_width * tile_half_height);
+        Vec2 { x, y }
+    })));
+}
+
+/// The tile in the world currently hovered by the pointer
+pub fn pick_tile(
+    picked_point: Res<PickedPointWorld>,
+    village_map: Res<VillageMap>,
+    mut picked_tile: ResMut<PickedTile>,
+) {
+    picked_tile.set_if_neq(PickedTile(
+        picked_point
+            .0
+            .map(|point| Tile::from(point))
+            .filter(|tile| village_map.contains_tile(*tile)),
+    ));
 }
 
 #[derive(Event, Debug, Copy, Clone)]
@@ -115,13 +115,6 @@ pub fn dispatch_pressed_tile(
             tile_pressed_event.send(TilePressedEvent(picked_tile));
         }
     }
-}
-
-fn is_point_in_triangle(x: f32, y: f32, w: f32, h: f32) -> bool {
-    if x < 0.0 || y < 0.0 {
-        return false;
-    }
-    y <= h - (h / w) * x
 }
 
 #[derive(Debug, Default, Copy, Clone, Eq, PartialEq)]

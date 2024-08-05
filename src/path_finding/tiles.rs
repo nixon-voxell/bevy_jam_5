@@ -244,6 +244,12 @@ impl Tile {
     }
 }
 
+impl From<Vec2> for Tile {
+    fn from(value: Vec2) -> Self {
+        Tile(value.x.round() as i32, value.y.round() as i32)
+    }
+}
+
 #[derive(Component, Default, Clone, PartialEq, Debug, Eq, Hash)]
 pub struct Path(Vec<Direction>);
 

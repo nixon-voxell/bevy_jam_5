@@ -39,7 +39,9 @@ impl Plugin for MapRenderingPlugin {
             .add_systems(PreUpdate, despawn_temporary_sprites)
             .add_systems(
                 Update,
-                spawn_tile_coord_labels.run_if(in_state(Screen::Playing)), //.run_if(|layers: Res<ShowLayers>| layers.show_tile_coords)
+                spawn_tile_coord_labels
+                    .run_if(in_state(Screen::Playing))
+                    .run_if(|layers: Res<ShowLayers>| layers.show_tile_coords),
             )
             .add_systems(
                 PostUpdate,

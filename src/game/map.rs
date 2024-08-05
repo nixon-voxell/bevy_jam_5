@@ -50,6 +50,10 @@ impl VillageMap {
         }
     }
 
+    pub fn contains_tile(&self, tile: Tile) -> bool {
+        self.bounds().contains(tile)
+    }
+
     pub fn bounds(&self) -> TileRect {
         TileRect(Tile::ZERO, Tile(self.size.x() - 1, self.size.y() - 1))
     }

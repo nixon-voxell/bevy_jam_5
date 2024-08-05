@@ -2,14 +2,16 @@ use bevy::prelude::*;
 use bevy::sprite::Anchor;
 use bevy::utils::HashMap;
 
+use super::level::Terrain;
+
 /// Width of a tile.
 pub const TILE_WIDTH: f32 = 256.0;
 /// Half height of a tile surface.
 pub const TILE_HALF_HEIGHT: f32 = TILE_WIDTH / 4.0 + 26.0;
 /// A single right direction unit in the isometric world.
-pub const RIGHT_DIR: Vec2 = Vec2::new(TILE_WIDTH / 2.0, -TILE_HALF_HEIGHT);
+pub const RIGHT_DIR: Vec2 = Vec2::new(-TILE_WIDTH / 2.0, -TILE_HALF_HEIGHT);
 /// A single down direction unit in the isometric world.
-pub const DOWN_DIR: Vec2 = Vec2::new(-TILE_WIDTH / 2.0, -TILE_HALF_HEIGHT);
+pub const DOWN_DIR: Vec2 = Vec2::new(TILE_WIDTH / 2.0, -TILE_HALF_HEIGHT);
 
 /// Z-depth of a single layer.
 pub const LAYER_DEPTH: f32 = 10.0;
@@ -83,5 +85,14 @@ impl TileSet {
             Some(handle) => handle.clone(),
             None => panic!("Unable to get tile: {name}"),
         }
+    }
+
+    pub fn get_terrain(&self, terrain: Terrain) -> Handle<Image> {
+        let image_name = match terrain {
+            Terrain::Grass => "grassblock",
+            Terrain::Gravel => "gravelblock",
+            Terrain::Water => "waterblock",
+        };
+        self.get(image_name)
     }
 }
