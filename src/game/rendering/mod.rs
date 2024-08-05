@@ -16,7 +16,10 @@ use crate::path_finding::tiles::Edge;
 use crate::path_finding::tiles::Tile;
 use crate::screen::playing::GameState;
 use crate::screen::Screen;
+use crate::ui::icon_set::IconSet;
 
+use bevy::color::palettes::tailwind::TEAL_300;
+use bevy::color::palettes::tailwind::YELLOW_300;
 use bevy::math::vec2;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
@@ -57,6 +60,7 @@ impl Plugin for MapRenderingPlugin {
                     spawn_selected_tiles
                         .run_if(|layers: Res<ShowLayers>| layers.show_selected_area),
                     spawn_tile_cursor,
+                    draw_health,
                 )
                     .run_if(in_state(Screen::Playing)),
             );
@@ -334,8 +338,98 @@ fn draw_terrain(
     }
 }
 
-pub fn draw_health(query: Query<(&Tile, &Health)>) {
-    for (tile, health) in query.iter() {
-        if health.value != health.max {}
+const HEART_SIZE: Vec2 = Vec2::new(40.0, 40.0);
+const HEART_GAP: f32 = 10.0;
+
+pub fn draw_health(
+    query: Query<(Entity, &Health)>,
+    icon_set: Res<IconSet>,
+    mut commands: Commands,
+    map: Res<VillageMap>,
+) {
+    for (entity, health) in query.iter() {
+        // if health.value == health.max {
+        let health_width = (HEART_SIZE.x + HEART_GAP) * health.max as f32 - HEART_GAP;
+        let x_offset = -0.5 * (health_width - HEART_SIZE.x);
+
+        let inner_panel_size = vec2(health_width + 2. * HEART_GAP, HEART_SIZE.y + HEART_GAP);
+        let outer_panel_size = inner_panel_size + 8.;
+
+        //     continue;
+        // }
+
+        let Some(tile) = map.object.locate(entity) else {
+            continue;
+        };
+        // println!("{entity:?} -> {health:?} -> {tile:?}");
+        // let start_x = (-hs(health.max) + HEART_SIZE.x) * 0.5;
+
+        let translation = tile_to_camera(tile, 10.) + 250. * Vec3::Y;
+
+        commands.spawn((
+            SpriteBundle {
+                sprite: Sprite {
+                    color: YELLOW_300.into(),
+                    custom_size: Some(outer_panel_size),
+                    ..default()
+                },
+                transform: Transform::from_translation(translation),
+                ..Default::default()
+            },
+            TemporarySprite,
+        ));
+
+        commands.spawn((
+            SpriteBundle {
+                sprite: Sprite {
+                    color: Color::BLACK,
+                    custom_size: Some(inner_panel_size),
+                    ..default()
+                },
+                transform: Transform::from_translation(translation + Vec3::Z * 0.1),
+                ..Default::default()
+            },
+            TemporarySprite,
+        ));
+
+        commands.spawn((
+            SpriteBundle {
+                sprite: Sprite {
+                    color: Color::WHITE,
+                    custom_size: Some(HEART_SIZE),
+                    ..default()
+                },
+                transform: Transform::from_translation(translation),
+                ..Default::default()
+            },
+            TemporarySprite,
+        ));
+        for index in 0..health.max {
+            let indexf = index as f32;
+
+            let color = match index < health.value {
+                true => Srgba::RED,
+                false => Srgba::gray(0.3),
+            };
+
+            let translation = translation
+                + x_offset * Vec3::X
+                + (HEART_SIZE.x + HEART_GAP) * indexf * Vec3::X
+                + Vec3::Z * 0.2;
+
+            commands.spawn((
+                SpriteBundle {
+                    sprite: Sprite {
+                        color: color.into(),
+                        custom_size: Some(HEART_SIZE),
+                        ..default()
+                    },
+                    texture: icon_set.get("heart"),
+                    transform: Transform::from_translation(translation),
+                    ..default()
+                },
+                TemporarySprite,
+            ));
+        }
     }
 }

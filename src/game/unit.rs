@@ -90,10 +90,6 @@ impl AvailableUnitNames {
             .unwrap_or("Unnamed".to_string())
     }
 }
-
-const HIT_POINT_SIZE: Vec2 = Vec2::new(40.0, 40.0);
-const HIT_POINT_GAP: f32 = 10.0;
-
 pub struct UnitPlugin;
 
 impl Plugin for UnitPlugin {
@@ -105,12 +101,12 @@ impl Plugin for UnitPlugin {
 
 fn health_ui(
     mut commands: Commands,
-    mut q_hit_points: Query<(Entity, &Health, &mut HealthIcons, &Transform), Changed<Health>>,
+    mut q_hit_points: Query<(Entity, &Health, &Transform), Changed<Health>>,
     q_is_player: Query<(), With<PlayerUnit>>,
     mut village_map: ResMut<VillageMap>,
-    icon_set: Res<IconSet>,
+    // icon_set: Res<IconSet>,
 ) {
-    for (entity, health, mut icons, transform) in q_hit_points.iter_mut() {
+    for (entity, health, transform) in q_hit_points.iter_mut() {
         if health.value == 0 {
             // Object dies
             let mut despawn_animation =
@@ -129,52 +125,52 @@ fn health_ui(
             return;
         }
 
-        let is_icon_empty = icons.0.is_empty();
-        // Remove previous health icons
-        for icon in icons.0.iter() {
-            commands.entity(*icon).despawn();
-        }
-        icons.0.clear();
+        // let is_icon_empty = icons.0.is_empty();
+        // // Remove previous health icons
+        // for icon in icons.0.iter() {
+        //     commands.entity(*icon).despawn();
+        // }
+        // icons.0.clear();
 
-        // Spawn health icons
-        commands.entity(entity).with_children(|builder| {
-            let hit_pointf = health.value as f32;
-            let start_x = -HIT_POINT_SIZE.x * hit_pointf * 0.5;
+        // // Spawn health icons
+        // commands.entity(entity).with_children(|builder| {
+        //     let hit_pointf = health.value as f32;
+        //     let start_x = -HIT_POINT_SIZE.x * hit_pointf * 0.5;
 
-            for index in 0..health.value {
-                let indexf = index as f32;
+        //     for index in 0..health.value {
+        //         let indexf = index as f32;
 
-                let color = match index < health.value {
-                    true => Srgba::RED,
-                    false => Srgba::gray(0.2),
-                };
-                let translation = Vec3::new(
-                    start_x + HIT_POINT_SIZE.x * indexf + HIT_POINT_GAP * indexf,
-                    300.0,
-                    100.0,
-                );
+        //         let color = match index < health.value {
+        //             true => Srgba::RED,
+        //             false => Srgba::gray(0.2),
+        //         };
+        //         let translation = Vec3::new(
+        //             start_x + HIT_POINT_SIZE.x * indexf + HIT_POINT_GAP * indexf,
+        //             300.0,
+        //             100.0,
+        //         );
 
-                let mut icon = builder.spawn((
-                    SpriteBundle {
-                        sprite: Sprite {
-                            color: color.into(),
-                            custom_size: Some(HIT_POINT_SIZE),
-                            ..default()
-                        },
-                        texture: icon_set.get("heart"),
-                        transform: Transform::from_translation(translation),
-                        ..default()
-                    },
-                    HealthIcon,
-                ));
+        //         let mut icon = builder.spawn((
+        //             SpriteBundle {
+        //                 sprite: Sprite {
+        //                     color: color.into(),
+        //                     custom_size: Some(HIT_POINT_SIZE),
+        //                     ..default()
+        //                 },
+        //                 texture: icon_set.get("heart"),
+        //                 transform: Transform::from_translation(translation),
+        //                 ..default()
+        //             },
+        //             HealthIcon,
+        //         ));
 
-                if is_icon_empty {
-                    icon.insert(SpawnAnimation::new(translation));
-                }
+        //         if is_icon_empty {
+        //             icon.insert(SpawnAnimation::new(translation));
+        //         }
 
-                icons.0.push(icon.id());
-            }
-        });
+        //         icons.0.push(icon.id());
+        //     }
+        // });
     }
 }
 
