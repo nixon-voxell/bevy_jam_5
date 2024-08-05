@@ -77,8 +77,8 @@ fn spawn_selected_tiles(
     tile_set: Res<TileSet>,
 ) {
     let edge_image = tile_set.get("edge");
-    let nw_corner_image = tile_set.get("nw_corner");
     let ne_corner_image = tile_set.get("ne_corner");
+    let se_corner_image = tile_set.get("se_corner");
     for tile in selected.tiles.iter().copied() {
         let border_edges = Edge::ALL
             .iter()
@@ -89,10 +89,10 @@ fn spawn_selected_tiles(
             .copied();
         for edge in border_edges {
             let scalar = match edge {
-                Edge::North => Vec2::ONE,
-                Edge::East => vec2(1., -1.),
-                Edge::South => -Vec2::ONE,
-                Edge::West => vec2(-1., 1.),
+                Edge::North => vec2(-1., 1.),
+                Edge::East => Vec2::ONE,
+                Edge::South => vec2(1., -1.),
+                Edge::West => -Vec2::ONE,
             };
             commands.spawn((
                 SpriteBundle {
@@ -120,9 +120,9 @@ fn spawn_selected_tiles(
         for corner in corners {
             let (image, scalar) = match corner {
                 Corner::NorthEast => (&ne_corner_image, Vec2::ONE),
-                Corner::SouthEast => (&nw_corner_image, -Vec2::ONE),
+                Corner::SouthEast => (&se_corner_image, Vec2::ONE),
                 Corner::SouthWest => (&ne_corner_image, -Vec2::ONE),
-                Corner::NorthWest => (&nw_corner_image, Vec2::ONE),
+                Corner::NorthWest => (&se_corner_image, -Vec2::ONE),
             };
             commands.spawn((
                 SpriteBundle {
