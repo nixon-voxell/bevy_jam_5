@@ -183,6 +183,14 @@ impl Direction {
                 | Direction::NorthWest
         )
     }
+
+    pub fn is_parallel(self) -> bool {
+        matches!(self, Direction::East | Direction::West)
+    }
+
+    pub fn is_meridean(self) -> bool {
+        matches!(self, Direction::North | Direction::South)
+    }
 }
 
 #[derive(Component, Default, Debug, Copy, Clone, PartialEq, Eq, Hash)]
@@ -253,16 +261,16 @@ impl Tile {
         }
 
         Some(if self.x() == other.x() {
-            if other.x() < self.x() {
-                Edge::East
-            } else {
-                Edge::West
-            }
-        } else {
             if other.y() < self.y() {
                 Edge::North
             } else {
                 Edge::South
+            }
+        } else {
+            if other.x() < self.x() {
+                Edge::East
+            } else {
+                Edge::West
             }
         })
     }
@@ -287,6 +295,105 @@ impl Tile {
             self = self.step(direction);
             Some(self)
         }))
+    }
+
+    pub fn right_angle_path_x(&self, dest: Tile) -> impl Iterator<Item = Tile> {
+        let diff = self.difference(dest);
+
+        let dirs = if diff.x() <= 0 && 0 <= diff.y() {
+            [Direction::East, Direction::South]
+        } else if 0 <= diff.x() && diff.y() <= 0 {
+            [Direction::South, Direction::West]
+        } else if 0 <= diff.x() && 0 <= diff.y() {
+            [Direction::West, Direction::South]
+        } else {
+            [Direction::South, Direction::East]
+        };
+
+        let mut current = *self;
+        let mut primary = true;
+
+        // might need to set some variables
+        std::iter::from_fn(move || {
+            if current == dest {
+                return None;
+            }
+
+            let next_step = if primary {
+                current.step(dirs[0])
+            } else {
+                current.step(dirs[1])
+            };
+
+            if next_step == dest
+                || next_step.step(dirs[1]) == dest
+                || next_step.step(dirs[0]) == dest
+            {
+                primary = !primary;
+                current = next_step;
+                Some(current)
+            } else if (primary
+                && next_step.distance_straight(dest) < current.distance_straight(dest))
+                || (!primary
+                    && current.step(dirs[1]).distance_straight(dest)
+                        < current.distance_straight(dest))
+            {
+                current = next_step;
+                Some(current)
+            } else {
+                primary = !primary;
+                None
+            }
+        })
+    }
+
+    pub fn right_angle_path(self, dest: Tile, right_turn: bool) -> impl Iterator<Item = Tile> {
+        let diff = self.difference(dest);
+
+        let mut dirs = if diff.x() <= 0 && 0 <= diff.y() {
+            [Direction::East, Direction::South]
+        } else if 0 <= diff.x() && 0 <= diff.y() {
+            [Direction::South, Direction::West]
+        } else if 0 <= diff.x() && diff.y() <= 0 {
+            [Direction::West, Direction::North]
+        } else {
+            [Direction::North, Direction::East]
+        };
+
+        if !right_turn {
+            dirs.swap(0, 1);
+        }
+
+        println!("dirs = {dirs:?}");
+        let mut current = self;
+
+        std::iter::from_fn(move || {
+            if current == dest {
+                return None;
+            }
+
+            let next_primary = current.step(dirs[0]);
+            let next_secondary = current.step(dirs[1]);
+
+            if next_primary == dest
+                || next_primary.distance_straight(dest) < current.distance_straight(dest)
+            {
+                current = next_primary;
+            } else if next_secondary == dest
+                || next_secondary.distance_straight(dest) < current.distance_straight(dest)
+            {
+                current = next_secondary;
+            } else {
+                current = next_primary;
+            }
+
+            Some(current)
+        })
+    }
+
+    pub fn cycle(self, other: Tile, clockwise: bool) -> impl Iterator<Item = Tile> {
+        self.right_angle_path(other, clockwise)
+            .chain(other.right_angle_path(self, !clockwise))
     }
 }
 
@@ -357,6 +464,22 @@ impl TileDim {
 
     pub const fn splat(value: i32) -> Self {
         Self(value, value)
+    }
+
+    pub const fn easterly(self) -> bool {
+        self.0 < 0
+    }
+
+    pub const fn westerly(self) -> bool {
+        0 < self.0
+    }
+
+    pub const fn northerly(self) -> bool {
+        self.1 < 0
+    }
+
+    pub const fn southerly(self) -> bool {
+        0 < self.1
     }
 }
 
@@ -563,5 +686,84 @@ mod tests {
         let rect = TileRect(Tile(1, 2), Tile(2, 3));
         let tiles: Vec<Tile> = rect.into_iter().collect();
         assert_eq!(tiles, vec![Tile(1, 2), Tile(2, 2), Tile(1, 3), Tile(2, 3)]);
+    }
+
+    #[test]
+    fn test_right_angle_path_trivial() {
+        let t = Tile::ZERO;
+        let p: Vec<Tile> = t.right_angle_path(t, true).collect();
+        assert!(p.is_empty());
+    }
+
+    #[test]
+    fn test_right_angle_path_north() {
+        let t = Tile::ZERO;
+        let d = Tile(0, -3);
+        let p: Vec<Tile> = t.right_angle_path(d, true).collect();
+        assert_eq!(p, vec![Tile(0, -1), Tile(0, -2), Tile(0, -3)]);
+    }
+
+    #[test]
+    fn test_right_angle_path_south_west() {
+        let t = Tile::ZERO;
+        let d = Tile(2, 2);
+        let p: Vec<Tile> = t.right_angle_path(d, true).collect();
+        assert_eq!(p, vec![Tile(0, 1), Tile(0, 2), Tile(1, 2), Tile(2, 2)]);
+    }
+
+    #[test]
+    fn test_right_angle_path_south_east() {
+        let t = Tile::ZERO;
+        let d = Tile(-2, 2);
+        let p: Vec<Tile> = t.right_angle_path(d, true).collect();
+        assert_eq!(p, vec![Tile(-1, 0), Tile(-2, 0), Tile(-2, 1), Tile(-2, 2)]);
+    }
+
+    #[test]
+    fn test_right_angle_11_02() {
+        let t = Tile(1, 1);
+        let d = Tile(0, 2);
+        let p: Vec<Tile> = t.right_angle_path(d, true).collect();
+        assert_eq!(p, vec![Tile(0, 1), Tile(0, 2)]);
+    }
+
+    #[test]
+    fn test_right_angle_11_00() {
+        let t = Tile(1, 1);
+        let d = Tile(0, 0);
+        let p: Vec<Tile> = t.right_angle_path(d, true).collect();
+        assert_eq!(p, vec![Tile(1, 0), Tile(0, 0)]);
+    }
+
+    #[test]
+    fn test_right_angle_11_00_left_turn() {
+        let t = Tile(1, 1);
+        let d = Tile(0, 0);
+        let p: Vec<Tile> = t.right_angle_path(d, false).collect();
+        assert_eq!(p, vec![Tile(0, 1), Tile(0, 0)]);
+    }
+
+    #[test]
+    fn test_right_angle_00_11() {
+        let t = Tile(0, 0);
+        let d = Tile(1, 1);
+        let p: Vec<Tile> = t.right_angle_path(d, true).collect();
+        assert_eq!(p, vec![Tile(0, 1), Tile(1, 1)]);
+    }
+
+    #[test]
+    fn test_right_angle_00_11_left_turn() {
+        let t = Tile(0, 0);
+        let d = Tile(1, 1);
+        let p: Vec<Tile> = t.right_angle_path(d, false).collect();
+        assert_eq!(p, vec![Tile(1, 0), Tile(1, 1)]);
+    }
+
+    #[test]
+    fn test_cycle_clockwise() {
+        let t = Tile(0, 0);
+        let d = Tile(1, 1);
+        let p: Vec<Tile> = t.cycle(d, true).collect();
+        assert_eq!(p, vec![Tile(0, 1), Tile(1, 1), Tile(0, 1), Tile(0, 0)]);
     }
 }

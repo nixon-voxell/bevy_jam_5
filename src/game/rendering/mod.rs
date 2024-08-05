@@ -1,5 +1,6 @@
 use super::components::ArcherTower;
 use super::components::GroundTileLayer;
+use super::constants;
 use super::constants::CURSOR_COLOR;
 use super::map::VillageMap;
 use super::picking::PickableTile;
@@ -12,10 +13,12 @@ use super::tile_set::TILE_ANCHOR;
 use crate::path_finding::tiles::Corner;
 use crate::path_finding::tiles::Edge;
 use crate::path_finding::tiles::Tile;
+use crate::screen::playing::GameState;
 use crate::screen::Screen;
 
 use bevy::math::vec2;
 use bevy::prelude::*;
+use bevy::utils::HashMap;
 
 #[derive(Resource)]
 pub struct ShowLayers {
@@ -37,7 +40,8 @@ pub struct MapRenderingPlugin;
 impl Plugin for MapRenderingPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<ShowLayers>()
-            .add_systems(PreUpdate, despawn_temporary_sprites)
+            .init_resource::<TileTints>()
+            .add_systems(PreUpdate, cleanup)
             .add_systems(
                 Update,
                 spawn_tile_coord_labels
@@ -47,8 +51,8 @@ impl Plugin for MapRenderingPlugin {
             .add_systems(
                 PostUpdate,
                 (
+                    spawn_arrow_sprites.run_if(in_state(GameState::BattleTurn)),
                     draw_terrain,
-                    spawn_arrow_sprites,
                     spawn_selected_tiles
                         .run_if(|layers: Res<ShowLayers>| layers.show_selected_area),
                     spawn_tile_cursor,
@@ -58,14 +62,22 @@ impl Plugin for MapRenderingPlugin {
     }
 }
 
-fn despawn_temporary_sprites(query: Query<Entity, With<TemporarySprite>>, mut commands: Commands) {
+fn cleanup(
+    query: Query<Entity, With<TemporarySprite>>,
+    mut commands: Commands,
+    mut tile_tints: ResMut<TileTints>,
+) {
     for entity in query.iter() {
         commands.entity(entity).despawn_recursive();
     }
+    tile_tints.0.clear();
 }
 
 #[derive(Component)]
 pub struct TemporarySprite;
+
+#[derive(Resource, Default)]
+pub struct TileTints(pub HashMap<Tile, Color>);
 
 fn tile_to_camera(tile: Tile, layer: f32) -> Vec3 {
     tile_coord_translation(tile.x() as f32, tile.y() as f32, layer)
@@ -196,71 +208,116 @@ fn spawn_arrow_sprites(
     village_map: Res<VillageMap>,
     query: Query<&Tile, With<ArcherTower>>,
     asset_server: Res<AssetServer>,
+    picked_tile: Res<PickedTile>,
+    mut tile_tints: ResMut<TileTints>,
 ) {
     let Some(selected_entity) = selected.entity else {
         return;
     };
-    let Ok(tile) = query.get(selected_entity) else {
+    let Ok(tile) = query.get(selected_entity).copied() else {
         return;
     };
-    for (edge, direction) in Edge::ALL.into_iter().map(|e| (e, e.direction())) {
-        let mut cursor = tile.step(direction);
-        while village_map.bounds().contains(cursor) && !village_map.object.is_occupied(cursor) {
-            let make_arrow_sprite_bundle =
-                |tile: Tile, height: f32, layer: f32, color: Color, edge: Edge| {
-                    let (flip_x, flip_y) = match edge {
-                        Edge::North => (true, false),
-                        Edge::East => (false, false),
-                        Edge::South => (false, true),
-                        Edge::West => (true, true),
-                    };
-                    (
-                        SpriteBundle {
-                            sprite: Sprite {
-                                color,
-                                flip_x,
-                                flip_y,
-                                ..Default::default()
-                            },
-                            texture: asset_server.load("tiles/arrow.png"),
-                            transform: Transform {
-                                translation: tile_to_camera(tile, layer) + height * Vec3::Y,
-                                scale: Vec3::new(2., 2., 1.),
-                                ..default()
-                            },
-                            ..default()
-                        },
-                        TemporarySprite,
-                    )
-                };
 
-            // arrow sprite
-            commands.spawn(make_arrow_sprite_bundle(
-                cursor,
-                45.,
-                1.2,
-                Color::WHITE,
-                edge,
-            ));
+    let Some(picked_tile) = picked_tile.0 else {
+        return;
+    };
 
-            // shadow sprite
-            commands.spawn(make_arrow_sprite_bundle(
-                cursor,
-                0.,
-                1.1,
-                Color::srgba(0.2, 0.2, 0.2, 0.8),
-                edge,
-            ));
-            cursor = cursor.step(direction);
+    let Some(edge) = tile.find_direction_edge(picked_tile) else {
+        return;
+    };
+
+    let Some(mut line_iterator) = tile.get_line_through(picked_tile) else {
+        return;
+    };
+
+    let (flip_x, flip_y) = match edge {
+        Edge::North => (true, false),
+        Edge::East => (false, false),
+        Edge::South => (false, true),
+        Edge::West => (true, true),
+    };
+
+    while let Some(cursor) = line_iterator
+        .next()
+        .filter(|&cursor| village_map.bounds().contains(cursor))
+    {
+        tile_tints
+            .0
+            .insert(cursor, bevy::color::palettes::tailwind::RED_400.into());
+        if village_map.object.is_occupied(cursor) {
+            break;
         }
+        let make_arrow_sprite_bundle = |tile: Tile, height: f32, layer: f32, color: Color| {
+            (
+                SpriteBundle {
+                    sprite: Sprite {
+                        color,
+                        flip_x,
+                        flip_y,
+                        ..Default::default()
+                    },
+                    texture: asset_server.load("tiles/arrow.png"),
+                    transform: Transform {
+                        translation: tile_to_camera(tile, layer) + height * Vec3::Y,
+                        scale: Vec3::new(2., 2., 1.),
+                        ..default()
+                    },
+                    ..default()
+                },
+                TemporarySprite,
+            )
+        };
+
+        // arrow sprite
+        commands.spawn(make_arrow_sprite_bundle(cursor, 45., 1.2, Color::WHITE));
+
+        // shadow sprite
+        commands.spawn(make_arrow_sprite_bundle(
+            cursor,
+            0.,
+            1.1,
+            Color::srgba(0.2, 0.2, 0.2, 0.8),
+        ));
     }
 }
 
-fn draw_terrain(mut commands: Commands, village_map: Res<VillageMap>, tile_set: Res<TileSet>) {
+fn draw_terrain(
+    mut commands: Commands,
+    village_map: Res<VillageMap>,
+    tile_set: Res<TileSet>,
+    selected: Res<SelectedTiles>,
+    game_state: Res<State<GameState>>,
+    tints: Res<TileTints>,
+) {
+    let state = game_state.get();
+    let tint = |tile: Tile| {
+        match state {
+            // ..
+            // ..
+            GameState::Deployment => {
+                if village_map.deployment_zone.contains(&tile) {
+                    constants::DEPLOYMENT_ZONE_COLOR.into()
+                } else {
+                    Color::WHITE
+                }
+            }
+            _ => {
+                if selected.tiles.contains(&tile) {
+                    selected.color
+                } else if let Some(color) = tints.0.get(&tile) {
+                    return *color;
+                } else {
+                    Color::WHITE
+                }
+            }
+        }
+    };
+
     for (tile, terrain) in village_map.iter_terrain() {
         commands.spawn((
             SpriteBundle {
                 sprite: Sprite {
+                    color: tint(tile),
                     anchor: TILE_ANCHOR,
                     ..Default::default()
                 },
