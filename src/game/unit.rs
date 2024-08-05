@@ -198,7 +198,6 @@ pub struct UnitName(pub String);
 pub struct UnitBundle<T: Component> {
     pub name: UnitName,
     pub health: Health,
-    pub health_icons: HealthIcons,
     pub movement: Movement,
     pub turn_state: UnitTurnState,
     pub unit: T,
@@ -215,7 +214,6 @@ where
         Self {
             name: UnitName(String::from(name)),
             health: Health::new(2),
-            health_icons: HealthIcons::default(),
             movement: Movement(2),
             turn_state: UnitTurnState::default(),
             unit: T::default(),
@@ -244,7 +242,6 @@ pub struct Structure;
 #[derive(Bundle)]
 pub struct StructureBundle {
     pub health: Health,
-    pub health_icons: HealthIcons,
     pub structure: Structure,
     pub population_capacity: PopulationCapacity,
     pub layer_marker: ObjectTileLayer,
@@ -254,7 +251,6 @@ impl Default for StructureBundle {
     fn default() -> Self {
         Self {
             health: Health::new(2),
-            health_icons: HealthIcons::default(),
             structure: Structure,
             layer_marker: ObjectTileLayer,
             population_capacity: PopulationCapacity(HOUSE_POPULATION_CAPACITY),
