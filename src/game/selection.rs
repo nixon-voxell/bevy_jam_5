@@ -16,7 +16,6 @@ use crate::path_finding::tiles::Tile;
 use crate::screen::playing::GameState;
 use crate::screen::Screen;
 use bevy::color::palettes::css;
-use bevy::math::vec2;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 use bevy::utils::HashSet;
@@ -137,7 +136,6 @@ pub fn set_selected_unit(
     if mouse_button.just_pressed(MouseButton::Left) {
         if let Some(tile) = picked_tile.0 {
             if let Some(new_selection) = village_map.object.get(tile) {
-                println!("Selected: {new_selection:?} at {tile:?}");
                 if let Some(previous_selection) = selected_unit.entity {
                     if new_selection == previous_selection {
                         return;
@@ -201,7 +199,6 @@ pub fn dispatch_object_pressed(
 ) {
     for TilePressedEvent(tile) in events.read().copied() {
         if let Some(entity) = map.object.get(tile) {
-            println!("object pressed -> {entity:?}");
             dispatcher.send(ObjectPressedEvent(entity));
         }
     }
