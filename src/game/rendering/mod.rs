@@ -208,10 +208,10 @@ fn spawn_arrow_sprites(
             let make_arrow_sprite_bundle =
                 |tile: Tile, height: f32, layer: f32, color: Color, edge: Edge| {
                     let (flip_x, flip_y) = match edge {
-                        Edge::North => (false, false),
-                        Edge::East => (false, true),
-                        Edge::South => (true, true),
-                        Edge::West => (true, false),
+                        Edge::North => (true, true),
+                        Edge::East => (true, false),
+                        Edge::South => (false, false),
+                        Edge::West => (false, true),
                     };
                     (
                         SpriteBundle {
