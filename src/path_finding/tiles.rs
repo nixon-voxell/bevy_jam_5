@@ -242,6 +242,52 @@ impl Tile {
     pub fn distance_straight(self, other: Tile) -> f32 {
         (self.distance_squared(other) as f32).sqrt()
     }
+
+    pub fn find_direction_edge(self, other: Tile) -> Option<Edge> {
+        if self == other {
+            return None;
+        }
+
+        if self.x() != other.x() && self.y() != other.y() {
+            return None;
+        }
+
+        Some(if self.x() == other.x() {
+            if other.x() < self.x() {
+                Edge::East
+            } else {
+                Edge::West
+            }
+        } else {
+            if other.y() < self.y() {
+                Edge::North
+            } else {
+                Edge::South
+            }
+        })
+    }
+
+    pub fn get_line_between(mut self, other: Tile) -> Option<impl Iterator<Item = Tile>> {
+        let Some(edge) = self.find_direction_edge(other) else {
+            return None;
+        };
+        let direction = edge.direction();
+        Some(std::iter::from_fn(move || {
+            self = self.step(direction);
+            Some(self).filter(|cursor| *cursor == other)
+        }))
+    }
+
+    pub fn get_line_through(mut self, other: Tile) -> Option<impl Iterator<Item = Tile>> {
+        let Some(edge) = self.find_direction_edge(other) else {
+            return None;
+        };
+        let direction = edge.direction();
+        Some(std::iter::from_fn(move || {
+            self = self.step(direction);
+            Some(self)
+        }))
+    }
 }
 
 impl From<Vec2> for Tile {
