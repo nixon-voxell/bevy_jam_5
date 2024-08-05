@@ -1,12 +1,11 @@
 use crate::path_finding::tiles::Direction;
 use crate::screen::Screen;
-use crate::ui::icon_set::IconSet;
 use bevy::prelude::*;
 use rand::prelude::SliceRandom;
 use rand::thread_rng;
 
 use self::enemy::EnemyUnitPlugin;
-use self::spawn::{DespawnAnimation, SpawnAnimation, SpawnUnitPlugin};
+use self::spawn::{DespawnAnimation, SpawnUnitPlugin};
 
 use super::components::{ObjectTileLayer, PopulationCapacity};
 use super::constants::HOUSE_POPULATION_CAPACITY;
@@ -124,53 +123,6 @@ fn health_ui(
             village_map.object.remove_entity(entity);
             return;
         }
-
-        // let is_icon_empty = icons.0.is_empty();
-        // // Remove previous health icons
-        // for icon in icons.0.iter() {
-        //     commands.entity(*icon).despawn();
-        // }
-        // icons.0.clear();
-
-        // // Spawn health icons
-        // commands.entity(entity).with_children(|builder| {
-        //     let hit_pointf = health.value as f32;
-        //     let start_x = -HIT_POINT_SIZE.x * hit_pointf * 0.5;
-
-        //     for index in 0..health.value {
-        //         let indexf = index as f32;
-
-        //         let color = match index < health.value {
-        //             true => Srgba::RED,
-        //             false => Srgba::gray(0.2),
-        //         };
-        //         let translation = Vec3::new(
-        //             start_x + HIT_POINT_SIZE.x * indexf + HIT_POINT_GAP * indexf,
-        //             300.0,
-        //             100.0,
-        //         );
-
-        //         let mut icon = builder.spawn((
-        //             SpriteBundle {
-        //                 sprite: Sprite {
-        //                     color: color.into(),
-        //                     custom_size: Some(HIT_POINT_SIZE),
-        //                     ..default()
-        //                 },
-        //                 texture: icon_set.get("heart"),
-        //                 transform: Transform::from_translation(translation),
-        //                 ..default()
-        //             },
-        //             HealthIcon,
-        //         ));
-
-        //         if is_icon_empty {
-        //             icon.insert(SpawnAnimation::new(translation));
-        //         }
-
-        //         icons.0.push(icon.id());
-        //     }
-        // });
     }
 }
 
@@ -182,36 +134,28 @@ pub struct Health {
 }
 
 impl Health {
-    fn new(value: u32) -> Self {
+    pub fn new(value: u32) -> Self {
         Self { value, max: value }
     }
 
-    fn is_full(self) -> bool {
+    pub fn is_full(self) -> bool {
         self.value == self.max
     }
 
-    fn is_empty(self) -> bool {
+    pub fn is_empty(self) -> bool {
         self.value == 0
     }
 
-    fn heal(mut self, value: u32) -> u32 {
+    pub fn heal(mut self, value: u32) -> u32 {
         self.value = (self.value + value).min(self.max);
         self.value
     }
 
-    fn hurt(mut self, value: u32) -> u32 {
+    pub fn hurt(mut self, value: u32) -> u32 {
         self.value = self.value.saturating_sub(value);
         self.value
     }
 }
-
-/// Health icon marker.
-#[derive(Component)]
-pub struct HealthIcon;
-
-/// Vec of entities that holds the health icon sprites.
-#[derive(Component, Default, Clone)]
-pub struct HealthIcons(Vec<Entity>);
 
 /// Number of tiles a unit can move per turn.
 #[derive(Component, Copy, Clone, Debug, Deref, DerefMut, PartialEq)]
