@@ -76,26 +76,12 @@ pub fn load_level(
             let object_tile_name = &level_asset.tiles[1][index];
 
             let (xf, yf) = (x as f32, y as f32);
-            let ground_translation = tile_coord_translation(xf, yf, 0.0);
+
             let edge_translation = tile_coord_translation(xf, yf, 1.0);
             let object_translation = tile_coord_translation(xf, yf, 2.0);
 
             let (xi, yi) = (x as i32, y as i32);
-            commands.spawn((
-                SpriteBundle {
-                    sprite: Sprite {
-                        anchor: TILE_ANCHOR,
-                        ..Default::default()
-                    },
-                    texture: tile_set.get(ground_tile_name),
-                    transform: Transform::from_translation(ground_translation),
-                    ..default()
-                },
-                Tile(xi, yi),
-                PickableTile,
-                GroundTileLayer,
-                StateScoped(Screen::Playing),
-            ));
+
             let terrain = match ground_tile_name.as_str() {
                 "grassblock" => Terrain::Grass,
                 "gravelblock" => Terrain::Gravel,

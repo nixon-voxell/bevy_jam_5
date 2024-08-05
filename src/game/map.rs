@@ -247,6 +247,10 @@ impl VillageMap {
             }
         }
     }
+
+    pub fn iter_terrain(&self) -> impl Iterator<Item = (Tile, Terrain)> + '_ {
+        self.terrain.iter().map(|(tile, ter)| (*tile, *ter))
+    }
 }
 
 #[derive(Debug, Default)]

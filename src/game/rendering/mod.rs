@@ -1,14 +1,14 @@
 use super::components::ArcherTower;
+use super::components::GroundTileLayer;
 use super::constants::CURSOR_COLOR;
-use super::construction::StructureType;
 use super::map::VillageMap;
+use super::picking::PickableTile;
 use super::picking::PickedTile;
 use super::selection::SelectedTiles;
 use super::selection::SelectedUnit;
 use super::tile_set::tile_coord_translation;
 use super::tile_set::TileSet;
 use super::tile_set::TILE_ANCHOR;
-use crate::path_finding::tiles;
 use crate::path_finding::tiles::Corner;
 use crate::path_finding::tiles::Edge;
 use crate::path_finding::tiles::Tile;
@@ -39,13 +39,12 @@ impl Plugin for MapRenderingPlugin {
             .add_systems(PreUpdate, despawn_temporary_sprites)
             .add_systems(
                 Update,
-                spawn_tile_coord_labels
-                    .run_if(in_state(Screen::Playing))
-                    .run_if(|layers: Res<ShowLayers>| layers.show_tile_coords),
+                spawn_tile_coord_labels.run_if(in_state(Screen::Playing)), //.run_if(|layers: Res<ShowLayers>| layers.show_tile_coords)
             )
             .add_systems(
                 PostUpdate,
                 (
+                    draw_terrain,
                     spawn_arrow_sprites,
                     spawn_selected_tiles
                         .run_if(|layers: Res<ShowLayers>| layers.show_selected_area),
@@ -251,5 +250,25 @@ fn spawn_arrow_sprites(
             ));
             cursor = cursor.step(direction);
         }
+    }
+}
+
+fn draw_terrain(mut commands: Commands, village_map: Res<VillageMap>, tile_set: Res<TileSet>) {
+    for (tile, terrain) in village_map.iter_terrain() {
+        commands.spawn((
+            SpriteBundle {
+                sprite: Sprite {
+                    anchor: TILE_ANCHOR,
+                    ..Default::default()
+                },
+                texture: tile_set.get_terrain(terrain),
+                transform: Transform::from_translation(tile_to_camera(tile, 0.)),
+                ..default()
+            },
+            tile,
+            PickableTile,
+            GroundTileLayer,
+            TemporarySprite,
+        ));
     }
 }
