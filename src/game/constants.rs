@@ -1,3 +1,4 @@
+use bevy::color::palettes::css::GREEN_YELLOW;
 use bevy::color::palettes::tailwind::YELLOW_300;
 use bevy::color::Color;
 use bevy::ui::Val;
@@ -31,3 +32,5 @@ pub const SLOT_COST: u32 = 0;
 pub const UNIT_LIST_ZINDEX: ZIndex = ZIndex::Global(150);
 
 pub const CURSOR_COLOR: bevy::prelude::Srgba = YELLOW_300;
+
+pub const DEPLOYMENT_ZONE_COLOR: bevy::prelude::Srgba = GREEN_YELLOW;
