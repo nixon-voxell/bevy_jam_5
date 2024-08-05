@@ -194,7 +194,6 @@ fn spawn_arrow_sprites(
     village_map: Res<VillageMap>,
     query: Query<&Tile, With<ArcherTower>>,
     asset_server: Res<AssetServer>,
-    tile_set: Res<TileSet>,
 ) {
     let Some(selected_entity) = selected.entity else {
         return;
@@ -205,48 +204,50 @@ fn spawn_arrow_sprites(
     for (edge, direction) in Edge::ALL.into_iter().map(|e| (e, e.direction())) {
         let mut cursor = tile.step(direction);
         while village_map.bounds().contains(cursor) && !village_map.object.is_occupied(cursor) {
-            let (flip_x, flip_y) = match edge {
-                Edge::North => (false, false),
-                Edge::East => (false, true),
-                Edge::South => (true, true),
-                Edge::West => (true, false),
-            };
-            commands.spawn((
-                SpriteBundle {
-                    sprite: Sprite {
-                        color: Color::WHITE,
-                        flip_x,
-                        flip_y,
-                        ..Default::default()
-                    },
-                    texture: asset_server.load("tiles/arrow.png"),
-                    transform: Transform {
-                        translation: tile_to_camera(cursor, 1.2) + 45. * Vec3::Y,
-                        scale: Vec3::new(2., 2., 1.),
-                        ..default()
-                    },
-                    ..default()
-                },
-                TemporarySprite,
+            let make_arrow_sprite_bundle =
+                |tile: Tile, height: f32, layer: f32, color: Color, edge: Edge| {
+                    let (flip_x, flip_y) = match edge {
+                        Edge::North => (false, false),
+                        Edge::East => (false, true),
+                        Edge::South => (true, true),
+                        Edge::West => (true, false),
+                    };
+                    (
+                        SpriteBundle {
+                            sprite: Sprite {
+                                color,
+                                flip_x,
+                                flip_y,
+                                ..Default::default()
+                            },
+                            texture: asset_server.load("tiles/arrow.png"),
+                            transform: Transform {
+                                translation: tile_to_camera(tile, layer) + height * Vec3::Y,
+                                scale: Vec3::new(2., 2., 1.),
+                                ..default()
+                            },
+                            ..default()
+                        },
+                        TemporarySprite,
+                    )
+                };
+
+            // arrow sprite
+            commands.spawn(make_arrow_sprite_bundle(
+                cursor,
+                45.,
+                1.2,
+                Color::WHITE,
+                edge,
             ));
 
-            commands.spawn((
-                SpriteBundle {
-                    sprite: Sprite {
-                        flip_x,
-                        flip_y,
-                        color: Color::srgba(0.2, 0.2, 0.2, 0.8),
-                        ..Default::default()
-                    },
-                    texture: asset_server.load("tiles/arrow.png"),
-                    transform: Transform {
-                        translation: tile_to_camera(cursor, 1.1),
-                        scale: Vec3::new(2., 2., 1.),
-                        ..default()
-                    },
-                    ..Default::default()
-                },
-                TemporarySprite,
+            // shadow sprite
+            commands.spawn(make_arrow_sprite_bundle(
+                cursor,
+                0.,
+                1.1,
+                Color::srgba(0.2, 0.2, 0.2, 0.8),
+                edge,
             ));
             cursor = cursor.step(direction);
         }
