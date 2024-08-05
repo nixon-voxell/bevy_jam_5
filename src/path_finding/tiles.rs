@@ -116,13 +116,13 @@ impl Direction {
     pub const fn parallel(self) -> i32 {
         match self {
             Direction::North => 0,
-            Direction::NorthEast => 1,
-            Direction::East => 1,
-            Direction::SouthEast => 1,
+            Direction::NorthEast => -1,
+            Direction::East => -1,
+            Direction::SouthEast => -1,
             Direction::South => 0,
-            Direction::SouthWest => -1,
-            Direction::West => -1,
-            Direction::NorthWest => -1,
+            Direction::SouthWest => 1,
+            Direction::West => 1,
+            Direction::NorthWest => 1,
         }
     }
 

@@ -13,6 +13,7 @@ use crate::path_finding::tiles::Corner;
 use crate::path_finding::tiles::Edge;
 use crate::path_finding::tiles::Tile;
 use crate::screen::Screen;
+
 use bevy::math::vec2;
 use bevy::prelude::*;
 
@@ -208,10 +209,10 @@ fn spawn_arrow_sprites(
             let make_arrow_sprite_bundle =
                 |tile: Tile, height: f32, layer: f32, color: Color, edge: Edge| {
                     let (flip_x, flip_y) = match edge {
-                        Edge::North => (true, true),
-                        Edge::East => (true, false),
-                        Edge::South => (false, false),
-                        Edge::West => (false, true),
+                        Edge::North => (true, false),
+                        Edge::East => (false, false),
+                        Edge::South => (false, true),
+                        Edge::West => (true, true),
                     };
                     (
                         SpriteBundle {
