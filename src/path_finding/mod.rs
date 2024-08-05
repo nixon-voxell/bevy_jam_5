@@ -44,3 +44,28 @@ where
         navigator(position).into_iter().map(|target| (target, 1))
     })
 }
+
+pub fn is_any_path<N, I>(start: Tile, dest: Tile, navigator: N) -> bool
+where
+    N: Fn(Tile) -> I,
+    I: IntoIterator<Item = Tile>,
+{
+    if start == dest {
+        return true;
+    }
+    let mut open = vec![start];
+    let mut visited = HashSet::default();
+
+    while let Some(current) = open.pop() {
+        visited.insert(current);
+        for neighbor in (navigator)(current) {
+            if neighbor == dest {
+                return true;
+            }
+            if !visited.contains(&neighbor) {
+                open.push(neighbor);
+            }
+        }
+    }
+    false
+}
