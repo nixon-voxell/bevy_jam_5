@@ -4,6 +4,7 @@ use super::selection::dispatch_object_pressed;
 use super::tile_set::TILE_HALF_HEIGHT;
 use super::tile_set::TILE_WIDTH;
 use crate::path_finding::tiles::Tile;
+use crate::path_finding::tiles::Tiled;
 use crate::screen::playing::GameState;
 use crate::screen::Screen;
 use bevy::app::Plugin;

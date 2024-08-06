@@ -11,7 +11,7 @@ use crate::game::map::VillageMap;
 pub use crate::game::picking::TilePressedEvent;
 use crate::game::selection::SelectedActor;
 use crate::game::tile_set::tile_coord_translation;
-use crate::path_finding::tiles::Direction;
+use crate::path_finding::tiles::TileDir;
 use crate::screen::playing::GameState;
 
 use super::*;
@@ -25,7 +25,7 @@ pub fn spawn_player_unit(commands: &mut Commands, name: String) -> Entity {
                 visibility: Visibility::Hidden,
                 ..default()
             },
-            ActorBundle::<PlayerActor>::new(&name, Direction::ALL.into())
+            ActorBundle::<PlayerActor>::new(&name, TileDir::ALL.into())
                 .with_health(3)
                 .with_movement(3),
             MaxInventorySize(3),
@@ -86,7 +86,7 @@ pub fn move_unit(
         };
 
         if village_map
-            .flood(current_pos, movement.0, &Direction::EDGES, false)
+            .flood(current_pos, movement.0, &TileDir::EDGES, false)
             .contains(target)
         {
             village_map.actors.set(*target, selected);

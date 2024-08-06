@@ -11,9 +11,9 @@ use super::selection::SelectedTiles;
 use super::tile_set::tile_coord_translation;
 use super::tile_set::TileSet;
 use super::tile_set::TILE_ANCHOR;
-use crate::path_finding::tiles::Corner;
-use crate::path_finding::tiles::Edge;
 use crate::path_finding::tiles::Tile;
+use crate::path_finding::tiles::TileCorner;
+use crate::path_finding::tiles::TileEdge;
 use crate::screen::playing::GameState;
 use crate::screen::Screen;
 use crate::ui::icon_set::IconSet;
@@ -96,7 +96,7 @@ fn spawn_selected_tiles(
     let ne_corner_image = tile_set.get("ne_corner");
     let se_corner_image = tile_set.get("se_corner");
     for tile in selected.tiles.iter().copied() {
-        let border_edges = Edge::ALL
+        let border_edges = TileEdge::ALL
             .iter()
             .filter(|e| {
                 let t = tile.step(e.direction());
@@ -105,10 +105,10 @@ fn spawn_selected_tiles(
             .copied();
         for edge in border_edges {
             let scalar = match edge {
-                Edge::North => vec2(-1., 1.),
-                Edge::East => Vec2::ONE,
-                Edge::South => vec2(1., -1.),
-                Edge::West => -Vec2::ONE,
+                TileEdge::North => vec2(-1., 1.),
+                TileEdge::East => Vec2::ONE,
+                TileEdge::South => vec2(1., -1.),
+                TileEdge::West => -Vec2::ONE,
             };
             commands.spawn((
                 SpriteBundle {
@@ -129,16 +129,16 @@ fn spawn_selected_tiles(
             ));
         }
 
-        let corners = Corner::ALL.iter().filter(|c| {
+        let corners = TileCorner::ALL.iter().filter(|c| {
             let t = tile.step(c.direction());
             !selected.tiles.contains(&t)
         });
         for corner in corners {
             let (image, scalar) = match corner {
-                Corner::NorthEast => (&ne_corner_image, Vec2::ONE),
-                Corner::SouthEast => (&se_corner_image, Vec2::ONE),
-                Corner::SouthWest => (&ne_corner_image, -Vec2::ONE),
-                Corner::NorthWest => (&se_corner_image, -Vec2::ONE),
+                TileCorner::NorthEast => (&ne_corner_image, Vec2::ONE),
+                TileCorner::SouthEast => (&se_corner_image, Vec2::ONE),
+                TileCorner::SouthWest => (&ne_corner_image, -Vec2::ONE),
+                TileCorner::NorthWest => (&se_corner_image, -Vec2::ONE),
             };
             commands.spawn((
                 SpriteBundle {
@@ -235,10 +235,10 @@ fn spawn_arrow_sprites(
     };
 
     let (flip_x, flip_y) = match edge {
-        Edge::North => (true, false),
-        Edge::East => (false, false),
-        Edge::South => (false, true),
-        Edge::West => (true, true),
+        TileEdge::North => (true, false),
+        TileEdge::East => (false, false),
+        TileEdge::South => (false, true),
+        TileEdge::West => (true, true),
     };
 
     while let Some(cursor) = line_iterator

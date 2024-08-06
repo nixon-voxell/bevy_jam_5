@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::path_finding::tiles::Direction;
+use crate::path_finding::tiles::TileDir;
 
 pub const ITEM_TEMPLATES: &[Item] = &[
     Item {
@@ -8,7 +8,7 @@ pub const ITEM_TEMPLATES: &[Item] = &[
         description: "Axe, mid range weapon. (Land only)",
         health_effect: -2,
         item_count: 2,
-        directions: &Direction::EDGES,
+        directions: &TileDir::EDGES,
         range: 2,
         cost: 10,
         air: false,
@@ -18,7 +18,7 @@ pub const ITEM_TEMPLATES: &[Item] = &[
         description: "Dagger, close range high damage weapon. (Land only)",
         health_effect: -4,
         item_count: 1,
-        directions: &Direction::EDGES,
+        directions: &TileDir::EDGES,
         range: 1,
         cost: 40,
         air: false,
@@ -28,7 +28,7 @@ pub const ITEM_TEMPLATES: &[Item] = &[
         description: "Sword, mid range weapon. (Land only)",
         health_effect: -1,
         item_count: 1,
-        directions: &Direction::ALL,
+        directions: &TileDir::ALL,
         range: 2,
         cost: 30,
         air: false,
@@ -38,7 +38,7 @@ pub const ITEM_TEMPLATES: &[Item] = &[
         description: "Whip, long range low damage weapon. (Land & Air)",
         health_effect: -1,
         item_count: 1,
-        directions: &Direction::ALL,
+        directions: &TileDir::ALL,
         range: 3,
         cost: 20,
         air: true,
@@ -48,7 +48,7 @@ pub const ITEM_TEMPLATES: &[Item] = &[
         description: "Bow, long range weapon. (Land & Air)",
         health_effect: -2,
         item_count: 2,
-        directions: &Direction::ALL,
+        directions: &TileDir::ALL,
         range: 3,
         cost: 30,
         air: true,
@@ -58,7 +58,7 @@ pub const ITEM_TEMPLATES: &[Item] = &[
         description: "Healing potion, heals 1 health.",
         health_effect: 1,
         item_count: 1,
-        directions: &Direction::ALL,
+        directions: &TileDir::ALL,
         range: 2,
         cost: 20,
         air: false,
@@ -159,7 +159,7 @@ pub struct Item {
     pub health_effect: i32,
     /// Number of items you get per purchase.
     pub item_count: u32,
-    pub directions: &'static [Direction],
+    pub directions: &'static [TileDir],
     pub range: u32,
     /// Cost of the item in gold coins
     pub cost: u32,

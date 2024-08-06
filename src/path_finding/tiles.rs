@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use bevy::utils::HashSet;
 
 #[derive(Component, Debug, Copy, Clone, PartialEq, Eq, Hash)]
-pub enum Direction {
+pub enum TileDir {
     North,
     NorthEast,
     East,
@@ -16,35 +16,35 @@ pub enum Direction {
 }
 
 #[derive(Component, Debug, Copy, Clone, PartialEq, Eq, Hash)]
-pub enum Edge {
+pub enum TileEdge {
     North,
     East,
     South,
     West,
 }
 
-impl Edge {
+impl TileEdge {
     pub const ALL: [Self; 4] = [Self::North, Self::East, Self::South, Self::West];
 
-    pub fn direction(&self) -> Direction {
+    pub fn direction(&self) -> TileDir {
         match self {
-            Edge::North => Direction::North,
-            Edge::East => Direction::East,
-            Edge::South => Direction::South,
-            Edge::West => Direction::West,
+            TileEdge::North => TileDir::North,
+            TileEdge::East => TileDir::East,
+            TileEdge::South => TileDir::South,
+            TileEdge::West => TileDir::West,
         }
     }
 }
 
 #[derive(Component, Debug, Copy, Clone, PartialEq, Eq, Hash)]
-pub enum Corner {
+pub enum TileCorner {
     NorthEast,
     SouthEast,
     SouthWest,
     NorthWest,
 }
 
-impl Corner {
+impl TileCorner {
     pub const ALL: [Self; 4] = [
         Self::NorthEast,
         Self::SouthEast,
@@ -52,116 +52,111 @@ impl Corner {
         Self::NorthWest,
     ];
 
-    pub fn direction(&self) -> Direction {
+    pub fn direction(&self) -> TileDir {
         match self {
-            Corner::NorthEast => Direction::NorthEast,
-            Corner::SouthEast => Direction::SouthEast,
-            Corner::SouthWest => Direction::SouthWest,
-            Corner::NorthWest => Direction::NorthWest,
+            TileCorner::NorthEast => TileDir::NorthEast,
+            TileCorner::SouthEast => TileDir::SouthEast,
+            TileCorner::SouthWest => TileDir::SouthWest,
+            TileCorner::NorthWest => TileDir::NorthWest,
         }
     }
 }
 
-impl Direction {
+impl TileDir {
     pub const fn index(self) -> usize {
         match self {
-            Direction::North => 0,
-            Direction::NorthEast => 1,
-            Direction::East => 2,
-            Direction::SouthEast => 3,
-            Direction::South => 4,
-            Direction::SouthWest => 5,
-            Direction::West => 6,
-            Direction::NorthWest => 7,
+            TileDir::North => 0,
+            TileDir::NorthEast => 1,
+            TileDir::East => 2,
+            TileDir::SouthEast => 3,
+            TileDir::South => 4,
+            TileDir::SouthWest => 5,
+            TileDir::West => 6,
+            TileDir::NorthWest => 7,
         }
     }
 
     pub const ALL: [Self; 8] = [
-        Direction::North,
-        Direction::NorthEast,
-        Direction::East,
-        Direction::SouthEast,
-        Direction::South,
-        Direction::SouthWest,
-        Direction::West,
-        Direction::NorthWest,
+        TileDir::North,
+        TileDir::NorthEast,
+        TileDir::East,
+        TileDir::SouthEast,
+        TileDir::South,
+        TileDir::SouthWest,
+        TileDir::West,
+        TileDir::NorthWest,
     ];
 
-    pub const EDGES: [Self; 4] = [
-        Direction::North,
-        Direction::East,
-        Direction::South,
-        Direction::West,
-    ];
+    pub const EDGES: [Self; 4] = [TileDir::North, TileDir::East, TileDir::South, TileDir::West];
 
     pub const CORNERS: [Self; 4] = [
-        Direction::NorthEast,
-        Direction::SouthEast,
-        Direction::SouthWest,
-        Direction::NorthWest,
+        TileDir::NorthEast,
+        TileDir::SouthEast,
+        TileDir::SouthWest,
+        TileDir::NorthWest,
     ];
 
     pub const fn meridean(self) -> i32 {
         match self {
-            Direction::North => -1,
-            Direction::NorthEast => -1,
-            Direction::East => 0,
-            Direction::SouthEast => 1,
-            Direction::South => 1,
-            Direction::SouthWest => 1,
-            Direction::West => 0,
-            Direction::NorthWest => -1,
+            TileDir::North => -1,
+            TileDir::NorthEast => -1,
+            TileDir::East => 0,
+            TileDir::SouthEast => 1,
+            TileDir::South => 1,
+            TileDir::SouthWest => 1,
+            TileDir::West => 0,
+            TileDir::NorthWest => -1,
         }
     }
 
     pub const fn parallel(self) -> i32 {
         match self {
-            Direction::North => 0,
-            Direction::NorthEast => -1,
-            Direction::East => -1,
-            Direction::SouthEast => -1,
-            Direction::South => 0,
-            Direction::SouthWest => 1,
-            Direction::West => 1,
-            Direction::NorthWest => 1,
+            TileDir::North => 0,
+            TileDir::NorthEast => -1,
+            TileDir::East => -1,
+            TileDir::SouthEast => -1,
+            TileDir::South => 0,
+            TileDir::SouthWest => 1,
+            TileDir::West => 1,
+            TileDir::NorthWest => 1,
         }
     }
 
     pub const fn opposite(self) -> Self {
         match self {
-            Direction::North => Direction::South,
-            Direction::NorthEast => Direction::SouthWest,
-            Direction::East => Direction::West,
-            Direction::SouthEast => Direction::SouthWest,
-            Direction::South => Direction::North,
-            Direction::SouthWest => Direction::NorthEast,
-            Direction::West => Direction::East,
-            Direction::NorthWest => Direction::SouthEast,
+            TileDir::North => TileDir::South,
+            TileDir::NorthEast => TileDir::SouthWest,
+            TileDir::East => TileDir::West,
+            TileDir::SouthEast => TileDir::SouthWest,
+            TileDir::South => TileDir::North,
+            TileDir::SouthWest => TileDir::NorthEast,
+            TileDir::West => TileDir::East,
+            TileDir::NorthWest => TileDir::SouthEast,
         }
     }
 
     pub const fn from_index(index: usize) -> Self {
-        Direction::ALL[index % 8]
+        TileDir::ALL[index % 8]
     }
 
     pub const fn turn_left_45(self) -> Self {
         let index = (self.index() + 7) % 8;
-        Direction::from_index(index)
+        TileDir::from_index(index)
     }
 
     pub const fn turn_right_45(self) -> Self {
         let index = (self.index() + 1) % 8;
-        Direction::from_index(index)
+        TileDir::from_index(index)
     }
 
     pub const fn turn_left_90(self) -> Self {
         let index = (self.index() + 6) % 8;
-        Direction::from_index(index)
+        TileDir::from_index(index)
     }
 
     pub const fn turn_right_90(self) -> Self {
         let index = (self.index() + 2) % 8;
-        Direction::from_index(index)
+        TileDir::from_index(index)
     }
 
     pub fn repeat(self, steps: u32) -> Path {
@@ -171,26 +166,23 @@ impl Direction {
     pub fn is_edge(self) -> bool {
         matches!(
             self,
-            Direction::North | Direction::East | Direction::South | Direction::West
+            TileDir::North | TileDir::East | TileDir::South | TileDir::West
         )
     }
 
     pub fn is_diagonal(self) -> bool {
         matches!(
             self,
-            Direction::NorthEast
-                | Direction::SouthEast
-                | Direction::SouthWest
-                | Direction::NorthWest
+            TileDir::NorthEast | TileDir::SouthEast | TileDir::SouthWest | TileDir::NorthWest
         )
     }
 
     pub fn is_parallel(self) -> bool {
-        matches!(self, Direction::East | Direction::West)
+        matches!(self, TileDir::East | TileDir::West)
     }
 
     pub fn is_meridean(self) -> bool {
-        matches!(self, Direction::North | Direction::South)
+        matches!(self, TileDir::North | TileDir::South)
     }
 }
 
@@ -208,7 +200,7 @@ impl Tile {
         self.1
     }
 
-    pub fn step(self, dir: Direction) -> Self {
+    pub fn step(self, dir: TileDir) -> Self {
         Self(self.x() + dir.parallel(), self.y() + dir.meridean())
     }
 
@@ -252,7 +244,7 @@ impl Tile {
         (self.distance_squared(other) as f32).sqrt()
     }
 
-    pub fn find_direction_edge(self, other: Tile) -> Option<Edge> {
+    pub fn find_direction_edge(self, other: Tile) -> Option<TileEdge> {
         if self == other {
             return None;
         }
@@ -263,15 +255,15 @@ impl Tile {
 
         Some(if self.x() == other.x() {
             if other.y() < self.y() {
-                Edge::North
+                TileEdge::North
             } else {
-                Edge::South
+                TileEdge::South
             }
         } else {
             if other.x() < self.x() {
-                Edge::East
+                TileEdge::East
             } else {
-                Edge::West
+                TileEdge::West
             }
         })
     }
@@ -302,13 +294,13 @@ impl Tile {
         let diff = self.difference(dest);
 
         let dirs = if diff.x() <= 0 && 0 <= diff.y() {
-            [Direction::East, Direction::South]
+            [TileDir::East, TileDir::South]
         } else if 0 <= diff.x() && diff.y() <= 0 {
-            [Direction::South, Direction::West]
+            [TileDir::South, TileDir::West]
         } else if 0 <= diff.x() && 0 <= diff.y() {
-            [Direction::West, Direction::South]
+            [TileDir::West, TileDir::South]
         } else {
-            [Direction::South, Direction::East]
+            [TileDir::South, TileDir::East]
         };
 
         let mut current = *self;
@@ -352,13 +344,13 @@ impl Tile {
         let diff = self.difference(dest);
 
         let mut dirs = if diff.x() <= 0 && 0 <= diff.y() {
-            [Direction::East, Direction::South]
+            [TileDir::East, TileDir::South]
         } else if 0 <= diff.x() && 0 <= diff.y() {
-            [Direction::South, Direction::West]
+            [TileDir::South, TileDir::West]
         } else if 0 <= diff.x() && diff.y() <= 0 {
-            [Direction::West, Direction::North]
+            [TileDir::West, TileDir::North]
         } else {
-            [Direction::North, Direction::East]
+            [TileDir::North, TileDir::East]
         };
 
         if !right_turn {
@@ -398,15 +390,15 @@ impl Tile {
     }
 
     pub fn edge_adjacent(self) -> [Self; 4] {
-        Direction::EDGES.map(|edge| self.step(edge))
+        TileDir::EDGES.map(|edge| self.step(edge))
     }
 
     pub fn corner_adjacent(self) -> [Self; 4] {
-        Direction::CORNERS.map(|corner| self.step(corner))
+        TileDir::CORNERS.map(|corner| self.step(corner))
     }
 
     pub fn all_adjacent(self) -> [Self; 8] {
-        Direction::ALL.map(|direction| self.step(direction))
+        TileDir::ALL.map(|direction| self.step(direction))
     }
 }
 
@@ -417,14 +409,14 @@ impl From<Vec2> for Tile {
 }
 
 #[derive(Component, Default, Clone, PartialEq, Debug, Eq, Hash)]
-pub struct Path(Vec<Direction>);
+pub struct Path(Vec<TileDir>);
 
 impl Path {
     pub fn len(&self) -> usize {
         self.0.len()
     }
 
-    pub fn iter<'a>(&'a self) -> impl Iterator<Item = Direction> + 'a {
+    pub fn iter<'a>(&'a self) -> impl Iterator<Item = TileDir> + 'a {
         self.0.iter().copied()
     }
 
@@ -435,7 +427,7 @@ impl Path {
         })
     }
 
-    pub fn step(&mut self, step: Direction) {
+    pub fn step(&mut self, step: TileDir) {
         self.0.push(step)
     }
 
@@ -595,7 +587,7 @@ impl IntoIterator for TileRect {
 
 pub trait Tiled {
     fn contains_tile(&self, tile: Tile) -> bool;
-    fn find_perimeter(&self, directions: &[Direction]) -> impl Iterator<Item = Tile>;
+    fn find_perimeter(&self, directions: &[TileDir]) -> impl Iterator<Item = Tile>;
 }
 
 impl Tiled for TileRect {
@@ -603,7 +595,7 @@ impl Tiled for TileRect {
         self.contains(tile)
     }
 
-    fn find_perimeter(&self, directions: &[Direction]) -> impl Iterator<Item = Tile> {
+    fn find_perimeter(&self, directions: &[TileDir]) -> impl Iterator<Item = Tile> {
         self.into_iter().filter(move |tile| {
             directions
                 .iter()
@@ -617,7 +609,7 @@ impl Tiled for HashSet<Tile> {
         self.contains(&tile)
     }
 
-    fn find_perimeter(&self, directions: &[Direction]) -> impl Iterator<Item = Tile> {
+    fn find_perimeter(&self, directions: &[TileDir]) -> impl Iterator<Item = Tile> {
         self.into_iter()
             .filter(move |tile| {
                 directions
@@ -634,38 +626,38 @@ mod tests {
 
     #[test]
     fn test_tile_step_index() {
-        assert_eq!(Direction::North.index(), 0);
-        assert_eq!(Direction::East.index(), 2);
-        assert_eq!(Direction::SouthWest.index(), 5);
+        assert_eq!(TileDir::North.index(), 0);
+        assert_eq!(TileDir::East.index(), 2);
+        assert_eq!(TileDir::SouthWest.index(), 5);
     }
 
     #[test]
     fn test_tile_step_turns() {
-        assert_eq!(Direction::North.turn_left_45(), Direction::NorthWest);
-        assert_eq!(Direction::North.turn_right_45(), Direction::NorthEast);
-        assert_eq!(Direction::North.turn_left_90(), Direction::West);
-        assert_eq!(Direction::North.turn_right_90(), Direction::East);
+        assert_eq!(TileDir::North.turn_left_45(), TileDir::NorthWest);
+        assert_eq!(TileDir::North.turn_right_45(), TileDir::NorthEast);
+        assert_eq!(TileDir::North.turn_left_90(), TileDir::West);
+        assert_eq!(TileDir::North.turn_right_90(), TileDir::East);
     }
 
     #[test]
     fn test_tile_step_opposite() {
-        assert_eq!(Direction::North.opposite(), Direction::South);
-        assert_eq!(Direction::East.opposite(), Direction::West);
-        assert_eq!(Direction::SouthWest.opposite(), Direction::NorthEast);
+        assert_eq!(TileDir::North.opposite(), TileDir::South);
+        assert_eq!(TileDir::East.opposite(), TileDir::West);
+        assert_eq!(TileDir::SouthWest.opposite(), TileDir::NorthEast);
     }
 
     #[test]
     fn test_tile_step_meridean_parallel() {
-        assert_eq!(Direction::North.meridean(), -1);
-        assert_eq!(Direction::North.parallel(), 0);
-        assert_eq!(Direction::East.meridean(), 0);
-        assert_eq!(Direction::East.parallel(), 1);
+        assert_eq!(TileDir::North.meridean(), -1);
+        assert_eq!(TileDir::North.parallel(), 0);
+        assert_eq!(TileDir::East.meridean(), 0);
+        assert_eq!(TileDir::East.parallel(), 1);
     }
 
     #[test]
     fn test_tile_operations() {
         let tile = Tile(1, 2);
-        let step = Direction::East;
+        let step = TileDir::East;
         let new_tile = tile.step(step);
         assert_eq!(new_tile, Tile(2, 2));
     }
@@ -690,8 +682,8 @@ mod tests {
     #[test]
     fn test_path_operations() {
         let mut path = Path::default();
-        path.step(Direction::North);
-        path.step(Direction::East);
+        path.step(TileDir::North);
+        path.step(TileDir::East);
         assert_eq!(path.len(), 2);
 
         let start_tile = Tile(0, 0);
@@ -701,11 +693,11 @@ mod tests {
 
     #[test]
     fn test_path_reverse() {
-        let path = Path(vec![Direction::North, Direction::East]);
+        let path = Path(vec![TileDir::North, TileDir::East]);
         let reversed_path = path.reverse();
         assert_eq!(
             reversed_path.iter().collect::<Vec<_>>(),
-            vec![Direction::West, Direction::South]
+            vec![TileDir::West, TileDir::South]
         );
     }
 

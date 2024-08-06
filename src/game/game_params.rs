@@ -1,4 +1,5 @@
 use crate::path_finding::tiles::Tile;
+use crate::path_finding::tiles::TileDir;
 
 use super::actors::stats::Health;
 use super::actors::stats::Movement;
@@ -6,6 +7,7 @@ use super::actors::EnemyActor;
 use super::actors::PlayerActor;
 use super::level::Terrain;
 use super::map::VillageMap;
+use crate::path_finding::tiles::Tiled;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 
@@ -84,5 +86,9 @@ impl Game<'_, '_> {
 
     pub fn get(&self, r: impl TileRef) -> Option<(Tile, Entity)> {
         r.get(self)
+    }
+
+    pub fn perimeter(&self) -> impl Iterator<Item = Tile> + '_ {
+        self.map.find_perimeter(&TileDir::EDGES)
     }
 }

@@ -2,7 +2,7 @@
 //! They represent any substantial game objects: player controlled characters, buildings, monsters, trees, etc
 //! Each map tile can hold a maximum of one actor.
 
-use crate::path_finding::tiles::Direction;
+use crate::path_finding::tiles::TileDir;
 use crate::screen::Screen;
 use bevy::prelude::*;
 use enemy::EnemyActorsPlugin;
@@ -147,7 +147,7 @@ pub struct IsAirborne;
 
 /// Directions a actor can move.
 #[derive(Component, Default, Clone, Debug)]
-pub struct Directions(pub Vec<Direction>);
+pub struct Directions(pub Vec<TileDir>);
 
 /// Has actor moved or performed an action yet.
 /// Needs to be reset to default after each turn (Not good?).
@@ -179,7 +179,7 @@ impl<T: Component> ActorBundle<T>
 where
     T: Default,
 {
-    pub fn new(name: &str, directions: Vec<Direction>) -> Self {
+    pub fn new(name: &str, directions: Vec<TileDir>) -> Self {
         Self {
             name: ActorName(String::from(name)),
             health: Health::new(2),

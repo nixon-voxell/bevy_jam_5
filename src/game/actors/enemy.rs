@@ -9,7 +9,7 @@ use crate::game::level::Terrain;
 use crate::game::map::VillageMap;
 use crate::game::selection::SelectionMap;
 use crate::game::tile_set::{tile_coord_translation, TileSet, TILE_ANCHOR};
-use crate::path_finding::tiles::{Direction, Tile};
+use crate::path_finding::tiles::{TileDir, Tile};
 use crate::screen::playing::GameState;
 use crate::screen::Screen;
 use crate::ui::icon_set::IconSet;
@@ -379,7 +379,7 @@ pub struct EnemySpawn {
     pub hit_points: u32,
     pub movement: u32,
     pub is_airborne: bool,
-    pub directions: &'static [Direction],
+    pub directions: &'static [TileDir],
 }
 
 impl EnemySpawn {
@@ -388,21 +388,21 @@ impl EnemySpawn {
         hit_points: 3,
         movement: 3,
         is_airborne: false,
-        directions: &Direction::EDGES,
+        directions: &TileDir::EDGES,
     };
     pub const SLIME: Self = Self {
         name: "slime",
         hit_points: 4,
         movement: 2,
         is_airborne: false,
-        directions: &Direction::EDGES,
+        directions: &TileDir::EDGES,
     };
     pub const BAT: Self = Self {
         name: "bat",
         hit_points: 2,
         movement: 4,
         is_airborne: true,
-        directions: &Direction::ALL,
+        directions: &TileDir::ALL,
     };
 }
 
