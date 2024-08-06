@@ -1,3 +1,4 @@
+use crate::path_finding::distance_map;
 use crate::path_finding::find_all;
 use crate::path_finding::tiles::Tile;
 use crate::path_finding::tiles::TileDir;
@@ -85,6 +86,10 @@ impl Game<'_, '_> {
         self.map.actors.iter()
     }
 
+    pub fn is_occupied(&self, tile: Tile) -> bool {
+        self.map.actors.is_occupied(tile)
+    }
+
     pub fn contains(&self, r: impl TileRef) -> bool {
         r.is_contained(self)
     }
@@ -141,6 +146,65 @@ impl Game<'_, '_> {
                 .filter(move |_| !structures.contains(&tile))
         };
         find_all(start, navigator).is_superset(&structures)
+    }
+
+    /// A tile can be built on if
+    /// - it is walkable
+    /// - it is not on the map perimeter
+    /// - from the tile there exists a walkable path to every perimeter tile on the map
+    /// - it is within two tiles distance (by edge steps) of another structure
+    ///     (losing all buildings is defeat)
+    pub fn find_tiles_that_can_be_built_on(&self) -> HashSet<Tile> {
+        let structures: HashSet<Tile> = self.structures().map(|(tile, _)| tile).collect();
+
+        let distance_map = distance_map(structures.iter().copied(), |t| {
+            t.edge_adjacent()
+                .into_iter()
+                .filter(|tile| self.contains(*tile))
+        });
+
+        let perimeter: HashSet<Tile> = self.perimeter().collect();
+
+        let candidate_tiles: HashSet<Tile> = self
+            .tiles()
+            .filter(|tile| {
+                // must be walkable
+                self.terrain(*tile)
+                    .filter(|terrain| terrain.is_walkable())
+                    .is_some()
+                // and not already built on
+                && !structures.contains(tile)
+                // within two tiles distance by edges
+                && distance_map.get(tile).map(|distance| *distance < 3).unwrap_or(false)
+                // not on perimeter
+                && !perimeter.contains(tile)
+            })
+            .collect();
+
+        // pick any structure, shouldn't matter which
+        let Some(start) = structures.iter().next().copied() else {
+            // no structures, empty return
+            return HashSet::default();
+        };
+
+        // navigator only enters candidates
+        let navigator = |tile: Tile| {
+            tile.edge_adjacent()
+                .into_iter()
+                .filter(|adj_tile| candidate_tiles.contains(adj_tile))
+        };
+
+        let mut reachable = find_all(start, navigator);
+        reachable.remove(&start);
+        reachable
+    }
+
+    pub fn iter_terrain(&self) -> impl Iterator<Item = (Tile, Terrain)> + '_ {
+        self.map.iter_terrain()
+    }
+
+    pub fn deployment_zone(&self) -> &HashSet<Tile> {
+        &self.map.deployment_zone
     }
 }
 

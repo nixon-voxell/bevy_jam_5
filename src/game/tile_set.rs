@@ -50,6 +50,9 @@ fn load_tiles(asset_server: Res<AssetServer>, mut tile_set: ResMut<TileSet>) {
         "tavern",
         "ne_corner",
         "se_corner",
+        "block_blue",
+        "block_grey",
+        "block_orange",
     ];
 
     for &tile in TILES {
@@ -62,7 +65,8 @@ fn load_tiles(asset_server: Res<AssetServer>, mut tile_set: ResMut<TileSet>) {
 pub fn tile_coord_translation(x: f32, y: f32, layer: f32) -> Vec3 {
     let mut translation = RIGHT_DIR.xyy() * x;
     translation += DOWN_DIR.xyy() * y;
-    translation.z = translation.z * -0.001 + layer * LAYER_DEPTH;
+    let z_rank = x * 15. + y * 10.;
+    translation.z = translation.z * -0.001 + layer * LAYER_DEPTH + z_rank;
 
     translation
 }

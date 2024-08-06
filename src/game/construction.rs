@@ -8,6 +8,9 @@ use crate::path_finding::tiles::Tile;
 use crate::screen::Screen;
 use crate::ui::prelude::InteractionPalette;
 
+use super::actors::spawn::SpawnAnimation;
+use super::actors::Structure;
+use super::actors::StructureBundle;
 use super::components::ArcherTower;
 use super::components::Blacksmith;
 use super::components::BuildingProgressLabel;
@@ -20,6 +23,7 @@ use super::constants::ICON_SIZE;
 use super::constants::TEXT_SIZE;
 use super::events::EndDayTurn;
 use super::events::SelectStructureTypeEvent;
+use super::game_params::Game;
 use super::map::VillageMap;
 use super::picking::PickableTile;
 use super::picking::TilePressedEvent;
@@ -30,8 +34,6 @@ use super::resources::VillagePopulation;
 use super::tile_set::tile_coord_translation;
 use super::tile_set::TileSet;
 use super::tile_set::TILE_ANCHOR;
-use super::actors::spawn::SpawnAnimation;
-use super::actors::StructureBundle;
 
 #[derive(Component, Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum StructureType {
@@ -279,7 +281,7 @@ pub struct BuildingSite;
 pub fn spawn_in_progress_building(
     mut commands: Commands,
     mut events: EventReader<TilePressedEvent>,
-    mut village_map: ResMut<VillageMap>,
+    //mut village_map: ResMut<VillageMap>,
     tile_set: Res<TileSet>,
     selected_structure_type: Res<SelectedStructueType>,
     structure_cost: Res<StructureCosts>,
@@ -287,6 +289,7 @@ pub fn spawn_in_progress_building(
     mut working_population: ResMut<VillageEmployment>,
     mut gold: ResMut<VillageGold>,
     structure_query: Query<&StructureType>,
+    mut game: Game,
 ) {
     let Some(TilePressedEvent(tile)) = events.read().last() else {
         return;
@@ -300,22 +303,13 @@ pub fn spawn_in_progress_building(
         return;
     };
 
-    if village_map.actors.is_occupied(*tile) {
+    if game.is_occupied(*tile) {
         return;
     }
 
-    if !is_any_path(Tile::ZERO, *tile, |t| {
-        village_map
-            .actors
-            .get_neighbouring_positions_rook(t)
-            .filter(|&n| {
-                village_map
-                    .get_terrain(n)
-                    .map(|t| t.is_walkable())
-                    .unwrap_or(false)
-                    && !village_map.actors.is_occupied(n)
-            })
-    }) {
+    let sites = game.find_tiles_that_can_be_built_on();
+
+    if !sites.contains(tile) {
         return;
     }
 
@@ -356,6 +350,7 @@ pub fn spawn_in_progress_building(
             RemainingConstructionTurns(cost.turns),
             ConstructionWorkers(cost.workers),
             BuildingSite,
+            Structure,
         ))
         .with_children(|builder| {
             builder.spawn((
@@ -387,7 +382,7 @@ pub fn spawn_in_progress_building(
         })
         .id();
 
-    village_map.actors.set(*tile, id);
+    game.insert(*tile, id);
 }
 
 pub fn update_building_progress(

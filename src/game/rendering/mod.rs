@@ -3,6 +3,7 @@ use super::components::ArcherTower;
 use super::components::GroundTileLayer;
 use super::constants;
 use super::constants::CURSOR_COLOR;
+use super::game_params::Game;
 use super::map::VillageMap;
 use super::picking::PickableTile;
 use super::picking::PickedTile;
@@ -18,6 +19,9 @@ use crate::screen::playing::GameState;
 use crate::screen::Screen;
 use crate::ui::icon_set::IconSet;
 
+use bevy::color::palettes::css::RED;
+use bevy::color::palettes::tailwind::BLUE_300;
+use bevy::color::palettes::tailwind::PURPLE_400;
 use bevy::color::palettes::tailwind::YELLOW_300;
 use bevy::math::vec2;
 use bevy::prelude::*;
@@ -51,6 +55,7 @@ impl Plugin for MapRenderingPlugin {
                     .run_if(in_state(Screen::Playing))
                     .run_if(|layers: Res<ShowLayers>| layers.show_tile_coords),
             )
+            //.add_systems(Update, tint_buildable.run_if(in_state(Screen::Playing)))
             .add_systems(
                 PostUpdate,
                 (
@@ -285,13 +290,19 @@ fn spawn_arrow_sprites(
     }
 }
 
+// fn tint_buildable(game: Game, mut tints: ResMut<TileTints>) {
+//     for tile in game.find_tiles_that_can_be_built_on() {
+//         tints.0.insert(tile, BLUE_300.into());
+//     }
+// }
+
 fn draw_terrain(
     mut commands: Commands,
-    village_map: Res<VillageMap>,
     tile_set: Res<TileSet>,
     selected: Res<SelectedTiles>,
     game_state: Res<State<GameState>>,
     tints: Res<TileTints>,
+    game: Game,
 ) {
     let state = game_state.get();
     let tint = |tile: Tile| {
@@ -299,7 +310,7 @@ fn draw_terrain(
             // ..
             // ..
             GameState::Deployment => {
-                if village_map.deployment_zone.contains(&tile) {
+                if game.deployment_zone().contains(&tile) {
                     constants::DEPLOYMENT_ZONE_COLOR.into()
                 } else {
                     Color::WHITE
@@ -309,7 +320,7 @@ fn draw_terrain(
                 if selected.tiles.contains(&tile) {
                     selected.color
                 } else if let Some(color) = tints.0.get(&tile) {
-                    return *color;
+                    *color
                 } else {
                     Color::WHITE
                 }
@@ -317,7 +328,9 @@ fn draw_terrain(
         }
     };
 
-    for (tile, terrain) in village_map.iter_terrain() {
+    let buildable = game.find_tiles_that_can_be_built_on();
+
+    for (tile, terrain) in game.iter_terrain() {
         commands.spawn((
             SpriteBundle {
                 sprite: Sprite {
@@ -334,6 +347,23 @@ fn draw_terrain(
             GroundTileLayer,
             TemporarySprite,
         ));
+
+        if buildable.contains(&tile) && *state == GameState::BuildingTurn {
+            commands.spawn((
+                SpriteBundle {
+                    sprite: Sprite {
+                        color: Color::WHITE.with_alpha(0.35),
+                        anchor: TILE_ANCHOR,
+                        ..Default::default()
+                    },
+                    texture: tile_set.get("block_blue"),
+                    transform: Transform::from_translation(tile_to_camera(tile, 0.01)),
+                    ..default()
+                },
+                tile,
+                TemporarySprite,
+            ));
+        }
     }
 }
 
@@ -347,21 +377,14 @@ pub fn draw_health(
     map: Res<VillageMap>,
 ) {
     for (entity, health) in query.iter() {
-        // if health.value == health.max {
         let health_width = (HEART_SIZE.x + HEART_GAP) * health.max as f32 - HEART_GAP;
         let x_offset = -0.5 * (health_width - HEART_SIZE.x);
-
         let inner_panel_size = vec2(health_width + 2. * HEART_GAP, HEART_SIZE.y + HEART_GAP);
         let outer_panel_size = inner_panel_size + 8.;
-
-        //     continue;
-        // }
 
         let Some(tile) = map.actors.locate(entity) else {
             continue;
         };
-        // println!("{entity:?} -> {health:?} -> {tile:?}");
-        // let start_x = (-hs(health.max) + HEART_SIZE.x) * 0.5;
 
         let translation = tile_to_camera(tile, 10.) + 250. * Vec3::Y;
 

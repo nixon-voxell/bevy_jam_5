@@ -22,7 +22,7 @@ use crate::game::resources::{
 };
 
 use crate::game::actors::player::{add_starting_player_units, move_unit, reset_unit_turn_states};
-use crate::game::selection::dispatch_object_pressed;
+use crate::game::selection::{dispatch_object_pressed, SelectedTiles};
 
 use crate::game::actors_list::{
     actor_list_layout, inventory_list_layout, inventory_list_layout_vis,
@@ -71,6 +71,12 @@ pub(super) fn plugin(app: &mut App) {
         .add_systems(
             OnEnter(GameState::Deployment),
             (deployment_setup, deployment_zone_visualization).chain(),
+        )
+        .add_systems(
+            OnExit(GameState::Deployment),
+            |mut selected_tiles: ResMut<SelectedTiles>| {
+                selected_tiles.tiles.clear();
+            },
         )
         .add_systems(
             OnEnter(GameState::Deployment),

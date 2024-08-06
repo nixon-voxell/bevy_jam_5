@@ -2,6 +2,7 @@ pub mod tiles;
 
 use std::cmp::Reverse;
 
+use bevy::utils::HashMap;
 use bevy::utils::HashSet;
 use priority_queue::PriorityQueue;
 use tiles::Tile;
@@ -89,4 +90,76 @@ where
         }
     }
     visited
+}
+
+pub fn distance_map<N, I>(sources: impl Iterator<Item = Tile>, navigator: N) -> HashMap<Tile, u32>
+where
+    N: Fn(Tile) -> I,
+    I: IntoIterator<Item = Tile>,
+{
+    let mut open_set: PriorityQueue<Tile, Reverse<u32>> = PriorityQueue::new();
+    let mut visited: HashMap<Tile, u32> = sources.map(|tile| (tile, 0)).collect();
+    open_set.extend(visited.keys().map(|tile| (*tile, Reverse(0))));
+
+    while let Some((current, current_weight)) = open_set.pop() {
+        for neighbor in (navigator)(current) {
+            if !visited.contains_key(&neighbor) {
+                let distance = current_weight.0 + 1;
+                open_set.push(neighbor, Reverse(distance));
+                visited.insert(neighbor, distance);
+            }
+        }
+    }
+    visited
+}
+
+#[cfg(test)]
+mod tests {
+    use super::distance_map;
+    use super::tiles::Tile;
+
+    #[test]
+    fn distance_map_trivial() {
+        let tiles = [Tile::ZERO, Tile(0, 1)];
+        let navigator = |tile: Tile| {
+            tile.edge_adjacent()
+                .into_iter()
+                .filter(|tile| tiles.contains(tile))
+        };
+        let d = distance_map([Tile::ZERO].into_iter(), navigator);
+        assert_eq!(d[&Tile::ZERO], 0);
+        assert_eq!(d[&Tile(0, 1)], 1);
+    }
+
+    #[test]
+    fn distance_map_five_tiles() {
+        let tiles = [Tile::ZERO, Tile(0, 1), Tile(1, 0), Tile(1, 1), Tile(1, 2)];
+        let navigator = |tile: Tile| {
+            tile.edge_adjacent()
+                .into_iter()
+                .filter(|tile| tiles.contains(tile))
+        };
+        let d = distance_map([Tile::ZERO].into_iter(), navigator);
+        assert_eq!(d[&Tile::ZERO], 0);
+        assert_eq!(d[&Tile(0, 1)], 1);
+        assert_eq!(d[&Tile(1, 0)], 1);
+        assert_eq!(d[&Tile(1, 1)], 2);
+        assert_eq!(d[&Tile(1, 2)], 3);
+    }
+
+    #[test]
+    fn distance_map_two_sources() {
+        let tiles = [Tile::ZERO, Tile(0, 1), Tile(1, 0), Tile(1, 1), Tile(1, 2)];
+        let navigator = |tile: Tile| {
+            tile.edge_adjacent()
+                .into_iter()
+                .filter(|tile| tiles.contains(tile))
+        };
+        let d = distance_map([Tile::ZERO, Tile(0, 1)].into_iter(), navigator);
+        assert_eq!(d[&Tile::ZERO], 0);
+        assert_eq!(d[&Tile(0, 1)], 0);
+        assert_eq!(d[&Tile(1, 0)], 1);
+        assert_eq!(d[&Tile(1, 1)], 1);
+        assert_eq!(d[&Tile(1, 2)], 2);
+    }
 }
