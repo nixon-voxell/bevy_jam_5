@@ -1,3 +1,4 @@
+use super::actors::stats::Health;
 use super::components::ArcherTower;
 use super::components::GroundTileLayer;
 use super::constants;
@@ -5,12 +6,11 @@ use super::constants::CURSOR_COLOR;
 use super::map::VillageMap;
 use super::picking::PickableTile;
 use super::picking::PickedTile;
+use super::selection::SelectedActor;
 use super::selection::SelectedTiles;
-use super::selection::SelectedUnit;
 use super::tile_set::tile_coord_translation;
 use super::tile_set::TileSet;
 use super::tile_set::TILE_ANCHOR;
-use super::unit::Health;
 use crate::path_finding::tiles::Corner;
 use crate::path_finding::tiles::Edge;
 use crate::path_finding::tiles::Tile;
@@ -18,7 +18,6 @@ use crate::screen::playing::GameState;
 use crate::screen::Screen;
 use crate::ui::icon_set::IconSet;
 
-use bevy::color::palettes::tailwind::TEAL_300;
 use bevy::color::palettes::tailwind::YELLOW_300;
 use bevy::math::vec2;
 use bevy::prelude::*;
@@ -209,7 +208,7 @@ fn spawn_tile_cursor(mut commands: Commands, picked_tile: Res<PickedTile>, tile_
 
 fn spawn_arrow_sprites(
     mut commands: Commands,
-    selected: Res<SelectedUnit>,
+    selected: Res<SelectedActor>,
     village_map: Res<VillageMap>,
     query: Query<&Tile, With<ArcherTower>>,
     asset_server: Res<AssetServer>,

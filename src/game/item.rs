@@ -3,11 +3,11 @@ use bevy_trauma_shake::TraumaCommands;
 
 use crate::{
     game::{
-        tile_set::{tile_coord_translation, TILE_ANCHOR},
-        unit::{
+        actors::{
             enemy::{ClawMarkBundle, CLAW_ANIM_DURATAION},
             spawn::DespawnAnimation,
         },
+        tile_set::{tile_coord_translation, TILE_ANCHOR},
     },
     path_finding::{find_all_within_distance_unweighted, tiles::Tile},
     screen::{playing::GameState, Screen},
@@ -15,10 +15,10 @@ use crate::{
 };
 
 use super::{
+    actors::{stats::Health, ActorTurnState, EnemyActor},
     inventory::{Inventory, Item},
     map::VillageMap,
-    selection::{self, SelectedTiles, SelectedUnit, SelectionEvent},
-    unit::{EnemyUnit, Health, UnitTurnState},
+    selection::{self, SelectedActor, SelectedTiles, SelectionEvent},
 };
 
 pub struct ItemPlugin;
@@ -45,7 +45,7 @@ pub struct InventorySelection {
 }
 
 fn show_attack_range(
-    q_inventories: Query<(Entity, &Inventory, &UnitTurnState), Changed<Inventory>>,
+    q_inventories: Query<(Entity, &Inventory, &ActorTurnState), Changed<Inventory>>,
     mut selection_tiles: ResMut<SelectedTiles>,
     village_map: Res<VillageMap>,
     mut inventory_selection: ResMut<InventorySelection>,
@@ -88,12 +88,12 @@ fn deselect_inventory_on_click(
 
 fn apply_item_effect(
     mut commands: Commands,
-    mut q_inventories: Query<(&mut Inventory, &mut UnitTurnState)>,
+    mut q_inventories: Query<(&mut Inventory, &mut ActorTurnState)>,
     mut q_healths: Query<&mut Health>,
-    q_enemy_units: Query<(), With<EnemyUnit>>,
+    q_enemy_units: Query<(), With<EnemyActor>>,
     mut village_map: ResMut<VillageMap>,
     icon_set: Res<IconSet>,
-    selected_unit: Res<SelectedUnit>,
+    selected_unit: Res<SelectedActor>,
     inventory_selection: Res<InventorySelection>,
     mut selection_events: EventReader<SelectionEvent>,
 ) {

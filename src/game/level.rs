@@ -3,12 +3,12 @@
 use bevy::color::palettes::css::YELLOW;
 use bevy::prelude::*;
 
-use crate::game::unit::spawn::SpawnAnimation;
-use crate::game::unit::StructureBundle;
+use crate::game::actors::spawn::SpawnAnimation;
+use crate::game::actors::StructureBundle;
 use crate::path_finding::tiles::{Tile, TileDim};
 use crate::{screen::Screen, VillageCamera};
 
-use super::unit::EnemyUnit;
+use super::actors::EnemyActor;
 use super::{picking::PickableTile, selection::SelectionMap};
 
 use self::level_asset::{LevelAsset, LevelAssetPlugin, Levels};
@@ -40,7 +40,7 @@ pub struct TileThickBorder;
 pub fn load_level(
     mut commands: Commands,
     mut village_camera_query: Query<&mut Transform, With<VillageCamera>>,
-    enemies_query: Query<(), With<EnemyUnit>>,
+    enemies_query: Query<(), With<EnemyActor>>,
     mut levels: ResMut<Levels>,
     level_assets: Res<Assets<LevelAsset>>,
     tile_set: Res<TileSet>,

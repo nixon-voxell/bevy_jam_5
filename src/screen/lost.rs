@@ -15,7 +15,7 @@ use sickle_ui::{
 };
 
 use crate::{
-    game::unit::Structure,
+    game::actors::Structure,
     ui::{
         interaction::InteractionPalette,
         palette::{HEADER_SIZE, LABEL_SIZE},

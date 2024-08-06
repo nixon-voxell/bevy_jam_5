@@ -7,9 +7,9 @@ const SPAWN_START_SCALE: Vec3 = Vec3::splat(0.3);
 /// Non-zero spawn animation duration.
 const SPAWN_DURATION: f32 = 0.5;
 
-pub struct SpawnUnitPlugin;
+pub struct SpawnActorsPlugin;
 
-impl Plugin for SpawnUnitPlugin {
+impl Plugin for SpawnActorsPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(PostUpdate, (spawn_animation, despawn_animation));
     }

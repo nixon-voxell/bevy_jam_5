@@ -3,8 +3,8 @@ use bevy::prelude::*;
 use crate::screen::{playing::GameState, Screen};
 
 use super::{
-    events::EndDayTurn, map::VillageMap, resources::VillageEmployment, unit_list::PlayerUnitList,
-    update_resource_label, update_resource_label_system, WatchRes,
+    actors_list::PlayerActorList, events::EndDayTurn, map::VillageMap,
+    resources::VillageEmployment, update_resource_label, update_resource_label_system, WatchRes,
 };
 
 /// Number of turns in a day.
@@ -90,7 +90,7 @@ fn end_turn(mut end_turn_evt: EventReader<EndTurn>, mut turn: ResMut<Turn>) {
 fn end_deployment(
     mut end_deployment_evt: EventReader<EndDeployment>,
     mut gamestate: ResMut<NextState<GameState>>,
-    player_unit_list: Res<PlayerUnitList>,
+    player_unit_list: Res<PlayerActorList>,
     village_map: Res<VillageMap>,
 ) {
     if !end_deployment_evt.is_empty() {

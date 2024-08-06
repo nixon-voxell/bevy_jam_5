@@ -1,7 +1,7 @@
+use super::actors::stats::ActorName;
+use super::actors::PlayerActor;
 use super::inventory::Inventory;
-use super::selection::SelectedUnit;
-use super::unit::PlayerUnit;
-use super::unit::UnitName;
+use super::selection::SelectedActor;
 use super::INVENTORY_CAPACITY;
 use crate::ui::palette::LABEL_SIZE;
 use crate::ui::prelude::InteractionPalette;
@@ -10,15 +10,15 @@ use bevy::prelude::*;
 use sickle_ui::prelude::*;
 
 #[derive(Component)]
-pub struct UnitListContainer;
+pub struct ActorListContainer;
 
 #[derive(Component)]
-pub struct PlayerUnitIcon;
+pub struct PlayerActorIcon;
 
-pub fn unit_list_layout(ui: &mut UiBuilder<Entity>) {
+pub fn actor_list_layout(ui: &mut UiBuilder<Entity>) {
     ui.row(|ui| {
         ui.column(|ui| {
-            ui.insert(UnitListContainer)
+            ui.insert(ActorListContainer)
                 .style()
                 .align_items(AlignItems::Start)
                 .justify_content(JustifyContent::Start)
@@ -32,18 +32,18 @@ pub fn unit_list_layout(ui: &mut UiBuilder<Entity>) {
 }
 
 #[derive(Resource, Default, Clone)]
-pub struct PlayerUnitList(pub Vec<Entity>);
+pub struct PlayerActorList(pub Vec<Entity>);
 
 #[derive(Component)]
-pub struct SelectPlayerUnitButton(pub Entity);
+pub struct SelectPlayerActorButton(pub Entity);
 
-pub fn update_unit_list_container(
+pub fn update_actor_list_container(
     mut local: Local<Vec<Entity>>,
     mut commands: Commands,
-    container_query: Query<Entity, With<UnitListContainer>>,
-    unit_query: Query<&UnitName>,
-    player_unit_list: Res<PlayerUnitList>,
-    selected_unit: Res<SelectedUnit>,
+    container_query: Query<Entity, With<ActorListContainer>>,
+    unit_query: Query<&ActorName>,
+    player_unit_list: Res<PlayerActorList>,
+    selected_unit: Res<SelectedActor>,
 ) {
     if *local != player_unit_list.0 {
         local.clone_from(&player_unit_list.0);
@@ -75,7 +75,7 @@ pub fn update_unit_list_container(
                     .justify_content(JustifyContent::SpaceBetween);
 
                 ui.icon("icons/human.png")
-                    .insert(PlayerUnitIcon)
+                    .insert(PlayerActorIcon)
                     .style()
                     .width(Val::Px(16.))
                     .height(Val::Px(24.));
@@ -96,14 +96,14 @@ pub fn update_unit_list_container(
                     hovered: css::DARK_RED.into(),
                     pressed: css::INDIAN_RED.into(),
                 },
-                SelectPlayerUnitButton(*unit_entity),
+                SelectPlayerActorButton(*unit_entity),
             ));
         }
     }
 }
 
 #[derive(Component)]
-pub struct SelectedUnitNameLabel;
+pub struct SelectedActorNameLabel;
 
 #[derive(Component)]
 pub struct InventoryListLayout;
@@ -124,7 +124,7 @@ pub fn inventory_list_layout(ui: &mut UiBuilder<Entity>) -> Vec<Entity> {
         ui.style().align_items(AlignItems::End).row_gap(Val::Px(4.));
         ui.row(|ui| {
             ui.label(LabelConfig::from("unit name"))
-                .insert(SelectedUnitNameLabel);
+                .insert(SelectedActorNameLabel);
         });
         ui.row(|ui| {
             ui.style().column_gap(Val::Px(2.));
@@ -178,11 +178,11 @@ pub fn inventory_list_layout(ui: &mut UiBuilder<Entity>) -> Vec<Entity> {
     out
 }
 
-pub fn update_selected_unit_name_label(
-    selected_unit: Res<SelectedUnit>,
-    player_unit_list: Res<PlayerUnitList>,
-    name_query: Query<&UnitName>,
-    mut label_query: Query<&mut Text, With<SelectedUnitNameLabel>>,
+pub fn update_selected_actor_name_label(
+    selected_unit: Res<SelectedActor>,
+    player_actor_list: Res<PlayerActorList>,
+    name_query: Query<&ActorName>,
+    mut label_query: Query<&mut Text, With<SelectedActorNameLabel>>,
 ) {
     let Some(entity) = selected_unit.entity else {
         return;
@@ -190,30 +190,30 @@ pub fn update_selected_unit_name_label(
     let Ok(name) = name_query.get(entity) else {
         return;
     };
-    if selected_unit.is_changed() && player_unit_list.0.contains(&entity) {
+    if selected_unit.is_changed() && player_actor_list.0.contains(&entity) {
         for mut text in label_query.iter_mut() {
             text.sections[0].value.clone_from(&name.0);
         }
     }
 }
 
-pub fn select_player_unit_btn_interaction(
-    q_interactions: Query<(&Interaction, &SelectPlayerUnitButton), Changed<Interaction>>,
-    mut selected_unit: ResMut<SelectedUnit>,
+pub fn select_player_actor_btn_interaction(
+    q_interactions: Query<(&Interaction, &SelectPlayerActorButton), Changed<Interaction>>,
+    mut selected_actor: ResMut<SelectedActor>,
 ) {
     for (interaction, select) in q_interactions.iter() {
         if let Interaction::Pressed = interaction {
-            selected_unit.entity = Some(select.0);
+            selected_actor.entity = Some(select.0);
         }
     }
 }
 
 pub fn inventory_list_layout_vis(
-    selected_unit: Res<SelectedUnit>,
+    selected_actor: Res<SelectedActor>,
     mut query: Query<&mut Visibility, With<InventoryListLayout>>,
-    pq: Query<&PlayerUnit>,
+    pq: Query<&PlayerActor>,
 ) {
-    if let Some(entity) = selected_unit.entity {
+    if let Some(entity) = selected_actor.entity {
         if pq.contains(entity) {
             for mut v in query.iter_mut() {
                 *v = Visibility::Visible;
@@ -229,7 +229,7 @@ pub fn inventory_list_layout_vis(
 
 pub fn update_inventory_icons(
     mut commands: Commands,
-    selected_unit: Res<SelectedUnit>,
+    selected_unit: Res<SelectedActor>,
     iq: Query<&Inventory>,
     slot_icons: Res<ItemSlotIcons>,
     mut sq: Query<(&mut Style, &mut BorderColor, &Children)>,
@@ -273,7 +273,7 @@ pub fn update_inventory_icons(
 }
 
 pub fn select_item_btn_interaction(
-    selected_unit: Res<SelectedUnit>,
+    selected_unit: Res<SelectedActor>,
     q_interactions: Query<(&Interaction, &ItemSlotIndex), Changed<Interaction>>,
     mut iq: Query<&mut Inventory>,
 ) {

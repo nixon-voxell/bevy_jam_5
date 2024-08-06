@@ -8,9 +8,9 @@ use crate::game::inventory::Inventory;
 
 use crate::game::map::VillageMap;
 pub use crate::game::picking::TilePressedEvent;
-use crate::game::selection::SelectedUnit;
+use crate::game::selection::SelectedActor;
 use crate::game::tile_set::tile_coord_translation;
-use crate::game::unit_list::PlayerUnitList;
+use crate::game::actors_list::PlayerActorList;
 use crate::path_finding::tiles::Direction;
 use crate::screen::playing::GameState;
 
@@ -25,7 +25,7 @@ pub fn spawn_player_unit(commands: &mut Commands, name: String) -> Entity {
                 visibility: Visibility::Hidden,
                 ..default()
             },
-            UnitBundle::<PlayerUnit>::new(&name, Direction::ALL.into())
+            ActorBundle::<PlayerActor>::new(&name, Direction::ALL.into())
                 .with_health(3)
                 .with_movement(3),
             MaxInventorySize(3),
@@ -35,8 +35,8 @@ pub fn spawn_player_unit(commands: &mut Commands, name: String) -> Entity {
 }
 
 pub fn add_starting_player_units(
-    mut available_names: ResMut<AvailableUnitNames>,
-    mut player_unit_list: ResMut<PlayerUnitList>,
+    mut available_names: ResMut<AvailableActorNames>,
+    mut player_unit_list: ResMut<PlayerActorList>,
     mut commands: Commands,
 ) {
     player_unit_list.0.clear();
@@ -49,17 +49,17 @@ pub fn add_starting_player_units(
 
 pub fn move_unit(
     mut event_reader: EventReader<TilePressedEvent>,
-    selected_unit: Res<SelectedUnit>,
+    selected_unit: Res<SelectedActor>,
     mut village_map: ResMut<VillageMap>,
     mut turn_state_query: Query<
         (
-            &mut UnitTurnState,
+            &mut ActorTurnState,
             &Movement,
             &mut Visibility,
             &mut Sprite,
             &mut Transform,
         ),
-        With<PlayerUnit>,
+        With<PlayerActor>,
     >,
 ) {
     if let Some(TilePressedEvent(target)) = event_reader.read().last() {
@@ -103,7 +103,7 @@ pub fn move_unit(
 
 pub fn reset_unit_turn_states(
     mut events: EventReader<EndTurn>,
-    mut query: Query<&mut UnitTurnState>,
+    mut query: Query<&mut ActorTurnState>,
     state: Res<State<GameState>>,
     mut next_game_state: ResMut<NextState<GameState>>,
 ) {

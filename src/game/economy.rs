@@ -3,6 +3,7 @@ use rand::Rng;
 
 use crate::screen::Screen;
 
+use super::actors::Structure;
 use super::components::Income;
 use super::components::PopulationCapacity;
 use super::cycle::TimeOfDay;
@@ -10,7 +11,6 @@ use super::cycle::Turn;
 use super::resources::VillageEmployment;
 use super::resources::VillageGold;
 use super::resources::VillagePopulation;
-use super::unit::Structure;
 use super::update_resource_label;
 
 pub struct EconomyPlugin;

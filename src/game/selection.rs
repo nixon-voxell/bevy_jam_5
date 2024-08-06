@@ -6,10 +6,10 @@ use super::picking::PickedTile;
 
 use super::picking::TilePressedEvent;
 
-use super::unit::EnemyUnit;
+use super::actors::EnemyActor;
 
-use super::unit::Movement;
-use super::unit::UnitTurnState;
+use super::actors::stats::Movement;
+use super::actors::ActorTurnState;
 
 use crate::path_finding::tiles::Direction;
 use crate::path_finding::tiles::Tile;
@@ -26,7 +26,7 @@ impl Plugin for SelectionPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<SelectedTiles>()
             .init_resource::<SelectionMap>()
-            .init_resource::<SelectedUnit>()
+            .init_resource::<SelectedActor>()
             .add_event::<SelectionEvent>()
             .add_event::<ObjectPressedEvent>()
             .add_systems(
@@ -41,7 +41,7 @@ impl Plugin for SelectionPlugin {
                     show_movement_range
                         .after(on_selection)
                         .run_if(not(in_state(GameState::Deployment)))
-                        .run_if(resource_changed::<SelectedUnit>),
+                        .run_if(resource_changed::<SelectedActor>),
                 )
                     .run_if(in_state(Screen::Playing)),
             );
@@ -50,11 +50,11 @@ impl Plugin for SelectionPlugin {
 
 /// Current selected unit, can be Player controlled, enemy or a building
 #[derive(Resource, Default)]
-pub struct SelectedUnit {
+pub struct SelectedActor {
     pub entity: Option<Entity>,
 }
 
-impl SelectedUnit {
+impl SelectedActor {
     pub fn set(&mut self, entity: Entity) {
         self.entity = Some(entity);
     }
@@ -86,9 +86,9 @@ fn color_selected_tiles(
 }
 
 pub fn show_movement_range(
-    q_movements: Query<(&Movement, &UnitTurnState)>,
-    q_enemies: Query<(), With<EnemyUnit>>,
-    selected_unit: Res<SelectedUnit>,
+    q_movements: Query<(&Movement, &ActorTurnState)>,
+    q_enemies: Query<(), With<EnemyActor>>,
+    selected_unit: Res<SelectedActor>,
     mut selected_tiles: ResMut<SelectedTiles>,
     village_map: Res<VillageMap>,
 ) {
@@ -124,13 +124,13 @@ pub enum SelectionEvent {
 }
 
 #[derive(Event)]
-pub struct DeselectedUnitEvent(pub Entity);
+pub struct DeselectedActorEvent(pub Entity);
 
 pub fn set_selected_unit(
     mouse_button: Res<ButtonInput<MouseButton>>,
     picked_tile: Res<PickedTile>,
     village_map: Res<VillageMap>,
-    mut selected_unit: ResMut<SelectedUnit>,
+    mut selected_unit: ResMut<SelectedActor>,
     mut selection_event: EventWriter<SelectionEvent>,
 ) {
     if mouse_button.just_pressed(MouseButton::Left) {

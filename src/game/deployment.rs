@@ -1,19 +1,19 @@
 use crate::path_finding::tiles::Tile;
 use crate::screen::Screen;
 
+use super::actors_list::PlayerActorList;
 use super::map::VillageMap;
 use super::picking::TilePressedEvent;
+use super::selection::SelectedActor;
 use super::selection::SelectedTiles;
-use super::selection::SelectedUnit;
 use super::tile_set::tile_coord_translation;
 use super::tile_set::TileSet;
-use super::unit_list::PlayerUnitList;
 use bevy::color::palettes::css::LIME;
 use bevy::prelude::*;
 
 pub fn deployment_setup(
-    player_unit_list: Res<PlayerUnitList>,
-    mut selected_unit: ResMut<SelectedUnit>,
+    player_unit_list: Res<PlayerActorList>,
+    mut selected_unit: ResMut<SelectedActor>,
     mut village_map: ResMut<VillageMap>,
 ) {
     selected_unit.entity = player_unit_list.0.first().copied();
@@ -45,7 +45,7 @@ pub fn deployment_zone_visualization(
 }
 
 pub fn is_deployment_ready(
-    player_unit_list: Res<PlayerUnitList>,
+    player_unit_list: Res<PlayerActorList>,
     village_map: Res<VillageMap>,
 ) -> bool {
     for entity in player_unit_list.0.iter() {
@@ -59,8 +59,8 @@ pub fn is_deployment_ready(
 pub fn deploy_unit(
     mut events: EventReader<TilePressedEvent>,
     mut village_map: ResMut<VillageMap>,
-    mut selected_unit: ResMut<SelectedUnit>,
-    player_unit_list: Res<PlayerUnitList>,
+    mut selected_unit: ResMut<SelectedActor>,
+    player_unit_list: Res<PlayerActorList>,
     tile_set: Res<TileSet>,
     mut commands: Commands,
 ) {

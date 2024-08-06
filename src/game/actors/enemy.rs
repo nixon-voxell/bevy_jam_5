@@ -1,21 +1,21 @@
 use bevy::{color::palettes::css, math::uvec2, prelude::*};
 use bevy_trauma_shake::TraumaCommands;
 
+use crate::game::actors::spawn::SpawnAnimation;
+use crate::game::actors::ActorBundle;
+use crate::game::actors_list::PlayerActorList;
 use crate::game::cycle::{Season, TimeOfDay, Turn, TURN_PER_DAY};
 use crate::game::level::Terrain;
 use crate::game::map::VillageMap;
 use crate::game::selection::SelectionMap;
 use crate::game::tile_set::{tile_coord_translation, TileSet, TILE_ANCHOR};
-use crate::game::unit::spawn::SpawnAnimation;
-use crate::game::unit::{EnemyUnit, IsAirborne, UnitBundle};
-use crate::game::unit_list::PlayerUnitList;
 use crate::path_finding::tiles::{Direction, Tile};
 use crate::screen::playing::GameState;
 use crate::screen::Screen;
 use crate::ui::icon_set::IconSet;
 
 use super::spawn::DespawnAnimation;
-use super::{Directions, Health, Movement};
+use super::{Directions, EnemyActor, Health, IsAirborne, Movement};
 
 /// Distance from border that the enemy will spawn in.
 pub const ENEMY_SPAWN_RANGE: u32 = 2;
@@ -24,9 +24,9 @@ pub const CLAW_ANIM_DURATAION: f32 = 1.0;
 const SPAWN_TRIAL: usize = 10;
 const ENEMY_MOVE_SPEED: f32 = 4.0;
 
-pub struct EnemyUnitPlugin;
+pub struct EnemyActorsPlugin;
 
-impl Plugin for EnemyUnitPlugin {
+impl Plugin for EnemyActorsPlugin {
     fn build(&self, app: &mut App) {
         app.init_state::<EnemyActionState>()
             .add_systems(OnEnter(TimeOfDay::Night), spawn_enemies)
@@ -46,8 +46,8 @@ impl Plugin for EnemyUnitPlugin {
 
 fn perform_attack(
     mut commands: Commands,
-    mut q_enemy_attacks: Query<(Entity, &mut EnemyAttack), With<EnemyUnit>>,
-    q_not_enemy_units: Query<(), Without<EnemyUnit>>,
+    mut q_enemy_attacks: Query<(Entity, &mut EnemyAttack), With<EnemyActor>>,
+    q_not_enemy_units: Query<(), Without<EnemyActor>>,
     mut q_health: Query<&mut Health>,
     mut q_vis: Query<&mut Visibility>,
     village_map: Res<VillageMap>,
@@ -107,16 +107,16 @@ fn move_enemies(
     mut commands: Commands,
     mut q_enemy_units: Query<
         (Entity, &mut Transform, &Directions, Option<&mut TilePath>),
-        With<EnemyUnit>,
+        With<EnemyActor>,
     >,
-    q_not_enemy_units: Query<(), Without<EnemyUnit>>,
+    q_not_enemy_units: Query<(), Without<EnemyActor>>,
     mut q_sprites: Query<(&mut Sprite, &mut Visibility)>,
-    q_transforms: Query<&Transform, Without<EnemyUnit>>,
+    q_transforms: Query<&Transform, Without<EnemyActor>>,
     mut next_game_state: ResMut<NextState<GameState>>,
     mut next_enemy_action_state: ResMut<NextState<EnemyActionState>>,
     mut village_map: ResMut<VillageMap>,
     selection_map: ResMut<SelectionMap>,
-    player_unit_list: Res<PlayerUnitList>,
+    player_unit_list: Res<PlayerActorList>,
     turn: Res<Turn>,
     time: Res<Time>,
 ) {
@@ -229,7 +229,7 @@ fn find_movement_path(
     mut commands: Commands,
     mut q_enemy_units: Query<
         (Entity, &Movement, &Directions, Option<&IsAirborne>),
-        With<EnemyUnit>,
+        With<EnemyActor>,
     >,
     mut village_map: ResMut<VillageMap>,
 ) {
@@ -336,7 +336,7 @@ fn spawn_enemies(
                 texture: tile_set.get(enemy.name),
                 ..default()
             },
-            UnitBundle::<EnemyUnit>::new(enemy.name, enemy.directions.to_vec())
+            ActorBundle::<EnemyActor>::new(enemy.name, enemy.directions.to_vec())
                 .with_health(enemy.hit_points)
                 .with_health(enemy.hit_points)
                 .with_movement(enemy.movement),

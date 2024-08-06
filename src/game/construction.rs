@@ -30,8 +30,8 @@ use super::resources::VillagePopulation;
 use super::tile_set::tile_coord_translation;
 use super::tile_set::TileSet;
 use super::tile_set::TILE_ANCHOR;
-use super::unit::spawn::SpawnAnimation;
-use super::unit::StructureBundle;
+use super::actors::spawn::SpawnAnimation;
+use super::actors::StructureBundle;
 
 #[derive(Component, Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum StructureType {

@@ -3,14 +3,14 @@ use bevy::utils::HashSet;
 
 #[derive(Debug, Copy, Clone)]
 pub enum Ability {
-    /// Intagible units can move through all other units, walls and buildings.
+    /// Intagible actors can move through all other actors, walls and buildings.
     Intangible,
 
     /// Can move through all terrain
     /// Can move diagonally    
     Flying,
 
-    /// `Aquatic`` units can move like `Swimmer`s
+    /// `Aquatic`` actors can move like `Swimmer`s
     /// but can also end their turn on a water tile and take actions while on a water tile.
     Aquatic,
 
@@ -36,7 +36,7 @@ pub struct Abilities(pub HashSet<Ability>);
 pub struct GroundTileLayer;
 
 #[derive(Component, Debug)]
-pub struct ObjectTileLayer;
+pub struct ActorTileLayer;
 
 #[derive(Component, Debug)]
 pub struct Income(pub u32);

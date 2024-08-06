@@ -1,19 +1,26 @@
+//! Actors are entities that are placed in the actor layer of the village map
+//! They represent any substantial game objects: player controlled characters, buildings, monsters, trees, etc
+//! Each map tile can hold a maximum of one actor.
+
 use crate::path_finding::tiles::Direction;
 use crate::screen::Screen;
 use bevy::prelude::*;
+use enemy::EnemyActorsPlugin;
 use rand::prelude::SliceRandom;
 use rand::thread_rng;
+use spawn::SpawnActorsPlugin;
+use stats::{ActorName, Health, Movement};
 
-use self::enemy::EnemyUnitPlugin;
-use self::spawn::{DespawnAnimation, SpawnUnitPlugin};
+use self::spawn::DespawnAnimation;
 
-use super::components::{ObjectTileLayer, PopulationCapacity};
+use super::components::{ActorTileLayer, PopulationCapacity};
 use super::constants::HOUSE_POPULATION_CAPACITY;
 use super::map::VillageMap;
 
 pub mod enemy;
 pub mod player;
 pub mod spawn;
+pub mod stats;
 
 /// Character names generated from some random name generator
 pub const NAMES: &[&str] = &[
@@ -70,18 +77,18 @@ pub const NAMES: &[&str] = &[
 ];
 
 #[derive(Resource)]
-pub struct AvailableUnitNames(pub Vec<&'static str>);
+pub struct AvailableActorNames(pub Vec<&'static str>);
 
-impl Default for AvailableUnitNames {
+impl Default for AvailableActorNames {
     fn default() -> Self {
         let mut names_vec: Vec<&'static str> = NAMES.to_vec();
         let mut rng = thread_rng();
         names_vec.shuffle(&mut rng);
-        AvailableUnitNames(names_vec)
+        AvailableActorNames(names_vec)
     }
 }
 
-impl AvailableUnitNames {
+impl AvailableActorNames {
     pub fn next_name(&mut self) -> String {
         self.0
             .pop()
@@ -89,11 +96,11 @@ impl AvailableUnitNames {
             .unwrap_or("Unnamed".to_string())
     }
 }
-pub struct UnitPlugin;
+pub struct ActorPlugin;
 
-impl Plugin for UnitPlugin {
+impl Plugin for ActorPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins((EnemyUnitPlugin, SpawnUnitPlugin))
+        app.add_plugins((EnemyActorsPlugin, SpawnActorsPlugin))
             .add_systems(Update, health_ui.run_if(in_state(Screen::Playing)));
     }
 }
@@ -101,7 +108,7 @@ impl Plugin for UnitPlugin {
 fn health_ui(
     mut commands: Commands,
     mut q_hit_points: Query<(Entity, &Health, &Transform), Changed<Health>>,
-    q_is_player: Query<(), With<PlayerUnit>>,
+    q_is_player: Query<(), With<PlayerActor>>,
     mut village_map: ResMut<VillageMap>,
     // icon_set: Res<IconSet>,
 ) {
@@ -113,7 +120,7 @@ fn health_ui(
 
             if q_is_player.contains(entity) {
                 despawn_animation = despawn_animation.with_hide_only(true);
-                // Player unit will only have 1 health for the next round
+                // Player actor will only have 1 health for the next round
                 commands.entity(entity).insert(Health {
                     value: 1,
                     ..*health
@@ -126,104 +133,66 @@ fn health_ui(
     }
 }
 
-/// Amount of health the unity current has.
-#[derive(Component, Copy, Clone, Debug, PartialEq)]
-pub struct Health {
-    pub value: u32,
-    pub max: u32,
-}
-
-impl Health {
-    pub fn new(value: u32) -> Self {
-        Self { value, max: value }
-    }
-
-    pub fn is_full(self) -> bool {
-        self.value == self.max
-    }
-
-    pub fn is_empty(self) -> bool {
-        self.value == 0
-    }
-
-    pub fn heal(mut self, value: u32) -> u32 {
-        self.value = (self.value + value).min(self.max);
-        self.value
-    }
-
-    pub fn hurt(mut self, value: u32) -> u32 {
-        self.value = self.value.saturating_sub(value);
-        self.value
-    }
-}
-
-/// Number of tiles a unit can move per turn.
-#[derive(Component, Copy, Clone, Debug, Deref, DerefMut, PartialEq)]
-pub struct Movement(pub u32);
-
-/// Marker component for Player controlled units.
+/// Marker component for Player controlled actors.
 #[derive(Component, Default, Copy, Clone, Debug)]
-pub struct PlayerUnit;
+pub struct PlayerActor;
 
-/// Marker component for Enemy units.
+/// Marker component for Enemy actors.
 #[derive(Component, Default, Copy, Clone, Debug)]
-pub struct EnemyUnit;
+pub struct EnemyActor;
 
-/// Marker component for airborne units.
+/// Marker component for airborne actors.
 #[derive(Component, Default, Copy, Clone, Debug)]
 pub struct IsAirborne;
 
-/// Directions a unit can move.
+/// Directions a actor can move.
 #[derive(Component, Default, Clone, Debug)]
 pub struct Directions(pub Vec<Direction>);
 
-/// Has unit moved or performed an action yet.
+/// Has actor moved or performed an action yet.
 /// Needs to be reset to default after each turn (Not good?).
 #[derive(Component, Default, Debug)]
-pub struct UnitTurnState {
+pub struct ActorTurnState {
     pub used_move: bool,
     pub used_action: bool,
 }
 
-impl UnitTurnState {
+impl ActorTurnState {
     pub fn reset(&mut self) {
         *self = Self::default();
     }
 }
 
-#[derive(Component, Default, PartialEq, Debug)]
-pub struct UnitName(pub String);
-
 #[derive(Bundle)]
-pub struct UnitBundle<T: Component> {
-    pub name: UnitName,
+pub struct ActorBundle<T: Component> {
+    pub name: ActorName,
     pub health: Health,
     pub movement: Movement,
-    pub turn_state: UnitTurnState,
-    pub unit: T,
-    pub layer_marker: ObjectTileLayer,
+    pub turn_state: ActorTurnState,
+    pub actor: T,
+    pub layer_marker: ActorTileLayer,
     pub directions: Directions,
     // pub abilities: Abilities,
 }
 
-impl<T: Component> UnitBundle<T>
+impl<T: Component> ActorBundle<T>
 where
     T: Default,
 {
     pub fn new(name: &str, directions: Vec<Direction>) -> Self {
         Self {
-            name: UnitName(String::from(name)),
+            name: ActorName(String::from(name)),
             health: Health::new(2),
             movement: Movement(2),
-            turn_state: UnitTurnState::default(),
-            unit: T::default(),
-            layer_marker: ObjectTileLayer,
+            turn_state: ActorTurnState::default(),
+            actor: T::default(),
+            layer_marker: ActorTileLayer,
             directions: Directions(directions),
         }
     }
 }
 
-impl<T: Component> UnitBundle<T> {
+impl<T: Component> ActorBundle<T> {
     pub fn with_health(mut self, value: u32) -> Self {
         self.health = Health::new(value);
         self
@@ -244,7 +213,7 @@ pub struct StructureBundle {
     pub health: Health,
     pub structure: Structure,
     pub population_capacity: PopulationCapacity,
-    pub layer_marker: ObjectTileLayer,
+    pub layer_marker: ActorTileLayer,
 }
 
 impl Default for StructureBundle {
@@ -252,7 +221,7 @@ impl Default for StructureBundle {
         Self {
             health: Health::new(2),
             structure: Structure,
-            layer_marker: ObjectTileLayer,
+            layer_marker: ActorTileLayer,
             population_capacity: PopulationCapacity(HOUSE_POPULATION_CAPACITY),
         }
     }

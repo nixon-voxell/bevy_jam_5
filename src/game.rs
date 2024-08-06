@@ -4,6 +4,8 @@ use std::marker::PhantomData;
 
 use bevy::{ecs::schedule::SystemConfigs, prelude::*};
 
+pub mod actors;
+pub mod actors_list;
 pub mod assets;
 pub mod audio;
 pub mod components;
@@ -13,6 +15,7 @@ pub mod cycle;
 pub mod deployment;
 pub mod economy;
 pub mod events;
+pub mod game_params;
 pub mod inventory;
 pub mod item;
 pub mod level;
@@ -23,8 +26,6 @@ pub mod resources;
 pub mod selection;
 pub mod systems;
 pub mod tile_set;
-pub mod unit;
-pub mod unit_list;
 
 pub(super) fn plugin(app: &mut App) {
     app.add_plugins((
@@ -36,7 +37,7 @@ pub(super) fn plugin(app: &mut App) {
         economy::EconomyPlugin,
         selection::SelectionPlugin,
         picking::PickingPlugin,
-        unit::UnitPlugin,
+        actors::ActorPlugin,
         item::ItemPlugin,
         rendering::MapRenderingPlugin,
     ));

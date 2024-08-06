@@ -8,8 +8,8 @@ use crate::game::inventory::Inventory;
 use crate::game::inventory::Item;
 use crate::game::inventory::ITEM_TEMPLATES;
 use crate::game::resources::VillageGold;
-use crate::game::selection::SelectedUnit;
-use crate::game::unit_list::SellItemButton;
+use crate::game::selection::SelectedActor;
+use crate::game::actors_list::SellItemButton;
 use crate::game::MODAL_Z_LAYER;
 use crate::screen::playing::hide_all_with;
 use crate::screen::playing::show_all_with;
@@ -230,7 +230,7 @@ fn item_btn_interaction(
 }
 
 fn buy_btn_interaction(
-    selected_unit: Res<SelectedUnit>,
+    selected_unit: Res<SelectedActor>,
     mut iq: Query<&mut Inventory>,
     q_interactions: Query<&Interaction, (Changed<Interaction>, With<BuyButton>)>,
     mut merchant_items: ResMut<MerchantItems>,
@@ -264,7 +264,7 @@ fn buy_btn_interaction(
 }
 
 fn sell_btn_interaction(
-    selected: Res<SelectedUnit>,
+    selected: Res<SelectedActor>,
     q_interactions: Query<&Interaction, (Changed<Interaction>, With<SellItemButton>)>,
     mut iq: Query<&mut Inventory>,
     mut next_game_state: ResMut<NextState<GameState>>,

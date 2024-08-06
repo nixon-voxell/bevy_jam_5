@@ -3,6 +3,11 @@ use bevy::prelude::*;
 use bevy::ui::FocusPolicy;
 use sickle_ui::prelude::*;
 
+use crate::game::actors::player::spawn_player_unit;
+use crate::game::actors::stats::ActorName;
+use crate::game::actors::stats::Health;
+use crate::game::actors::stats::Movement;
+use crate::game::actors::AvailableActorNames;
 use crate::game::components::Tavern;
 use crate::game::constants::BIG_TEXT_SIZE;
 use crate::game::constants::RECRUIT_COST;
@@ -12,12 +17,7 @@ use crate::game::inventory::Inventory;
 use crate::game::inventory::MaxInventorySize;
 use crate::game::resources::VillageGold;
 use crate::game::selection::ObjectPressedEvent;
-use crate::game::unit::player::spawn_player_unit;
-use crate::game::unit::AvailableUnitNames;
-use crate::game::unit::Health;
-use crate::game::unit::Movement;
-use crate::game::unit::UnitName;
-use crate::game::unit_list::PlayerUnitList;
+use crate::game::actors_list::PlayerActorList;
 use crate::game::MODAL_Z_LAYER;
 use crate::screen::playing::GameState;
 use crate::ui::palette::LABEL_SIZE;
@@ -59,7 +59,7 @@ pub struct NameLabel;
 pub struct RecruitButton;
 
 #[derive(Component)]
-pub struct TavernUnitList;
+pub struct TavernActorList;
 
 pub fn spawn_hero_button(ui: &mut UiBuilder<Entity>, entity: Entity, name: String) {
     ui.container(ButtonBundle::default(), |ui| {
@@ -84,8 +84,8 @@ pub fn spawn_hero_button(ui: &mut UiBuilder<Entity>, entity: Entity, name: Strin
 
 pub fn tavern_modal_layout(
     mut commands: Commands,
-    player_unit_list: Res<PlayerUnitList>,
-    unit_query: Query<(Entity, &UnitName)>,
+    player_unit_list: Res<PlayerActorList>,
+    unit_query: Query<(Entity, &ActorName)>,
     mut subject: ResMut<TavernSubject>,
 ) {
     subject.0 = player_unit_list
@@ -121,7 +121,7 @@ pub fn tavern_modal_layout(
                         .height(Val::Px(64.));
 
                     ui.column(|ui| {
-                        ui.insert(TavernUnitList);
+                        ui.insert(TavernActorList);
                         for entity in player_unit_list.0.iter() {
                             if let Ok((entity, name, ..)) = unit_query.get(*entity) {
                                 spawn_hero_button(ui, entity, name.0.clone());
@@ -197,7 +197,7 @@ pub fn tavern_modal_layout(
                                     .insert(HealthLabel)
                                     .style()
                                     .font_size(TAVERN_FONT_SIZE);
-                                ui.row(|ui| {}).style().width(Val::Px(20.));
+                                ui.row(|_| {}).style().width(Val::Px(20.));
                                 ui.container(ButtonBundle::default(), |ui| {
                                     ui.insert(TavernUpgrade::AddHealth)
                                         .style()
@@ -319,7 +319,7 @@ impl Default for TavernSubject {
 
 pub fn update_slot_labels(
     subject: Res<TavernSubject>,
-    query: Query<(&UnitName, &Movement, &Health, &MaxInventorySize)>,
+    query: Query<(&ActorName, &Movement, &Health, &MaxInventorySize)>,
     mut n_query: Query<
         &mut Text,
         (
@@ -434,9 +434,9 @@ pub fn recruit_button(
     r_q: Query<&Interaction, (With<RecruitButton>, Changed<Interaction>)>,
     mut commands: Commands,
     mut gold: ResMut<VillageGold>,
-    mut player_unit_list: ResMut<PlayerUnitList>,
-    mut names: ResMut<AvailableUnitNames>,
-    t_q: Query<Entity, With<TavernUnitList>>,
+    mut player_unit_list: ResMut<PlayerActorList>,
+    mut names: ResMut<AvailableActorNames>,
+    t_q: Query<Entity, With<TavernActorList>>,
 ) {
     if player_unit_list.0.len() < 5 {
         for i in r_q.iter() {

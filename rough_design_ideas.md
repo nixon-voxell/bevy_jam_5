@@ -75,7 +75,7 @@ They can't make an action and then a move (unless they have a special ability th
 * Each unit has a movement characteristic that determines how many tiles they can move by rook move rules (no diagonal movement) unless they are flying in which case they can move in all eight directions. Each move takes 1 movement point.
 * Two units can never occupy the same tile, including flying units. They also can't enter a building tile. They can enter a trapped tile.
 * Flying units can move through any terrain without restriction.
-* Units can have a swim ability that allows them to move through a water tile. They can't end a turn on a water tile however.
+* Actors can have a swim ability that allows them to move through a water tile. They can't end a turn on a water tile however.
 * Aquatic units can move like with the swim ability but can also end their turn on a water tile and take actions while on a water tile.
 * Player controlled characters can move through buildings and gates but not walls, as long as they have enough movement to reach a tile on the other side of the building. They can't end their move on a building tile. Enemy movement is completely blocked by buildings.
 * Towers can't move, but can perform actions.
