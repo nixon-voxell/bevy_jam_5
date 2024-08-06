@@ -264,7 +264,7 @@ impl Tiled for VillageMap {
         bounds.into_iter().filter(move |tile| {
             directions
                 .iter()
-                .all(|direction| bounds.contains(tile.step(*direction)))
+                .any(|direction| !bounds.contains(tile.step(*direction)))
         })
     }
 }
@@ -619,5 +619,26 @@ mod tests {
         village_map.generate_heat_map(|_| false);
         assert_eq!(village_map.heat_map[0], 4);
         assert_eq!(village_map.heat_map[8], 0);
+    }
+
+    #[test]
+    fn find_perimeter_trivial() {
+        let village_map = VillageMap::new(TileDim(1, 1));
+        let mut iter = village_map.find_perimeter(&TileDir::EDGES);
+        assert_eq!(iter.next(), Some(Tile::ZERO));
+        assert_eq!(iter.next(), None);
+    }
+
+    #[test]
+    fn find_perimeter_2x2() {
+        let village_map = VillageMap::new(TileDim(2, 2));
+        let perimeter: HashSet<Tile> = village_map.find_perimeter(&TileDir::EDGES).collect();
+        for tile in [Tile(0, 0), Tile(0, 1), Tile(1, 0), Tile(1, 1)] {
+            assert!(perimeter.contains(&tile));
+        }
+        assert!(!perimeter.contains(&Tile(2, 0)));
+        assert!(!perimeter.contains(&Tile(0, 2)));
+        assert!(!perimeter.contains(&Tile(2, 2)));
+        assert!(!perimeter.contains(&Tile(-1, -1)));
     }
 }

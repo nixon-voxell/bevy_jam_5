@@ -71,3 +71,22 @@ where
     }
     false
 }
+
+pub fn find_all<N, I>(start: Tile, navigator: N) -> HashSet<Tile>
+where
+    N: Fn(Tile) -> I,
+    I: IntoIterator<Item = Tile>,
+{
+    let mut open = vec![start];
+    let mut visited = HashSet::default();
+
+    while let Some(current) = open.pop() {
+        visited.insert(current);
+        for neighbor in (navigator)(current) {
+            if !visited.contains(&neighbor) {
+                open.push(neighbor);
+            }
+        }
+    }
+    visited
+}
