@@ -248,7 +248,7 @@ fn spawn_arrow_sprites(
         tile_tints
             .0
             .insert(cursor, bevy::color::palettes::tailwind::RED_400.into());
-        if village_map.object.is_occupied(cursor) {
+        if village_map.actors.is_occupied(cursor) {
             break;
         }
         let make_arrow_sprite_bundle = |tile: Tile, height: f32, layer: f32, color: Color| {
@@ -357,7 +357,7 @@ pub fn draw_health(
         //     continue;
         // }
 
-        let Some(tile) = map.object.locate(entity) else {
+        let Some(tile) = map.actors.locate(entity) else {
             continue;
         };
         // println!("{entity:?} -> {health:?} -> {tile:?}");

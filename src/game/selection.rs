@@ -96,7 +96,7 @@ pub fn show_movement_range(
         return;
     };
     let (Some(tile), Ok((movement, turn_state))) =
-        (village_map.object.locate(entity), q_movements.get(entity))
+        (village_map.actors.locate(entity), q_movements.get(entity))
     else {
         return;
     };
@@ -106,7 +106,7 @@ pub fn show_movement_range(
         return;
     }
 
-    let tiles = village_map.flood(tile, movement.0, &Direction::ROOK, false);
+    let tiles = village_map.flood(tile, movement.0, &Direction::EDGES, false);
     selected_tiles.tiles = tiles;
     match q_enemies.contains(entity) {
         true => selected_tiles.color = css::INDIAN_RED.into(),
@@ -135,7 +135,7 @@ pub fn set_selected_unit(
 ) {
     if mouse_button.just_pressed(MouseButton::Left) {
         if let Some(tile) = picked_tile.0 {
-            if let Some(new_selection) = village_map.object.get(tile) {
+            if let Some(new_selection) = village_map.actors.get(tile) {
                 if let Some(previous_selection) = selected_unit.entity {
                     if new_selection == previous_selection {
                         return;
@@ -198,7 +198,7 @@ pub fn dispatch_object_pressed(
     mut dispatcher: EventWriter<ObjectPressedEvent>,
 ) {
     for TilePressedEvent(tile) in events.read().copied() {
-        if let Some(entity) = map.object.get(tile) {
+        if let Some(entity) = map.actors.get(tile) {
             dispatcher.send(ObjectPressedEvent(entity));
         }
     }

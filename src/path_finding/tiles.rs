@@ -1,6 +1,7 @@
 use std::ops::{Add, Sub};
 
 use bevy::prelude::*;
+use bevy::utils::HashSet;
 
 #[derive(Component, Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum Direction {
@@ -86,14 +87,14 @@ impl Direction {
         Direction::NorthWest,
     ];
 
-    pub const ROOK: [Self; 4] = [
+    pub const EDGES: [Self; 4] = [
         Direction::North,
         Direction::East,
         Direction::South,
         Direction::West,
     ];
 
-    pub const DIAGONALS: [Self; 4] = [
+    pub const CORNERS: [Self; 4] = [
         Direction::NorthEast,
         Direction::SouthEast,
         Direction::SouthWest,
@@ -395,6 +396,18 @@ impl Tile {
         self.right_angle_path(other, clockwise)
             .chain(other.right_angle_path(self, !clockwise))
     }
+
+    pub fn edge_adjacent(self) -> [Self; 4] {
+        Direction::EDGES.map(|edge| self.step(edge))
+    }
+
+    pub fn corner_adjacent(self) -> [Self; 4] {
+        Direction::CORNERS.map(|corner| self.step(corner))
+    }
+
+    pub fn all_adjacent(self) -> [Self; 8] {
+        Direction::ALL.map(|direction| self.step(direction))
+    }
 }
 
 impl From<Vec2> for Tile {
@@ -577,6 +590,41 @@ impl IntoIterator for TileRect {
             max_x: max.x(),
             max_y: max.y(),
         }
+    }
+}
+
+pub trait Tiled {
+    fn contains_tile(&self, tile: Tile) -> bool;
+    fn find_perimeter(&self, directions: &[Direction]) -> impl Iterator<Item = Tile>;
+}
+
+impl Tiled for TileRect {
+    fn contains_tile(&self, tile: Tile) -> bool {
+        self.contains(tile)
+    }
+
+    fn find_perimeter(&self, directions: &[Direction]) -> impl Iterator<Item = Tile> {
+        self.into_iter().filter(move |tile| {
+            directions
+                .iter()
+                .all(|direction| self.contains(tile.step(*direction)))
+        })
+    }
+}
+
+impl Tiled for HashSet<Tile> {
+    fn contains_tile(&self, tile: Tile) -> bool {
+        self.contains(&tile)
+    }
+
+    fn find_perimeter(&self, directions: &[Direction]) -> impl Iterator<Item = Tile> {
+        self.into_iter()
+            .filter(move |tile| {
+                directions
+                    .iter()
+                    .all(|direction| self.contains(&tile.step(*direction)))
+            })
+            .copied()
     }
 }
 

@@ -157,7 +157,7 @@ pub fn load_level(
                     SpawnAnimation::new(object_translation),
                 ));
 
-                village_map.object.set(Tile(xi, yi), object_entity.id());
+                village_map.actors.set(Tile(xi, yi), object_entity.id());
             }
         }
     }

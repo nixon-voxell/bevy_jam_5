@@ -56,7 +56,7 @@ fn show_attack_range(
         }
 
         if let Some(item) = inventory.selected_item.and_then(|i| inventory.get(i)) {
-            let Some(tile) = village_map.object.locate(entity) else {
+            let Some(tile) = village_map.actors.locate(entity) else {
                 continue;
             };
 
@@ -109,7 +109,7 @@ fn apply_item_effect(
     let Some(target_entity) = selected_unit.entity else {
         return;
     };
-    let Some(target_tile) = village_map.object.locate(target_entity) else {
+    let Some(target_tile) = village_map.actors.locate(target_entity) else {
         return;
     };
     let Ok((mut inventory, mut turn_state)) = q_inventories.get_mut(origin_entity) else {
@@ -163,7 +163,7 @@ fn apply_item_effect(
                 commands.add_trauma(0.5);
 
                 if health.value == 0 {
-                    village_map.object.remove_entity(target_entity);
+                    village_map.actors.remove_entity(target_entity);
                 }
             }
 

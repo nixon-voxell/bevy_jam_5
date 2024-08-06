@@ -6,11 +6,11 @@ use crate::game::inventory::MaxInventorySize;
 
 use crate::game::inventory::Inventory;
 
+use crate::game::actors_list::PlayerActorList;
 use crate::game::map::VillageMap;
 pub use crate::game::picking::TilePressedEvent;
 use crate::game::selection::SelectedActor;
 use crate::game::tile_set::tile_coord_translation;
-use crate::game::actors_list::PlayerActorList;
 use crate::path_finding::tiles::Direction;
 use crate::screen::playing::GameState;
 
@@ -78,7 +78,7 @@ pub fn move_unit(
         }
 
         let Some(current_pos) = village_map
-            .object
+            .actors
             .locate(selected)
             .filter(|pos| *pos != *target)
         else {
@@ -86,10 +86,10 @@ pub fn move_unit(
         };
 
         if village_map
-            .flood(current_pos, movement.0, &Direction::ROOK, false)
+            .flood(current_pos, movement.0, &Direction::EDGES, false)
             .contains(target)
         {
-            village_map.object.set(*target, selected);
+            village_map.actors.set(*target, selected);
             turn_state.used_move = true;
             transform.translation =
                 tile_coord_translation(target.x() as f32, target.y() as f32, 2.);

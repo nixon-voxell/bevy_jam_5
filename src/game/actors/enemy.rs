@@ -83,7 +83,7 @@ fn perform_attack(
     if enemy_attack.factor >= CLAW_ANIM_DURATAION {
         // Deal damage
         if let Some(mut health) = village_map
-            .object
+            .actors
             .get(enemy_attack.tile)
             // Can only deal damage to non enemy units
             .filter(|e| q_not_enemy_units.contains(*e))
@@ -126,19 +126,19 @@ fn move_enemies(
             commands
                 .entity(enemy_entity)
                 .insert(DespawnAnimation::new(transform.translation).with_recursive(true));
-            village_map.object.remove_entity(enemy_entity);
+            village_map.actors.remove_entity(enemy_entity);
         }
 
         // Hide all player units
         for &player_entity in player_unit_list.0.iter() {
-            if village_map.object.locate(player_entity).is_some() {
+            if village_map.actors.locate(player_entity).is_some() {
                 if let Ok(transform) = q_transforms.get(player_entity) {
                     commands
                         .entity(player_entity)
                         .insert(DespawnAnimation::new(transform.translation).with_hide_only(true));
                 }
 
-                village_map.object.remove_entity(player_entity);
+                village_map.actors.remove_entity(player_entity);
             }
         }
 
@@ -171,7 +171,7 @@ fn move_enemies(
             // for direction in enemy.
             for direction in directions.0.iter() {
                 let attack_tile = enemy_tile.step(*direction);
-                let Some(attack_entity) = village_map.object.get(attack_tile) else {
+                let Some(attack_entity) = village_map.actors.get(attack_tile) else {
                     continue;
                 };
 
@@ -237,7 +237,7 @@ fn find_movement_path(
     village_map.generate_heat_map(|e| q_enemy_units.contains(e));
 
     for (entity, movement, directions, airborne) in q_enemy_units.iter_mut() {
-        let Some(enemy_tile) = village_map.object.locate(entity) else {
+        let Some(enemy_tile) = village_map.actors.locate(entity) else {
             continue;
         };
 
@@ -255,8 +255,8 @@ fn find_movement_path(
         };
 
         commands.entity(entity).insert(TilePath::new(path));
-        village_map.object.remove(enemy_tile);
-        village_map.object.set(best_tile, entity);
+        village_map.actors.remove(enemy_tile);
+        village_map.actors.set(best_tile, entity);
     }
 }
 
@@ -310,7 +310,7 @@ fn spawn_enemies(
                 .into();
 
             // There is something blocking the spawning location
-            if village_map.object.get(tile_coord).is_some() {
+            if village_map.actors.get(tile_coord).is_some() {
                 continue;
             }
 
@@ -346,7 +346,7 @@ fn spawn_enemies(
         if enemy.is_airborne {
             enemy_entity.insert(IsAirborne);
         }
-        village_map.object.set(tile_coord, enemy_entity.id());
+        village_map.actors.set(tile_coord, enemy_entity.id());
     }
 }
 
@@ -388,14 +388,14 @@ impl EnemySpawn {
         hit_points: 3,
         movement: 3,
         is_airborne: false,
-        directions: &Direction::ROOK,
+        directions: &Direction::EDGES,
     };
     pub const SLIME: Self = Self {
         name: "slime",
         hit_points: 4,
         movement: 2,
         is_airborne: false,
-        directions: &Direction::ROOK,
+        directions: &Direction::EDGES,
     };
     pub const BAT: Self = Self {
         name: "bat",

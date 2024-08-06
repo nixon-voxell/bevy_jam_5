@@ -300,20 +300,20 @@ pub fn spawn_in_progress_building(
         return;
     };
 
-    if village_map.object.is_occupied(*tile) {
+    if village_map.actors.is_occupied(*tile) {
         return;
     }
 
     if !is_any_path(Tile::ZERO, *tile, |t| {
         village_map
-            .object
+            .actors
             .get_neighbouring_positions_rook(t)
             .filter(|&n| {
                 village_map
                     .get_terrain(n)
                     .map(|t| t.is_walkable())
                     .unwrap_or(false)
-                    && !village_map.object.is_occupied(n)
+                    && !village_map.actors.is_occupied(n)
             })
     }) {
         return;
@@ -387,7 +387,7 @@ pub fn spawn_in_progress_building(
         })
         .id();
 
-    village_map.object.set(*tile, id);
+    village_map.actors.set(*tile, id);
 }
 
 pub fn update_building_progress(
@@ -409,7 +409,7 @@ pub fn update_building_progress(
             if b.0 == 0 {
                 working_population.0 = working_population.0.saturating_sub(w.0);
                 commands.entity(e).despawn_recursive();
-                let Some(tile) = village_map.object.locate(e) else {
+                let Some(tile) = village_map.actors.locate(e) else {
                     continue;
                 };
                 let object_translation =
@@ -455,7 +455,7 @@ pub fn update_building_progress(
                     }
                 };
 
-                village_map.object.set(tile, object_entity.id());
+                village_map.actors.set(tile, object_entity.id());
             }
         }
     }

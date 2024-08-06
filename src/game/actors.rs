@@ -127,7 +127,7 @@ fn health_ui(
                 });
             }
             commands.entity(entity).insert(despawn_animation);
-            village_map.object.remove_entity(entity);
+            village_map.actors.remove_entity(entity);
             return;
         }
     }

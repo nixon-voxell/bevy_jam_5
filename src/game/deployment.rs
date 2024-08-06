@@ -49,7 +49,7 @@ pub fn is_deployment_ready(
     village_map: Res<VillageMap>,
 ) -> bool {
     for entity in player_unit_list.0.iter() {
-        if village_map.object.locate(*entity).is_none() {
+        if village_map.actors.locate(*entity).is_none() {
             return false;
         }
     }
@@ -70,7 +70,7 @@ pub fn deploy_unit(
     if player_unit_list.0.contains(&entity_to_deploy) {
         if let Some(TilePressedEvent(target_tile)) = events.read().next() {
             if village_map.deployment_zone.contains(target_tile)
-                && !village_map.object.is_occupied(*target_tile)
+                && !village_map.actors.is_occupied(*target_tile)
             {
                 let translation =
                     tile_coord_translation(target_tile.x() as f32, target_tile.y() as f32, 2.0);
@@ -86,12 +86,12 @@ pub fn deploy_unit(
                     },
                     StateScoped(Screen::Playing),
                 ));
-                village_map.object.set(*target_tile, entity_to_deploy);
+                village_map.actors.set(*target_tile, entity_to_deploy);
                 println!("Placing {} at {:?}", entity_to_deploy, target_tile);
                 if let Some(next_unit) = player_unit_list
                     .0
                     .iter()
-                    .find(|entity| village_map.object.locate(**entity).is_none())
+                    .find(|entity| village_map.actors.locate(**entity).is_none())
                 {
                     println!("deployed: {entity_to_deploy:?}, next unit: {next_unit:?}");
                     selected_unit.set(*next_unit);

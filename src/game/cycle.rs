@@ -96,7 +96,7 @@ fn end_deployment(
     if !end_deployment_evt.is_empty() {
         end_deployment_evt.clear();
         for entity in player_unit_list.0.iter() {
-            if village_map.object.locate(*entity).is_none() {
+            if village_map.actors.locate(*entity).is_none() {
                 println!("Undeployed still");
                 return;
             }

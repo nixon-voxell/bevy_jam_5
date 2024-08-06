@@ -35,7 +35,7 @@ pub struct VillageMap {
     pub size: TileDim,
     pub heat_map: Vec<u32>,
     pub terrain: HashMap<Tile, Terrain>,
-    pub object: TileMap,
+    pub actors: TileMap,
     pub deployment_zone: HashSet<Tile>,
 }
 
@@ -45,7 +45,7 @@ impl VillageMap {
             size,
             heat_map: Vec::new(),
             terrain: Default::default(),
-            object: TileMap::new(size),
+            actors: TileMap::new(size),
             deployment_zone: HashSet::default(),
         }
     }
@@ -62,8 +62,8 @@ impl VillageMap {
         self.size
     }
 
-    pub fn is_out_of_bounds(&self, coord: Tile) -> bool {
-        !self.bounds().contains(coord)
+    pub fn is_out_of_bounds(&self, tile: Tile) -> bool {
+        !self.bounds().contains(tile)
     }
 
     pub fn get_terrain(&self, coord: Tile) -> Option<Terrain> {
@@ -95,7 +95,7 @@ impl VillageMap {
                     }
 
                     // There is an obstacle blocking it
-                    if self.object.get(final_coord).is_some() {
+                    if self.actors.get(final_coord).is_some() {
                         return None;
                     }
 
@@ -130,7 +130,7 @@ impl VillageMap {
                 }
 
                 // There is an obstacle blocking it
-                if self.object.is_occupied(final_coord) {
+                if self.actors.is_occupied(final_coord) {
                     return None;
                 }
 
@@ -213,7 +213,7 @@ impl VillageMap {
         self.heat_map = vec![u32::MAX; (self.size.x() * self.size.y()) as usize];
         let mut stack = VecDeque::new();
 
-        for (tile_coord, entity) in self.object.map.iter() {
+        for (tile_coord, entity) in self.actors.map.iter() {
             if is_enemy(*entity) {
                 continue;
             }
@@ -233,7 +233,7 @@ impl VillageMap {
             let index = (tile_coord.x() + tile_coord.y() * self.size.x() as i32) as usize;
             let curr_heat = self.heat_map[index];
 
-            for offset in Direction::ROOK.iter() {
+            for offset in Direction::EDGES.iter() {
                 let flood_coord = tile_coord.step(*offset);
                 if self.is_out_of_bounds(flood_coord) {
                     continue;
@@ -316,7 +316,7 @@ impl TileMap {
         &self,
         position: Tile,
     ) -> impl Iterator<Item = Tile> + '_ {
-        Direction::ROOK
+        Direction::EDGES
             .iter()
             .copied()
             .map(move |translation| position.step(translation))
@@ -332,6 +332,10 @@ impl TileMap {
             .copied()
             .map(move |translation| position.step(translation))
             .filter(|target| self.bounds().contains(*target))
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = (Tile, Entity)> + '_ {
+        self.map.iter().map(|(t, e)| (*t, *e))
     }
 }
 
@@ -599,7 +603,7 @@ mod tests {
     fn test_village_map_generate_heat_map() {
         let mut village_map = VillageMap::new(TileDim(3, 3));
         let entity = Entity::from_raw(1);
-        village_map.object.set(Tile(2, 2), entity);
+        village_map.actors.set(Tile(2, 2), entity);
         village_map.generate_heat_map(|_| false);
         assert_eq!(village_map.heat_map[0], 4);
         assert_eq!(village_map.heat_map[8], 0);
