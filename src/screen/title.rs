@@ -27,12 +27,13 @@ fn enter_title(mut commands: Commands) {
         .ui_root()
         .insert(StateScoped(Screen::Title))
         .with_children(|children| {
-            children.header("Cycle of Valor");
-            children.button("Play").insert(TitleAction::Play);
-            children.button("Credits").insert(TitleAction::Credits);
-
+            children.title("Cycle of Valor");
+            children.title_button("Play").insert(TitleAction::Play);
+            children
+                .title_button("Credits")
+                .insert(TitleAction::Credits);
             #[cfg(not(target_family = "wasm"))]
-            children.button("Exit").insert(TitleAction::Exit);
+            children.title_button("Exit").insert(TitleAction::Exit);
         });
 }
 
