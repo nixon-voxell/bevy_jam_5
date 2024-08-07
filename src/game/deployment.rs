@@ -2,6 +2,8 @@ use crate::path_finding::tiles::Tile;
 use crate::screen::Screen;
 
 use super::actors_list::PlayerActorList;
+use super::assets::SoundtrackKey;
+use super::audio::soundtrack::PlaySoundtrack;
 use super::map::VillageMap;
 use super::picking::TilePressedEvent;
 use super::selection::SelectedActor;
@@ -15,7 +17,9 @@ pub fn deployment_setup(
     player_unit_list: Res<PlayerActorList>,
     mut selected_unit: ResMut<SelectedActor>,
     mut village_map: ResMut<VillageMap>,
+    mut commands: Commands,
 ) {
+    commands.trigger(PlaySoundtrack::Key(SoundtrackKey::Battle));
     selected_unit.entity = player_unit_list.0.first().copied();
     let size = village_map.size;
     let r = IRect::from_corners(

@@ -3,6 +3,8 @@
 use bevy::prelude::*;
 
 use super::Screen;
+use crate::game::assets::SoundtrackKey;
+use crate::game::audio::soundtrack::PlaySoundtrack;
 use crate::ui::prelude::*;
 
 pub(super) fn plugin(app: &mut App) {
@@ -23,6 +25,8 @@ enum TitleAction {
 }
 
 fn enter_title(mut commands: Commands) {
+    commands.trigger(PlaySoundtrack::Key(SoundtrackKey::Title));
+
     commands
         .ui_root()
         .insert(StateScoped(Screen::Title))

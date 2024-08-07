@@ -85,9 +85,17 @@ pub(super) fn plugin(app: &mut App) {
                 hide_all_with::<OpenMerchantButton>,
             ),
         )
+        .add_systems(OnEnter(Screen::Playing), |mut commands: Commands| {
+            commands.trigger(PlaySoundtrack::Key(SoundtrackKey::Gameplay));
+        })
         .add_systems(
             OnEnter(GameState::BuildingTurn),
-            show_all_with::<OpenMerchantButton>,
+            (
+                show_all_with::<OpenMerchantButton>,
+                |mut commands: Commands| {
+                    commands.trigger(PlaySoundtrack::Key(SoundtrackKey::Gameplay));
+                },
+            ),
         )
         .add_systems(
             Update,
@@ -223,7 +231,6 @@ fn enter_playing(
     icon_set: Res<IconSet>,
     mut item_slots: ResMut<ItemSlotIcons>,
 ) {
-    commands.trigger(PlaySoundtrack::Key(SoundtrackKey::Gameplay));
     commands
         .ui_builder(UiRoot)
         .column(|ui| {
