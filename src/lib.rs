@@ -11,7 +11,7 @@ const BASE_APP_HEIGHT: f32 = 720.0;
 const BASE_CAM_SCALE: f32 = 3.2;
 
 use bevy::{
-    asset::AssetMetaCheck,
+    asset::{load_internal_binary_asset, AssetMetaCheck},
     audio::{AudioPlugin, Volume},
     prelude::*,
     window::PrimaryWindow,
@@ -63,6 +63,13 @@ impl Plugin for AppPlugin {
         if self.show_debug {
             app.add_plugins(DebugPlugin);
         }
+
+        load_internal_binary_asset!(
+            app,
+            TextStyle::default().font,
+            "../assets/fonts/Kangala.ttf",
+            |bytes: &[u8], _path: String| { Font::try_from_bytes(bytes.to_vec()).unwrap() }
+        );
 
         // Add other plugins.
         app.add_plugins((game::plugin, screen::plugin, ui::plugin))

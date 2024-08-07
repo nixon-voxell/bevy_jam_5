@@ -27,6 +27,7 @@ fn enter_title(mut commands: Commands) {
         .ui_root()
         .insert(StateScoped(Screen::Title))
         .with_children(|children| {
+            children.header("Cycle of Valor");
             children.button("Play").insert(TitleAction::Play);
             children.button("Credits").insert(TitleAction::Credits);
 
