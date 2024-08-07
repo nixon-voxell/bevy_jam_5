@@ -92,9 +92,10 @@ pub(super) fn plugin(app: &mut App) {
             OnEnter(GameState::BuildingTurn),
             (
                 show_all_with::<OpenMerchantButton>,
-                |mut commands: Commands| {
+                (|mut commands: Commands| {
                     commands.trigger(PlaySoundtrack::Key(SoundtrackKey::Gameplay));
-                },
+                })
+                .run_if(in_state(Screen::Playing)),
             ),
         )
         .add_systems(
