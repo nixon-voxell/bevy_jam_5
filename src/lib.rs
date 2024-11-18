@@ -7,8 +7,8 @@ mod path_finding;
 mod screen;
 mod ui;
 
-const BASE_APP_HEIGHT: f32 = 720.0;
-const BASE_CAM_SCALE: f32 = 3.2;
+const BASE_APP_HEIGHT: f32 = 2460.0;
+const BASE_CAM_SCALE: f32 = 2.7;
 
 use bevy::{
     asset::{load_internal_binary_asset, AssetMetaCheck},
@@ -44,18 +44,13 @@ impl Plugin for AppPlugin {
                 .set(WindowPlugin {
                     primary_window: Window {
                         title: "Bevy Jam 5".to_string(),
+                        resolution: (2460.0, 1080.0).into(), // Set custom resolution
                         canvas: Some("#bevy".to_string()),
-                        fit_canvas_to_parent: true,
+                        fit_canvas_to_parent: true, // This ensures the canvas fits its parent in web builds
                         prevent_default_event_handling: true,
                         ..default()
                     }
                     .into(),
-                    ..default()
-                })
-                .set(AudioPlugin {
-                    global_volume: GlobalVolume {
-                        volume: Volume::new(0.3),
-                    },
                     ..default()
                 }),
         );
@@ -89,8 +84,8 @@ fn spawn_camera(mut commands: Commands) {
         Name::new("Camera"),
         Camera2dBundle {
             projection: OrthographicProjection {
-                far: 1000.,
-                near: -1000.,
+                far: 500.,
+                near: -500.,
                 scale: 3.2,
                 ..default()
             },
@@ -116,10 +111,16 @@ fn update_camera_scale(
         return;
     };
 
+    let window_width = window.size().x;
     let window_height = window.size().y;
 
     if window_height > f32::EPSILON {
-        let scale = BASE_APP_HEIGHT / window_height * BASE_CAM_SCALE;
+        // Calculate scale based on the ratio of the current window to the base resolution.
+        let width_scale = BASE_APP_HEIGHT / window_width;
+        let height_scale = BASE_APP_HEIGHT / window_height;
+
+        // Use the smaller scale to ensure the entire UI fits within the screen.
+        let scale = f32::min(width_scale, height_scale) * BASE_CAM_SCALE;
         projection.scale = scale;
     }
 }

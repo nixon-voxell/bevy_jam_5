@@ -19,9 +19,6 @@ use crate::screen::playing::GameState;
 use crate::screen::Screen;
 use crate::ui::icon_set::IconSet;
 
-use bevy::color::palettes::css::RED;
-use bevy::color::palettes::tailwind::BLUE_300;
-use bevy::color::palettes::tailwind::PURPLE_400;
 use bevy::color::palettes::tailwind::YELLOW_300;
 use bevy::math::vec2;
 use bevy::prelude::*;
