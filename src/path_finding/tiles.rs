@@ -259,12 +259,10 @@ impl Tile {
             } else {
                 TileEdge::South
             }
+        } else if other.x() < self.x() {
+            TileEdge::East
         } else {
-            if other.x() < self.x() {
-                TileEdge::East
-            } else {
-                TileEdge::West
-            }
+            TileEdge::West
         })
     }
 
@@ -401,7 +399,6 @@ impl Tile {
         TileDir::ALL.map(|direction| self.step(direction))
     }
 }
-
 impl From<Vec2> for Tile {
     fn from(value: Vec2) -> Self {
         Tile(value.x.round() as i32, value.y.round() as i32)

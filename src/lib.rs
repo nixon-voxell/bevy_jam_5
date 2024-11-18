@@ -43,15 +43,15 @@ impl Plugin for AppPlugin {
                 })
                 .set(WindowPlugin {
                     primary_window: Window {
-                    title: "Bevy Jam 5".to_string(),
-                    resolution: (2460.0, 1080.0).into(), // Set custom resolution
-                    canvas: Some("#bevy".to_string()),
-                    fit_canvas_to_parent: true, // This ensures the canvas fits its parent in web builds
-                    prevent_default_event_handling: true,
+                        title: "Bevy Jam 5".to_string(),
+                        resolution: (2460.0, 1080.0).into(), // Set custom resolution
+                        canvas: Some("#bevy".to_string()),
+                        fit_canvas_to_parent: true, // This ensures the canvas fits its parent in web builds
+                        prevent_default_event_handling: true,
+                        ..default()
+                    }
+                    .into(),
                     ..default()
-                }
-                .into(),
-                ..default()
                 }),
         );
 

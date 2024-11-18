@@ -3,8 +3,6 @@ use bevy::prelude::*;
 use bevy::utils::HashMap;
 use sickle_ui::prelude::*;
 
-use crate::path_finding::is_any_path;
-use crate::path_finding::tiles::Tile;
 use crate::screen::Screen;
 use crate::ui::prelude::InteractionPalette;
 
