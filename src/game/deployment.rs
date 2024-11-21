@@ -13,6 +13,21 @@ use super::tile_set::TileSet;
 use bevy::color::palettes::css::LIME;
 use bevy::prelude::*;
 
+#[derive(Clone, Copy, Debug)]
+pub enum PlayerSprite {
+    Human,
+    Warrior,
+}
+
+impl PlayerSprite {
+    pub fn texture_key(&self) -> &'static str {
+        match self {
+            PlayerSprite::Human => "human",
+            PlayerSprite::Warrior => "warrior",
+        }
+    }
+}
+
 pub fn deployment_setup(
     player_unit_list: Res<PlayerActorList>,
     mut selected_unit: ResMut<SelectedActor>,
@@ -71,6 +86,18 @@ pub fn deploy_unit(
     let Some(entity_to_deploy) = selected_unit.entity else {
         return;
     };
+
+    // Define the sprite type for the entity to deploy
+    let sprite_type = match entity_to_deploy {
+        // Match against specific entities and assign sprite types
+        entity if entity == player_unit_list.0[0] => PlayerSprite::Human,
+        entity if entity == player_unit_list.0[1] => PlayerSprite::Warrior,
+        _ => {
+            println!("Unknown entity: {:?}", entity_to_deploy);
+            return;
+        }
+    };
+
     if player_unit_list.0.contains(&entity_to_deploy) {
         if let Some(TilePressedEvent(target_tile)) = events.read().next() {
             if village_map.deployment_zone.contains(target_tile)
@@ -85,7 +112,7 @@ pub fn deploy_unit(
                             ..default()
                         },
                         transform: Transform::from_translation(translation),
-                        texture: tile_set.get("human"),
+                        texture: tile_set.get(sprite_type.texture_key()),
                         ..default()
                     },
                     StateScoped(Screen::Playing),

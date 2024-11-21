@@ -79,6 +79,11 @@ pub fn update_actor_list_container(
                     .style()
                     .width(Val::Px(16.))
                     .height(Val::Px(24.));
+                ui.icon("icons/warrior.png")
+                    .insert(PlayerActorIcon)
+                    .style()
+                    .width(Val::Px(16.))
+                    .height(Val::Px(24.));
 
                 ui.row(|ui| {
                     ui.style().padding(UiRect::all(Val::Px(4.)));
