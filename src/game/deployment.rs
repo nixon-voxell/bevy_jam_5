@@ -1,6 +1,9 @@
 use crate::path_finding::tiles::Tile;
 use crate::screen::Screen;
 
+use rand::seq::SliceRandom;
+use rand::thread_rng;
+
 use super::actors_list::PlayerActorList;
 use super::assets::SoundtrackKey;
 use super::audio::soundtrack::PlaySoundtrack;
@@ -17,6 +20,8 @@ use bevy::prelude::*;
 pub enum PlayerSprite {
     Human,
     Warrior,
+    Orc,
+    Viking,
 }
 
 impl PlayerSprite {
@@ -24,8 +29,26 @@ impl PlayerSprite {
         match self {
             PlayerSprite::Human => "human",
             PlayerSprite::Warrior => "warrior",
+            PlayerSprite::Orc => "orc",
+            PlayerSprite::Viking => "viking",
         }
     }
+}
+
+pub fn select_random_sprites() -> Vec<PlayerSprite> {
+    let mut rng = thread_rng();
+    let sprites = vec![
+        PlayerSprite::Human,
+        PlayerSprite::Warrior,
+        PlayerSprite::Orc,
+        PlayerSprite::Viking,
+    ];
+
+    // Shuffle and take two distinct sprites
+    let mut shuffled_sprites = sprites.clone();
+    shuffled_sprites.shuffle(&mut rng);
+
+    shuffled_sprites.into_iter().take(2).collect()
 }
 
 pub fn deployment_setup(
@@ -87,11 +110,13 @@ pub fn deploy_unit(
         return;
     };
 
-    // Define the sprite type for the entity to deploy
+    // Get two random sprites
+    let random_sprites = select_random_sprites();
+
+    // Define sprite type for deployment based on random selection
     let sprite_type = match entity_to_deploy {
-        // Match against specific entities and assign sprite types
-        entity if entity == player_unit_list.0[0] => PlayerSprite::Human,
-        entity if entity == player_unit_list.0[1] => PlayerSprite::Warrior,
+        entity if entity == player_unit_list.0[0] => random_sprites[0],
+        entity if entity == player_unit_list.0[1] => random_sprites[1],
         _ => {
             println!("Unknown entity: {:?}", entity_to_deploy);
             return;
@@ -130,5 +155,6 @@ pub fn deploy_unit(
             }
         }
     }
-    events.clear()
+
+    events.clear();
 }

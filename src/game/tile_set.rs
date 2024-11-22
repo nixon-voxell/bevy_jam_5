@@ -43,6 +43,8 @@ fn load_tiles(asset_server: Res<AssetServer>, mut tile_set: ResMut<TileSet>) {
         "human",
         "warrior",
         "werewolf",
+        "orc",
+        "viking",
         "slime",
         "bat",
         "border_thick",
