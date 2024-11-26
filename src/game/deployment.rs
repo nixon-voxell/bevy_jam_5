@@ -18,20 +18,18 @@ use bevy::prelude::*;
 
 #[derive(Clone, Copy, Debug)]
 pub enum PlayerSprite {
-    Human,
     Fighter,
     Warrior,
-    Orc,
+    Spartan,
     Viking,
 }
 
 impl PlayerSprite {
     pub fn texture_key(&self) -> &'static str {
         match self {
-            PlayerSprite::Human => "human",
-            PlayerSprite::Fighter => "human2",
+            PlayerSprite::Fighter => "fighter",
             PlayerSprite::Warrior => "warrior",
-            PlayerSprite::Orc => "orc",
+            PlayerSprite::Spartan => "spartan",
             PlayerSprite::Viking => "viking",
         }
     }
@@ -40,10 +38,9 @@ impl PlayerSprite {
 pub fn select_random_sprites() -> Vec<PlayerSprite> {
     let mut rng = thread_rng();
     let sprites = vec![
-        PlayerSprite::Human,
         PlayerSprite::Fighter,
         PlayerSprite::Warrior,
-        PlayerSprite::Orc,
+        PlayerSprite::Spartan,
         PlayerSprite::Viking,
     ];
 
