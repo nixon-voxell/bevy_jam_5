@@ -28,6 +28,7 @@ impl Plugin for PickingPlugin {
                     dispatch_pressed_tile,
                     dispatch_object_pressed,
                     deploy_unit.run_if(in_state(GameState::Deployment)),
+                    touch_tile,
                 )
                     .chain()
                     .run_if(in_state(Screen::Playing)),
@@ -71,6 +72,26 @@ pub fn pointer_coords_to_world_camera_coords(
             None
         },
     ));
+}
+
+pub fn touch_tile(
+    q_camera: Query<(&Camera, &GlobalTransform)>,
+    touches: Res<Touches>,
+    village_map: Res<VillageMap>,
+    mut tile_pressed_event: EventWriter<TilePressedEvent>,
+) {
+    let (camera, camera_transform) = q_camera.single();
+
+    for touch in touches.iter_just_pressed() {
+        if let Some(tile) = camera
+            .viewport_to_world(camera_transform, touch.position())
+            .map(|ray| ray.origin.truncate())
+            .map(|point| Tile::from(point))
+            .filter(|tile| village_map.contains_tile(*tile))
+        {
+            tile_pressed_event.send(TilePressedEvent(tile));
+        }
+    }
 }
 
 /// Converts world camera coords to fractional (possibly negative) world tile coordinates
