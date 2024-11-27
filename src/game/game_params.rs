@@ -224,10 +224,6 @@ impl Game<'_, '_> {
 #[derive(SystemParam)]
 pub struct ReadGame<'w, 's> {
     pub map: Option<Res<'w, VillageMap>>,
-    health: Query<'w, 's, &'static Health>,
-    movement: Query<'w, 's, &'static Movement>,
-    player_actors: Query<'w, 's, Entity, With<PlayerActor>>,
-    enemy_actors: Query<'w, 's, Entity, With<EnemyActor>>,
     structures: Query<'w, 's, Entity, With<Structure>>,
 }
 
