@@ -1,14 +1,14 @@
 pub mod debug;
 #[cfg(feature = "dev")]
 mod dev_tools;
-mod game;
-mod modals;
-mod path_finding;
-mod screen;
-mod ui;
+pub mod game;
+pub mod modals;
+pub mod path_finding;
+pub mod screen;
+pub mod ui;
 
-const BASE_APP_HEIGHT: f32 = 720.0;
-const BASE_CAM_SCALE: f32 = 3.2;
+const BASE_APP_HEIGHT: f32 = 390.0;
+const BASE_CAM_SCALE: f32 = 5.0;
 
 use bevy::{
     asset::{load_internal_binary_asset, AssetMetaCheck},
@@ -44,6 +44,7 @@ impl Plugin for AppPlugin {
                 .set(WindowPlugin {
                     primary_window: Window {
                         title: "Bevy Jam 5".to_string(),
+                        resolution: (844.0, 390.0).into(),
                         canvas: Some("#bevy".to_string()),
                         fit_canvas_to_parent: true,
                         prevent_default_event_handling: true,
@@ -89,9 +90,9 @@ fn spawn_camera(mut commands: Commands) {
         Name::new("Camera"),
         Camera2dBundle {
             projection: OrthographicProjection {
-                far: 1000.,
-                near: -1000.,
-                scale: 3.2,
+                far: 500.,
+                near: -500.,
+                scale: 5.0,
                 ..default()
             },
             ..default()
