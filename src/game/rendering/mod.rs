@@ -14,17 +14,9 @@ use crate::screen::Screen;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 
-#[derive(Resource)]
+#[derive(Resource, Default)]
 pub struct ShowCoords {
     show_tile_coords: bool,
-}
-
-impl Default for ShowCoords {
-    fn default() -> Self {
-        Self {
-            show_tile_coords: false,
-        }
-    }
 }
 
 pub struct MapRenderingPlugin;
