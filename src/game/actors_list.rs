@@ -291,8 +291,10 @@ pub fn select_item_btn_interaction(
 
     for (interaction, select) in q_interactions.iter() {
         if let Interaction::Pressed = interaction {
-            if select.0 < inventory.slot_count() && inventory.get(select.0).is_some() {
-                inventory.selected_item = Some(select.0);
+            if select.0 < inventory.slot_count() {
+                if inventory.get(select.0).is_some() {
+                    inventory.selected_item = Some(select.0);
+                }
             }
         }
     }

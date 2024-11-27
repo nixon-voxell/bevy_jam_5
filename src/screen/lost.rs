@@ -2,9 +2,9 @@ use bevy::{color::palettes::css, prelude::*, ui::FocusPolicy};
 use sickle_ui::{
     ui_builder::{UiBuilderExt, UiRoot},
     ui_style::generated::{
-        SetBackgroundColorExt, SetBorderRadiusExt, SetFlexGrowExt, SetFlexShrinkExt,
-        SetFocusPolicyExt, SetFontColorExt, SetFontSizeExt, SetHeightExt, SetJustifyContentExt,
-        SetJustifyItemsExt, SetJustifySelfExt, SetPaddingExt, SetWidthExt,
+        SetBackgroundColorExt, SetBorderColorExt, SetBorderExt, SetBorderRadiusExt, SetFlexGrowExt,
+        SetFlexShrinkExt, SetFocusPolicyExt, SetFontColorExt, SetFontSizeExt, SetHeightExt,
+        SetJustifyContentExt, SetJustifyItemsExt, SetJustifySelfExt, SetPaddingExt, SetWidthExt,
     },
     widgets::layout::{
         column::UiColumnExt,

@@ -191,7 +191,7 @@ impl VillageMap {
         tiles.last().copied()
     }
 
-    /// Generate heat map based on [`Self::actors`].
+    /// Generate heat map based on [`Self::object`].
     ///
     /// # Example
     ///

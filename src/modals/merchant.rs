@@ -3,13 +3,13 @@ use bevy::prelude::*;
 use bevy::ui::FocusPolicy;
 use sickle_ui::prelude::*;
 
-use crate::game::actors_list::SellItemButton;
 use crate::game::constants::TEXT_SIZE;
 use crate::game::inventory::Inventory;
 use crate::game::inventory::Item;
 use crate::game::inventory::ITEM_TEMPLATES;
 use crate::game::resources::VillageGold;
 use crate::game::selection::SelectedActor;
+use crate::game::actors_list::SellItemButton;
 use crate::game::MODAL_Z_LAYER;
 use crate::screen::playing::hide_all_with;
 use crate::screen::playing::show_all_with;
