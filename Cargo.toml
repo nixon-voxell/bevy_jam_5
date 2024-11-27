@@ -22,6 +22,8 @@ pathfinding = "4.10"
 ordered-float = "4.0"
 clap = { version = "4.5.11", features = ["derive"] }
 bevy_trauma_shake = "0.3.0"
+strum = "0.26"
+strum_macros = "0.26"
 
 [features]
 default = [

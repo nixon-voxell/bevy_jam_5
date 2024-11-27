@@ -135,18 +135,18 @@ pub struct ItemIcon {
 #[derive(Component, Default, Debug, Clone)]
 pub struct ItemName(pub String);
 
-/// Number of remaining times the item can be used
-/// If not present, item is infinite use.
-#[derive(Component, Debug, Clone)]
-pub struct ConsumbleItem {
-    uses: u32,
-}
+// /// Number of remaining times the item can be used
+// /// If not present, item is infinite use.
+// #[derive(Component, Debug, Clone)]
+// pub struct ConsumbleItem {
+//     uses: u32,
+// }
 
-impl Default for ConsumbleItem {
-    fn default() -> Self {
-        Self { uses: 1 }
-    }
-}
+// impl Default for ConsumbleItem {
+//     fn default() -> Self {
+//         Self { uses: 1 }
+//     }
+// }
 
 /// Marking that this entity is just a reference item.
 #[derive(Debug, Clone, Copy)]

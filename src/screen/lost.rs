@@ -1,26 +1,20 @@
-use bevy::{color::palettes::css, prelude::*, ui::FocusPolicy};
-use sickle_ui::{
-    ui_builder::{UiBuilderExt, UiRoot},
-    ui_style::generated::{
-        SetBackgroundColorExt, SetBorderColorExt, SetBorderExt, SetBorderRadiusExt, SetFlexGrowExt,
-        SetFlexShrinkExt, SetFocusPolicyExt, SetFontColorExt, SetFontSizeExt, SetHeightExt,
-        SetJustifyContentExt, SetJustifyItemsExt, SetJustifySelfExt, SetPaddingExt, SetWidthExt,
-    },
-    widgets::layout::{
-        column::UiColumnExt,
-        container::UiContainerExt,
-        label::{LabelConfig, UiLabelExt},
-        row::UiRowExt,
-    },
+use bevy::color::palettes::css;
+use bevy::prelude::*;
+use bevy::ui::FocusPolicy;
+use sickle_ui::ui_builder::{UiBuilderExt, UiRoot};
+use sickle_ui::ui_style::generated::{
+    SetBackgroundColorExt, SetBorderRadiusExt, SetFlexGrowExt, SetFlexShrinkExt, SetFocusPolicyExt,
+    SetFontColorExt, SetFontSizeExt, SetHeightExt, SetJustifyContentExt, SetJustifyItemsExt,
+    SetJustifySelfExt, SetPaddingExt, SetWidthExt,
 };
+use sickle_ui::widgets::layout::column::UiColumnExt;
+use sickle_ui::widgets::layout::container::UiContainerExt;
+use sickle_ui::widgets::layout::label::{LabelConfig, UiLabelExt};
+use sickle_ui::widgets::layout::row::UiRowExt;
 
-use crate::{
-    game::actors::Structure,
-    ui::{
-        interaction::InteractionPalette,
-        palette::{HEADER_SIZE, LABEL_SIZE},
-    },
-};
+use crate::game::actors::Structure;
+use crate::ui::interaction::InteractionPalette;
+use crate::ui::palette::{HEADER_SIZE, LABEL_SIZE};
 
 use super::Screen;
 

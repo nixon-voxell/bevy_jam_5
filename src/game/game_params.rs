@@ -63,12 +63,12 @@ pub trait GameData {
 /// System param for accessing game data
 #[derive(SystemParam)]
 pub struct Game<'w, 's> {
-    map: ResMut<'w, VillageMap>,
-    health: Query<'w, 's, &'static mut Health>,
-    movement: Query<'w, 's, &'static mut Movement>,
-    player_actors: Query<'w, 's, Entity, With<PlayerActor>>,
-    enemy_actors: Query<'w, 's, Entity, With<EnemyActor>>,
-    structures: Query<'w, 's, Entity, With<Structure>>,
+    pub map: ResMut<'w, VillageMap>,
+    pub health: Query<'w, 's, &'static mut Health>,
+    pub movement: Query<'w, 's, &'static mut Movement>,
+    pub player_actors: Query<'w, 's, Entity, With<PlayerActor>>,
+    pub enemy_actors: Query<'w, 's, Entity, With<EnemyActor>>,
+    pub structures: Query<'w, 's, Entity, With<Structure>>,
 }
 
 impl GameData for Game<'_, '_> {

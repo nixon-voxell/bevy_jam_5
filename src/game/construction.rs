@@ -3,8 +3,6 @@ use bevy::prelude::*;
 use bevy::utils::HashMap;
 use sickle_ui::prelude::*;
 
-use crate::path_finding::is_any_path;
-use crate::path_finding::tiles::Tile;
 use crate::screen::Screen;
 use crate::ui::prelude::InteractionPalette;
 
@@ -424,7 +422,7 @@ pub fn update_building_progress(
                     StateScoped(Screen::Playing),
                     StructureBundle::default(),
                     SpawnAnimation::new(object_translation),
-                    s.clone(),
+                    *s,
                 ));
                 println!("building structure type = {s:?}");
                 println!("entity = {:?}", object_entity.id());

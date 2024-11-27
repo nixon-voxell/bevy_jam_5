@@ -9,7 +9,7 @@ use crate::game::level::Terrain;
 use crate::game::map::VillageMap;
 use crate::game::selection::SelectionMap;
 use crate::game::tile_set::{tile_coord_translation, TileSet, TILE_ANCHOR};
-use crate::path_finding::tiles::{TileDir, Tile};
+use crate::path_finding::tiles::{Tile, TileDir};
 use crate::screen::playing::GameState;
 use crate::screen::Screen;
 use crate::ui::icon_set::IconSet;

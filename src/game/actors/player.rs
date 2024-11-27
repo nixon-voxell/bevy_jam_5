@@ -1,14 +1,12 @@
 use bevy::prelude::*;
-
-use crate::game::cycle::EndTurn;
-
-use crate::game::inventory::MaxInventorySize;
-
-use crate::game::inventory::Inventory;
+use strum::{EnumCount, IntoEnumIterator};
+use strum_macros::{AsRefStr, EnumCount, EnumIter};
 
 use crate::game::actors_list::PlayerActorList;
+use crate::game::cycle::EndTurn;
+use crate::game::inventory::{Inventory, MaxInventorySize};
 use crate::game::map::VillageMap;
-pub use crate::game::picking::TilePressedEvent;
+use crate::game::picking::TilePressedEvent;
 use crate::game::selection::SelectedActor;
 use crate::game::tile_set::tile_coord_translation;
 use crate::path_finding::tiles::TileDir;
@@ -30,6 +28,7 @@ pub fn spawn_player_unit(commands: &mut Commands, name: String) -> Entity {
                 .with_movement(3),
             MaxInventorySize(3),
             Inventory::default(),
+            PlayerSprite::random(),
         ))
         .id()
 }
@@ -43,7 +42,7 @@ pub fn add_starting_player_units(
     for _ in 0..INITIAL_PLAYER_UNITS {
         let name = available_names.next_name();
         let id = spawn_player_unit(&mut commands, name);
-        player_unit_list.0.push(id);
+        player_unit_list.push(id);
     }
 }
 
@@ -114,5 +113,24 @@ pub fn reset_unit_turn_states(
                 next_game_state.set(GameState::EnemyTurn);
             }
         }
+    }
+}
+
+#[derive(Component, EnumCount, EnumIter, AsRefStr, Debug, Clone, Copy)]
+pub enum PlayerSprite {
+    Fighter,
+    Warrior,
+    Spartan,
+    Viking,
+}
+
+impl PlayerSprite {
+    pub fn texture_key(&self) -> String {
+        self.as_ref().to_lowercase()
+    }
+
+    pub fn random() -> Self {
+        let index = rand::random::<usize>() % Self::COUNT;
+        Self::iter().nth(index).unwrap()
     }
 }
