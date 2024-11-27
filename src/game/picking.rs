@@ -29,6 +29,7 @@ impl Plugin for PickingPlugin {
                     touch_tile,
                     dispatch_object_pressed,
                     deploy_unit.run_if(in_state(GameState::Deployment)),
+                    touch_tile,
                 )
                     .chain()
                     .run_if(in_state(Screen::Playing)),

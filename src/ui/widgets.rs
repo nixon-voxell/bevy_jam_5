@@ -32,13 +32,13 @@ impl<T: Spawn + SpawnCommand> Widgets for T {
             Name::new("Button"),
             ButtonBundle {
                 style: Style {
-                    width: Px(200.0),
-                    height: Px(65.0),
+                    width: Px(100.0),
+                    height: Px(32.0),
                     justify_content: JustifyContent::Center,
                     align_items: AlignItems::Center,
                     ..default()
                 },
-                border_radius: BorderRadius::all(Val::Px(8.0)),
+                border_radius: BorderRadius::all(Val::Px(4.0)),
                 background_color: BackgroundColor(NODE_BACKGROUND),
                 ..default()
             },
@@ -54,7 +54,7 @@ impl<T: Spawn + SpawnCommand> Widgets for T {
                 TextBundle::from_section(
                     text,
                     TextStyle {
-                        font_size: 40.0,
+                        font_size: 20.0,
                         color: BUTTON_TEXT,
                         ..default()
                     },
@@ -69,13 +69,13 @@ impl<T: Spawn + SpawnCommand> Widgets for T {
             Name::new("Button"),
             ButtonBundle {
                 style: Style {
-                    width: Px(200.0),
-                    height: Px(65.0),
+                    width: Px(100.0),
+                    height: Px(32.0),
                     justify_content: JustifyContent::Center,
                     align_items: AlignItems::Center,
                     ..default()
                 },
-                border_radius: BorderRadius::all(Val::Px(8.0)),
+                border_radius: BorderRadius::all(Val::Px(4.0)),
                 background_color: BackgroundColor(TITLE_BUTTON_BACKGROUND),
                 ..default()
             },
@@ -91,7 +91,7 @@ impl<T: Spawn + SpawnCommand> Widgets for T {
                 TextBundle::from_section(
                     text,
                     TextStyle {
-                        font_size: 40.0,
+                        font_size: 20.0,
                         color: TITLE_BUTTON_TEXT_COLOR,
                         ..default()
                     },
@@ -106,8 +106,8 @@ impl<T: Spawn + SpawnCommand> Widgets for T {
             Name::new("Header"),
             NodeBundle {
                 style: Style {
-                    width: Px(500.0),
-                    height: Px(65.0),
+                    width: Px(250.0),
+                    height: Px(32.0),
                     justify_content: JustifyContent::Center,
                     align_items: AlignItems::Center,
                     ..default()
@@ -123,7 +123,7 @@ impl<T: Spawn + SpawnCommand> Widgets for T {
                 TextBundle::from_section(
                     text,
                     TextStyle {
-                        font_size: 40.0,
+                        font_size: 20.0,
                         color: HEADER_TEXT,
                         ..default()
                     },
@@ -138,7 +138,7 @@ impl<T: Spawn + SpawnCommand> Widgets for T {
             Name::new("Label"),
             NodeBundle {
                 style: Style {
-                    width: Px(500.0),
+                    width: Px(250.0),
                     justify_content: JustifyContent::Center,
                     align_items: AlignItems::Center,
                     ..default()
@@ -152,7 +152,7 @@ impl<T: Spawn + SpawnCommand> Widgets for T {
                 TextBundle::from_section(
                     text,
                     TextStyle {
-                        font_size: 24.0,
+                        font_size: 18.0,
                         color: LABEL_TEXT,
                         ..default()
                     },
@@ -174,9 +174,9 @@ impl<T: Spawn + SpawnCommand> Widgets for T {
                             Name::new("Title"),
                             NodeBundle {
                                 style: Style {
-                                    width: Px(500.0),
-                                    height: Px(65.0),
-                                    margin: UiRect::all(Px(30.0)),
+                                    width: Px(250.0),
+                                    height: Px(32.0),
+                                    margin: UiRect::all(Px(15.0)),
                                     justify_content: JustifyContent::Center,
                                     align_items: AlignItems::Center,
                                     ..default()
@@ -190,7 +190,7 @@ impl<T: Spawn + SpawnCommand> Widgets for T {
                                 TextBundle::from_section(
                                     title,
                                     TextStyle {
-                                        font_size: 80.0,
+                                        font_size: 40.0,
                                         color: TITLE_TEXT_COLOR,
                                         font: asset_server.load(TITLE_TEXT_FONT_PATH),
                                     },
@@ -221,7 +221,7 @@ impl Containers for Commands<'_, '_> {
                     justify_content: JustifyContent::Center,
                     align_items: AlignItems::Center,
                     flex_direction: FlexDirection::Column,
-                    row_gap: Px(10.0),
+                    row_gap: Px(5.0),
                     position_type: PositionType::Absolute,
                     ..default()
                 },
