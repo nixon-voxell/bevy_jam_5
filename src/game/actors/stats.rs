@@ -43,10 +43,10 @@ impl Health {
 #[derive(Component, Copy, Clone, Debug, Deref, DerefMut, PartialEq)]
 pub struct Movement(pub u32);
 
-pub struct StatsBundle {
-    health: Health,
-    movement: Movement,
-}
+// pub struct StatsBundle {
+//     health: Health,
+//     movement: Movement,
+// }
 
 /// Name of the actor, used to identify it to the player
 /// Does not have to be unique

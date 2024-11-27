@@ -39,7 +39,7 @@ impl Plugin for PickingPlugin {
 #[derive(Component)]
 pub struct PickableTile;
 
-#[derive(Resource, Default, Debug, PartialEq)]
+#[derive(Resource, Default, Deref, Debug, PartialEq)]
 pub struct PickedPointWorldCamera(pub Option<Vec2>);
 
 // The position of the pointer in fractional world tile coordinates.
@@ -62,15 +62,10 @@ pub fn pointer_coords_to_world_camera_coords(
     let window = q_window.single();
 
     picked_point.set_if_neq(PickedPointWorldCamera(
-        if let Some(world_position) = window
+        window
             .cursor_position()
             .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
-            .map(|ray| ray.origin.truncate())
-        {
-            Some(world_position)
-        } else {
-            None
-        },
+            .map(|ray| ray.origin.truncate()),
     ));
 }
 
@@ -86,6 +81,14 @@ pub fn touch_tile(
         if let Some(touched_point) = camera
             .viewport_to_world(camera_transform, touch.position())
             .map(|ray| ray.origin.truncate())
+        // <<<<<<< HEAD
+        //             .map(Tile::from)
+        //             .filter(|tile| village_map.contains_tile(*tile))
+        // ||||||| 6ae4b19
+        //             .map(|point| Tile::from(point))
+        //             .filter(|tile| village_map.contains_tile(*tile))
+        // =======
+        // >>>>>>> main
         {
             let tile_point = camera_to_tile(touched_point);
             let tile = Tile::from(tile_point);
@@ -109,7 +112,7 @@ pub fn world_camera_picked_point_to_tile_coords(
     camera_point: Res<PickedPointWorldCamera>,
     mut world_point: ResMut<PickedPointWorld>,
 ) {
-    world_point.set_if_neq(PickedPointWorld(camera_point.0.map(|p| camera_to_tile(p))));
+    world_point.set_if_neq(PickedPointWorld(camera_point.map(camera_to_tile)));
 }
 
 /// The tile in the world currently hovered by the pointer
@@ -121,7 +124,7 @@ pub fn pick_tile(
     picked_tile.set_if_neq(PickedTile(
         picked_point
             .0
-            .map(|point| Tile::from(point))
+            .map(Tile::from)
             .filter(|tile| village_map.contains_tile(*tile)),
     ));
 }
