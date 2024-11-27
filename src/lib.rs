@@ -74,7 +74,7 @@ impl Plugin for AppPlugin {
 
         // Add other plugins.
         app.add_plugins((game::plugin, screen::plugin, ui::plugin))
-            .add_plugins(TraumaPlugin)
+            .add_plugins((TraumaPlugin, bevy_enoki::EnokiPlugin))
             .add_systems(Startup, spawn_camera)
             .add_systems(Update, update_camera_scale);
 
