@@ -1,3 +1,5 @@
+pub mod extract_map;
+
 use super::actors::stats::Health;
 use super::components::ArcherTower;
 use super::components::GroundTileLayer;
@@ -60,7 +62,7 @@ impl Plugin for MapRenderingPlugin {
                 PostUpdate,
                 (
                     spawn_arrow_sprites.run_if(in_state(GameState::BattleTurn)),
-                    draw_terrain,
+                    //draw_terrain,
                     spawn_selected_tiles
                         .run_if(|layers: Res<ShowLayers>| layers.show_selected_area),
                     spawn_tile_cursor,
