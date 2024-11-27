@@ -267,7 +267,6 @@ fn sell_btn_interaction(
     selected: Res<SelectedActor>,
     q_interactions: Query<&Interaction, (Changed<Interaction>, With<SellItemButton>)>,
     mut iq: Query<&mut Inventory>,
-    mut next_game_state: ResMut<NextState<GameState>>,
     mut gold: ResMut<VillageGold>,
 ) {
     let Some(entity) = selected.entity else {

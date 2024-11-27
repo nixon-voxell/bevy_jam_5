@@ -238,14 +238,14 @@ fn enter_playing(
             ui.style()
                 .width(Val::Percent(100.))
                 .height(Val::Percent(100.))
-                .padding(UiRect::all(Val::Px(40.)))
+                .padding(UiRect::all(Val::Px(20.)))
                 .justify_content(JustifyContent::SpaceBetween);
 
             ui.row(|ui| {
                 ui.style()
                     .justify_content(JustifyContent::SpaceBetween)
                     .align_items(AlignItems::Center)
-                    .column_gap(Val::Px(40.));
+                    .column_gap(Val::Px(20.));
 
                 ui.label(LabelConfig::from("Season"))
                     .insert(WatchRes::<Season>::default())

@@ -98,8 +98,8 @@ impl VillageMap {
 
                     // Check eligibility of moving on top of water tile
                     match self.get_terrain(final_coord) {
-                        Some(Terrain::Water) if is_airborne == false => return None,
-                        _ => return Some((final_coord, 1)),
+                        Some(Terrain::Water) if is_airborne == false => None,
+                        _ => Some((final_coord, 1)),
                     }
                 })
             },
@@ -133,8 +133,8 @@ impl VillageMap {
 
                 // Check eligibility of moving on top of water tile
                 match self.get_terrain(final_coord) {
-                    Some(Terrain::Water) if !is_airborne => return None,
-                    _ => return Some(final_coord),
+                    Some(Terrain::Water) if !is_airborne => None,
+                    _ => Some(final_coord),
                 }
             })
         })
@@ -148,7 +148,7 @@ impl VillageMap {
     /// Sort tiles based on heat map.
     pub fn sort_tiles_by_heat(&self, tiles: &mut [Tile]) {
         tiles.sort_by_key(|t| {
-            let index = t.x() + t.y() * self.size.x() as i32;
+            let index = t.x() + t.y() * self.size.x();
             self.heat_map[index as usize]
         });
     }
@@ -215,7 +215,7 @@ impl VillageMap {
                 continue;
             }
 
-            let index = (tile_coord.x() + tile_coord.y() * self.size.x() as i32) as usize;
+            let index = (tile_coord.x() + tile_coord.y() * self.size.x()) as usize;
             self.heat_map[index] = 0;
 
             stack.push_back(*tile_coord);
@@ -227,7 +227,7 @@ impl VillageMap {
         }
 
         while let Some(tile_coord) = stack.pop_front() {
-            let index = (tile_coord.x() + tile_coord.y() * self.size.x() as i32) as usize;
+            let index = (tile_coord.x() + tile_coord.y() * self.size.x()) as usize;
             let curr_heat = self.heat_map[index];
 
             for offset in TileDir::EDGES.iter() {
@@ -236,7 +236,7 @@ impl VillageMap {
                     continue;
                 }
 
-                let index = (flood_coord.x() + flood_coord.y() * self.size.x() as i32) as usize;
+                let index = (flood_coord.x() + flood_coord.y() * self.size.x()) as usize;
 
                 // Has been visited
                 if self.heat_map[index] != u32::MAX {
@@ -437,7 +437,7 @@ mod tests {
         let tile = Tile(1, 1);
         let neighbours: Vec<Tile> = tile_map.get_neighbouring_positions_rook(tile).collect();
         assert_eq!(neighbours.len(), 4);
-        let expected = vec![Tile(0, 1), Tile(1, 0), Tile(1, 2), Tile(2, 1)];
+        let expected = [Tile(0, 1), Tile(1, 0), Tile(1, 2), Tile(2, 1)];
         for n in neighbours {
             assert!(expected.contains(&n));
         }
@@ -450,7 +450,7 @@ mod tests {
         let tile = Tile(1, 1);
         let neighbours: Vec<Tile> = tile_map.get_neighbouring_positions_king(tile).collect();
         assert_eq!(neighbours.len(), 8);
-        let expected = vec![
+        let expected = [
             Tile(0, 1),
             Tile(1, 0),
             Tile(1, 2),

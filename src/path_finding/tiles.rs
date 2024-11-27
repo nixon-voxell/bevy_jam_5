@@ -253,26 +253,35 @@ impl Tile {
             return None;
         }
 
-        Some(if self.x() == other.x() {
-            if other.y() < self.y() {
-                TileEdge::North
-            } else {
-                TileEdge::South
+        Some(match self.x().cmp(&other.x()) {
+            std::cmp::Ordering::Less => TileEdge::East,
+            std::cmp::Ordering::Equal => {
+                if other.y() < self.y() {
+                    TileEdge::North
+                } else {
+                    TileEdge::South
+                }
             }
-        } else {
-            if other.x() < self.x() {
-                TileEdge::East
-            } else {
-                TileEdge::West
-            }
+            std::cmp::Ordering::Greater => TileEdge::West,
         })
+
+        // Some(if self.x() == other.x() {
+        //     if other.y() < self.y() {
+        //         TileEdge::North
+        //     } else {
+        //         TileEdge::South
+        //     }
+        // } else if other.x() < self.x() {
+        //     TileEdge::East
+        // } else {
+        //     TileEdge::West
+        // })
     }
 
     pub fn get_line_between(mut self, other: Tile) -> Option<impl Iterator<Item = Tile>> {
-        let Some(edge) = self.find_direction_edge(other) else {
-            return None;
-        };
+        let edge = self.find_direction_edge(other)?;
         let direction = edge.direction();
+
         Some(std::iter::from_fn(move || {
             self = self.step(direction);
             Some(self).filter(|cursor| *cursor == other)
@@ -280,10 +289,9 @@ impl Tile {
     }
 
     pub fn get_line_through(mut self, other: Tile) -> Option<impl Iterator<Item = Tile>> {
-        let Some(edge) = self.find_direction_edge(other) else {
-            return None;
-        };
+        let edge = self.find_direction_edge(other)?;
         let direction = edge.direction();
+
         Some(std::iter::from_fn(move || {
             self = self.step(direction);
             Some(self)
@@ -416,7 +424,12 @@ impl Path {
         self.0.len()
     }
 
-    pub fn iter<'a>(&'a self) -> impl Iterator<Item = TileDir> + 'a {
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = TileDir> + '_ {
         self.0.iter().copied()
     }
 
@@ -451,38 +464,47 @@ impl TileDim {
     pub const ZERO: Self = Self(0, 0);
     pub const ONE: Self = Self(1, 1);
 
+    #[inline]
     pub const fn x(self) -> i32 {
         self.0
     }
 
+    #[inline]
     pub const fn y(self) -> i32 {
         self.1
     }
 
+    #[inline]
     pub const fn abs(self) -> Self {
         TileDim(self.x().abs(), self.y().abs())
     }
 
+    #[inline]
     pub const fn to_ivec2(self) -> IVec2 {
         IVec2::new(self.x(), self.y())
     }
 
+    #[inline]
     pub const fn splat(value: i32) -> Self {
         Self(value, value)
     }
 
+    #[inline]
     pub const fn easterly(self) -> bool {
         self.0 < 0
     }
 
+    #[inline]
     pub const fn westerly(self) -> bool {
         0 < self.0
     }
 
+    #[inline]
     pub const fn northerly(self) -> bool {
         self.1 < 0
     }
 
+    #[inline]
     pub const fn southerly(self) -> bool {
         0 < self.1
     }

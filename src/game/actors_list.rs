@@ -31,7 +31,7 @@ pub fn actor_list_layout(ui: &mut UiBuilder<Entity>) {
     });
 }
 
-#[derive(Resource, Default, Clone)]
+#[derive(Resource, Default, Clone, Deref, DerefMut)]
 pub struct PlayerActorList(pub Vec<Entity>);
 
 #[derive(Component)]
@@ -289,13 +289,16 @@ pub fn select_item_btn_interaction(
         return;
     };
 
-    for (interaction, select) in q_interactions.iter() {
-        if let Interaction::Pressed = interaction {
-            if select.0 < inventory.slot_count() {
-                if inventory.get(select.0).is_some() {
-                    inventory.selected_item = Some(select.0);
-                }
-            }
+    for (_, select) in q_interactions
+        .iter()
+        .filter(|(&i, _)| i == Interaction::Pressed)
+    {
+        if select.0 >= inventory.slot_count() {
+            continue;
+        }
+
+        if inventory.get(select.0).is_some() {
+            inventory.selected_item = Some(select.0);
         }
     }
 }

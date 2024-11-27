@@ -203,7 +203,7 @@ pub struct DayCycle {
 }
 
 impl DayCycle {
-    fn len(&self) -> u32 {
+    pub fn count(&self) -> u32 {
         self.day + self.night
     }
 }

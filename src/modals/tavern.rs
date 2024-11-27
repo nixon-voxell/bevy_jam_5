@@ -4,24 +4,18 @@ use bevy::ui::FocusPolicy;
 use sickle_ui::prelude::*;
 
 use crate::game::actors::player::spawn_player_unit;
-use crate::game::actors::stats::ActorName;
-use crate::game::actors::stats::Health;
-use crate::game::actors::stats::Movement;
+use crate::game::actors::stats::{ActorName, Health, Movement};
 use crate::game::actors::AvailableActorNames;
 use crate::game::actors_list::PlayerActorList;
 use crate::game::components::Tavern;
-use crate::game::constants::BIG_TEXT_SIZE;
-use crate::game::constants::RECRUIT_COST;
-use crate::game::constants::TAVERN_FONT_SIZE;
-use crate::game::constants::UPGRADE_COST;
-use crate::game::inventory::Inventory;
-use crate::game::inventory::MaxInventorySize;
+use crate::game::constants::{BIG_TEXT_SIZE, RECRUIT_COST, TAVERN_FONT_SIZE, UPGRADE_COST};
+use crate::game::inventory::{Inventory, MaxInventorySize};
 use crate::game::resources::VillageGold;
 use crate::game::selection::ObjectPressedEvent;
 use crate::game::MODAL_Z_LAYER;
 use crate::screen::playing::GameState;
 use crate::ui::palette::LABEL_SIZE;
-use crate::ui::prelude::InteractionPalette;
+use crate::ui::prelude::*;
 
 #[derive(Component, Default)]
 pub struct BuyButton(pub Option<Entity>);
@@ -167,7 +161,7 @@ pub fn tavern_modal_layout(
                                     .insert(MovementLabel)
                                     .style()
                                     .font_size(TAVERN_FONT_SIZE);
-                                ui.row(|ui| {}).style().width(Val::Px(20.));
+                                ui.row(|_| {}).style().width(Val::Px(20.));
                                 ui.container(ButtonBundle::default(), |ui| {
                                     ui.insert(TavernUpgrade::AddMovement)
                                         .style()
@@ -360,7 +354,7 @@ pub fn update_slot_labels(
 ) {
     if let Ok((n, m, h, s)) = query.get(subject.0) {
         for mut t in n_query.iter_mut() {
-            t.sections[0].value = format!("{}", n.0);
+            t.sections[0].value = n.0.clone();
         }
         for mut t in m_query.iter_mut() {
             t.sections[0].value = format!("{}", m.0);
@@ -390,31 +384,34 @@ pub fn upgrade_buttons(
         n == *value
     }
 
-    for (i, u) in upgrade_query.iter() {
-        if *i == Interaction::Pressed {
-            if UPGRADE_COST <= gold.0 {
-                if match u {
-                    TavernUpgrade::AddMovement => upgrade(&mut m.0),
-                    TavernUpgrade::AddHealth => {
-                        if upgrade(&mut h.max) {
-                            h.value = (h.value + 1).min(h.max);
-                            true
-                        } else {
-                            false
-                        }
-                    }
-                    TavernUpgrade::AddItemSlot => {
-                        if s.slot_count() < 5 {
-                            s.add_slot();
-                            true
-                        } else {
-                            false
-                        }
-                    }
-                } {
-                    gold.0 -= UPGRADE_COST;
+    for (_, u) in upgrade_query
+        .iter()
+        .filter(|(&i, _)| i == Interaction::Pressed)
+    {
+        if UPGRADE_COST > gold.0 {
+            continue;
+        }
+
+        if match u {
+            TavernUpgrade::AddMovement => upgrade(&mut m.0),
+            TavernUpgrade::AddHealth => {
+                if upgrade(&mut h.max) {
+                    h.value = (h.value + 1).min(h.max);
+                    true
+                } else {
+                    false
                 }
             }
+            TavernUpgrade::AddItemSlot => {
+                if s.slot_count() < 5 {
+                    s.add_slot();
+                    true
+                } else {
+                    false
+                }
+            }
+        } {
+            gold.0 -= UPGRADE_COST;
         }
     }
 }
@@ -439,17 +436,17 @@ pub fn recruit_button(
     t_q: Query<Entity, With<TavernActorList>>,
 ) {
     if player_unit_list.0.len() < 5 {
-        for i in r_q.iter() {
-            if RECRUIT_COST <= gold.0 {
-                if *i == Interaction::Pressed {
-                    gold.0 -= RECRUIT_COST;
-                    let name = names.next_name();
-                    let id = spawn_player_unit(&mut commands, name.clone());
-                    player_unit_list.0.push(id);
-                    for entity in t_q.iter() {
-                        spawn_hero_button(&mut commands.ui_builder(entity), id, name.clone())
-                    }
-                }
+        for _ in r_q.iter().filter(|&&i| i == Interaction::Pressed) {
+            if RECRUIT_COST > gold.0 {
+                continue;
+            }
+
+            gold.0 -= RECRUIT_COST;
+            let name = names.next_name();
+            let id = spawn_player_unit(&mut commands, name.clone());
+            player_unit_list.0.push(id);
+            for entity in t_q.iter() {
+                spawn_hero_button(&mut commands.ui_builder(entity), id, name.clone())
             }
         }
     }

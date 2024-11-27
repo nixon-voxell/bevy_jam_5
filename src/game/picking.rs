@@ -62,15 +62,10 @@ pub fn pointer_coords_to_world_camera_coords(
     let window = q_window.single();
 
     picked_point.set_if_neq(PickedPointWorldCamera(
-        if let Some(world_position) = window
+        window
             .cursor_position()
             .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
-            .map(|ray| ray.origin.truncate())
-        {
-            Some(world_position)
-        } else {
-            None
-        },
+            .map(|ray| ray.origin.truncate()),
     ));
 }
 
@@ -86,7 +81,7 @@ pub fn touch_tile(
         if let Some(tile) = camera
             .viewport_to_world(camera_transform, touch.position())
             .map(|ray| ray.origin.truncate())
-            .map(|point| Tile::from(point))
+            .map(Tile::from)
             .filter(|tile| village_map.contains_tile(*tile))
         {
             tile_pressed_event.send(TilePressedEvent(tile));
@@ -119,7 +114,7 @@ pub fn pick_tile(
     picked_tile.set_if_neq(PickedTile(
         picked_point
             .0
-            .map(|point| Tile::from(point))
+            .map(Tile::from)
             .filter(|tile| village_map.contains_tile(*tile)),
     ));
 }
@@ -145,26 +140,26 @@ pub struct PickState {
     pressed: Option<Tile>,
 }
 
-#[derive(Resource, Default, Debug)]
-pub struct PickStatus {
-    previous: PickState,
-    current: PickState,
-}
+// #[derive(Resource, Default, Debug)]
+// pub struct PickStatus {
+//     previous: PickState,
+//     current: PickState,
+// }
 
-pub fn update_pick_status(
-    mut pickstatus: ResMut<PickStatus>,
-    mouse_state: ResMut<ButtonInput<MouseButton>>,
-    picked_tile: Res<PickedTile>,
-) {
-    pickstatus.previous = pickstatus.current;
+// pub fn update_pick_status(
+//     mut pickstatus: ResMut<PickStatus>,
+//     mouse_state: ResMut<ButtonInput<MouseButton>>,
+//     picked_tile: Res<PickedTile>,
+// ) {
+//     pickstatus.previous = pickstatus.current;
 
-    pickstatus.current.hovered = picked_tile.0;
+//     pickstatus.current.hovered = picked_tile.0;
 
-    if mouse_state.just_released(MouseButton::Left) {
-        pickstatus.current.pressed = None;
-    }
+//     if mouse_state.just_released(MouseButton::Left) {
+//         pickstatus.current.pressed = None;
+//     }
 
-    if mouse_state.just_pressed(MouseButton::Left) {
-        pickstatus.current.pressed = picked_tile.0;
-    }
-}
+//     if mouse_state.just_pressed(MouseButton::Left) {
+//         pickstatus.current.pressed = picked_tile.0;
+//     }
+// }
