@@ -11,8 +11,8 @@ use super::actors::EnemyActor;
 use super::actors::stats::Movement;
 use super::actors::ActorTurnState;
 
-use crate::path_finding::tiles::TileDir;
 use crate::path_finding::tiles::Tile;
+use crate::path_finding::tiles::TileDir;
 use crate::screen::playing::GameState;
 use crate::screen::Screen;
 use bevy::color::palettes::css;
