@@ -89,4 +89,3 @@ inherits = "release"
 # Optimize with performance in mind.
 opt-level = 3
 # Keep debug information in the binary.
-strip = "none"

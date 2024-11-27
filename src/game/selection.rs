@@ -127,24 +127,21 @@ pub enum SelectionEvent {
 pub struct DeselectedActorEvent(pub Entity);
 
 pub fn set_selected_unit(
-    mouse_button: Res<ButtonInput<MouseButton>>,
-    picked_tile: Res<PickedTile>,
+    mut tile_pressed_event: EventReader<TilePressedEvent>,
     village_map: Res<VillageMap>,
     mut selected_unit: ResMut<SelectedActor>,
     mut selection_event: EventWriter<SelectionEvent>,
 ) {
-    if mouse_button.just_pressed(MouseButton::Left) {
-        if let Some(tile) = picked_tile.0 {
-            if let Some(new_selection) = village_map.actors.get(tile) {
-                if let Some(previous_selection) = selected_unit.entity {
-                    if new_selection == previous_selection {
-                        return;
-                    }
-                    selection_event.send(SelectionEvent::Deselected(previous_selection));
+    if let Some(tile) = tile_pressed_event.read().last() {
+        if let Some(new_selection) = village_map.actors.get(tile.0) {
+            if let Some(previous_selection) = selected_unit.entity {
+                if new_selection == previous_selection {
+                    return;
                 }
-                selection_event.send(SelectionEvent::Selected(new_selection));
-                selected_unit.entity = Some(new_selection);
+                selection_event.send(SelectionEvent::Deselected(previous_selection));
             }
+            selection_event.send(SelectionEvent::Selected(new_selection));
+            selected_unit.entity = Some(new_selection);
         }
     }
 }
@@ -198,7 +195,9 @@ pub fn dispatch_object_pressed(
     mut dispatcher: EventWriter<ObjectPressedEvent>,
 ) {
     for TilePressedEvent(tile) in events.read().copied() {
+        info!("tile pressed -> {:?}", tile);
         if let Some(entity) = map.actors.get(tile) {
+            info!("object pressed -> {:?}", entity);
             dispatcher.send(ObjectPressedEvent(entity));
         }
     }
