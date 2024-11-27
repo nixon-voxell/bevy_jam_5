@@ -25,10 +25,10 @@ impl Plugin for PickingPlugin {
                     pointer_coords_to_world_camera_coords,
                     world_camera_picked_point_to_tile_coords,
                     pick_tile,
+                    touch_tile,
                     dispatch_pressed_tile,
                     dispatch_object_pressed,
                     deploy_unit.run_if(in_state(GameState::Deployment)),
-                    touch_tile,
                 )
                     .chain()
                     .run_if(in_state(Screen::Playing)),
@@ -83,15 +83,25 @@ pub fn touch_tile(
     let (camera, camera_transform) = q_camera.single();
 
     for touch in touches.iter_just_pressed() {
-        if let Some(tile) = camera
+        if let Some(touched_point) = camera
             .viewport_to_world(camera_transform, touch.position())
             .map(|ray| ray.origin.truncate())
-            .map(|point| Tile::from(point))
-            .filter(|tile| village_map.contains_tile(*tile))
         {
-            tile_pressed_event.send(TilePressedEvent(tile));
+            let tile_point = camera_to_tile(touched_point);
+            let tile = Tile::from(tile_point);
+            if village_map.contains_tile(tile) {
+                tile_pressed_event.send(TilePressedEvent(tile));
+            }
         }
     }
+}
+
+fn camera_to_tile(p: Vec2) -> Vec2 {
+    let tile_width = TILE_WIDTH;
+    let tile_half_height = TILE_HALF_HEIGHT;
+    let x = (-tile_half_height * p.x - (tile_width / 2.0) * p.y) / (tile_width * tile_half_height);
+    let y = (tile_half_height * p.x - (tile_width / 2.0) * p.y) / (tile_width * tile_half_height);
+    Vec2 { x, y }
 }
 
 /// Converts world camera coords to fractional (possibly negative) world tile coordinates
@@ -99,15 +109,7 @@ pub fn world_camera_picked_point_to_tile_coords(
     camera_point: Res<PickedPointWorldCamera>,
     mut world_point: ResMut<PickedPointWorld>,
 ) {
-    world_point.set_if_neq(PickedPointWorld(camera_point.0.map(|p| {
-        let tile_width = TILE_WIDTH;
-        let tile_half_height = TILE_HALF_HEIGHT;
-        let x =
-            (-tile_half_height * p.x - (tile_width / 2.0) * p.y) / (tile_width * tile_half_height);
-        let y =
-            (tile_half_height * p.x - (tile_width / 2.0) * p.y) / (tile_width * tile_half_height);
-        Vec2 { x, y }
-    })));
+    world_point.set_if_neq(PickedPointWorld(camera_point.0.map(|p| camera_to_tile(p))));
 }
 
 /// The tile in the world currently hovered by the pointer
@@ -136,35 +138,5 @@ pub fn dispatch_pressed_tile(
         if let Some(picked_tile) = picked_tile.0 {
             tile_pressed_event.send(TilePressedEvent(picked_tile));
         }
-    }
-}
-
-#[derive(Debug, Default, Copy, Clone, Eq, PartialEq)]
-pub struct PickState {
-    hovered: Option<Tile>,
-    pressed: Option<Tile>,
-}
-
-#[derive(Resource, Default, Debug)]
-pub struct PickStatus {
-    previous: PickState,
-    current: PickState,
-}
-
-pub fn update_pick_status(
-    mut pickstatus: ResMut<PickStatus>,
-    mouse_state: ResMut<ButtonInput<MouseButton>>,
-    picked_tile: Res<PickedTile>,
-) {
-    pickstatus.previous = pickstatus.current;
-
-    pickstatus.current.hovered = picked_tile.0;
-
-    if mouse_state.just_released(MouseButton::Left) {
-        pickstatus.current.pressed = None;
-    }
-
-    if mouse_state.just_pressed(MouseButton::Left) {
-        pickstatus.current.pressed = picked_tile.0;
     }
 }
