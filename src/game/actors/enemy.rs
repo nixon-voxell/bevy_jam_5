@@ -6,6 +6,7 @@ use bevy_trauma_shake::TraumaCommands;
 use crate::game::actors::spawn::SpawnAnimation;
 use crate::game::actors::ActorBundle;
 use crate::game::actors_list::PlayerActorList;
+use crate::game::constants::*;
 use crate::game::cycle::{Season, TimeOfDay, Turn, TURN_PER_DAY};
 use crate::game::level::Terrain;
 use crate::game::map::VillageMap;
@@ -15,17 +16,9 @@ use crate::game::vfx::{FireOneShotVfx, OneShotVfx};
 use crate::path_finding::tiles::{Tile, TileDir};
 use crate::screen::playing::GameState;
 use crate::screen::Screen;
-use crate::ui::icon_set::IconSet;
 
 use super::spawn::DespawnAnimation;
 use super::{Directions, EnemyActor, Health, IsAirborne, Movement};
-
-/// Distance from border that the enemy will spawn in.
-pub const ENEMY_SPAWN_RANGE: u32 = 2;
-/// Claw animation extra duration.
-pub const CLAW_ANIM_DURATION: f32 = 1.0;
-const SPAWN_TRIAL: usize = 10;
-const ENEMY_MOVE_SPEED: f32 = 4.0;
 
 pub struct EnemyActorsPlugin;
 
@@ -100,7 +93,7 @@ fn perform_attack(
     }
 
     enemy_attack.factor += time.delta_seconds();
-    if enemy_attack.factor >= CLAW_ANIM_DURATION {
+    if enemy_attack.factor >= ATK_ANIM_DURATION {
         // Deal damage
         if let Some(mut health) = village_map
             .actors

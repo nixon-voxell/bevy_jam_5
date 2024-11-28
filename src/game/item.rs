@@ -1,25 +1,18 @@
 use bevy::{color::palettes::css, prelude::*};
 use bevy_trauma_shake::TraumaCommands;
 
-use crate::{
-    game::{
-        actors::{
-            enemy::{ClawMarkBundle, CLAW_ANIM_DURATION},
-            spawn::DespawnAnimation,
-        },
-        tile_set::{tile_coord_translation, TILE_ANCHOR},
-    },
-    path_finding::{find_all_within_distance_unweighted, tiles::Tile},
-    screen::{playing::GameState, Screen},
-    ui::icon_set::IconSet,
-};
+use crate::game::tile_set::tile_coord_translation;
+use crate::path_finding::find_all_within_distance_unweighted;
+use crate::path_finding::tiles::Tile;
+use crate::screen::playing::GameState;
+use crate::screen::Screen;
+use crate::ui::icon_set::IconSet;
 
-use super::{
-    actors::{stats::Health, ActorTurnState, ClearUndoEvent, EnemyActor},
-    inventory::{Inventory, Item},
-    map::VillageMap,
-    selection::{self, SelectedActor, SelectedTiles, SelectionEvent},
-};
+use super::actors::{stats::Health, ActorTurnState, ClearUndoEvent, EnemyActor};
+use super::inventory::{Inventory, Item};
+use super::map::VillageMap;
+use super::selection::{self, SelectedActor, SelectedTiles, SelectionEvent};
+use super::vfx::{FireOneShotVfx, OneShotVfx};
 
 pub struct ItemPlugin;
 
@@ -97,6 +90,7 @@ fn apply_item_effect(
     inventory_selection: Res<InventorySelection>,
     mut selection_events: EventReader<SelectionEvent>,
     mut clear_undo_event: EventWriter<ClearUndoEvent>,
+    mut evw_oneshot_vfx: EventWriter<FireOneShotVfx>,
 ) {
     if selection_events.is_empty() {
         return;
@@ -147,20 +141,18 @@ fn apply_item_effect(
                     .value
                     .saturating_sub(item.health_effect.unsigned_abs());
 
-                let translation =
+                let mut tile_trans =
                     tile_coord_translation(target_tile.x() as f32, target_tile.y() as f32, 3.0);
-                commands.spawn(ClawMarkBundle {
-                    sprite: SpriteBundle {
-                        sprite: Sprite {
-                            anchor: TILE_ANCHOR,
-                            ..default()
-                        },
-                        texture: icon_set.get("claw_mark"),
-                        ..default()
-                    },
-                    despawn_anim: DespawnAnimation::new(translation)
-                        .with_extra_progress(CLAW_ANIM_DURATION),
-                });
+                tile_trans.y += 100.0;
+
+                evw_oneshot_vfx.send(FireOneShotVfx(
+                    OneShotVfx::AttackFlash,
+                    Transform::from_translation(tile_trans),
+                ));
+                evw_oneshot_vfx.send(FireOneShotVfx(
+                    OneShotVfx::BloodSplash,
+                    Transform::from_translation(tile_trans),
+                ));
                 commands.add_trauma(0.5);
 
                 if health.value == 0 {

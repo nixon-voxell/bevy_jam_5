@@ -41,6 +41,8 @@ fn load_icon_set(asset_server: Res<AssetServer>, mut icon_set: ResMut<IconSet>) 
         "button1",
         "button1-gs",
         "heart",
+        "leaf",
+        "snowflake",
     ];
 
     for pixel_icon in PIXEL_ICONS {
