@@ -4,7 +4,7 @@ use bevy_trauma_shake::TraumaCommands;
 use crate::{
     game::{
         actors::{
-            enemy::{ClawMarkBundle, CLAW_ANIM_DURATAION},
+            enemy::{ClawMarkBundle, CLAW_ANIM_DURATION},
             spawn::DespawnAnimation,
         },
         tile_set::{tile_coord_translation, TILE_ANCHOR},
@@ -159,7 +159,7 @@ fn apply_item_effect(
                         ..default()
                     },
                     despawn_anim: DespawnAnimation::new(translation)
-                        .with_extra_progress(CLAW_ANIM_DURATAION),
+                        .with_extra_progress(CLAW_ANIM_DURATION),
                 });
                 commands.add_trauma(0.5);
 

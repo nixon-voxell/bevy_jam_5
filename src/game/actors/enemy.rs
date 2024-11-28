@@ -20,7 +20,7 @@ use super::{Directions, EnemyActor, Health, IsAirborne, Movement};
 /// Distance from border that the enemy will spawn in.
 pub const ENEMY_SPAWN_RANGE: u32 = 2;
 /// Claw animation extra duration.
-pub const CLAW_ANIM_DURATAION: f32 = 1.0;
+pub const CLAW_ANIM_DURATION: f32 = 1.0;
 const SPAWN_TRIAL: usize = 10;
 const ENEMY_MOVE_SPEED: f32 = 4.0;
 
@@ -74,13 +74,13 @@ fn perform_attack(
                 ..default()
             },
             despawn_anim: DespawnAnimation::new(translation)
-                .with_extra_progress(CLAW_ANIM_DURATAION),
+                .with_extra_progress(CLAW_ANIM_DURATION),
         });
         commands.add_trauma(0.5);
     }
 
     enemy_attack.factor += time.delta_seconds();
-    if enemy_attack.factor >= CLAW_ANIM_DURATAION {
+    if enemy_attack.factor >= CLAW_ANIM_DURATION {
         // Deal damage
         if let Some(mut health) = village_map
             .actors
