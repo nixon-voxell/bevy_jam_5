@@ -26,6 +26,7 @@ pub mod resources;
 pub mod selection;
 pub mod systems;
 pub mod tile_set;
+pub mod vfx;
 
 pub(super) fn plugin(app: &mut App) {
     app.add_plugins((
@@ -40,6 +41,7 @@ pub(super) fn plugin(app: &mut App) {
         actors::ActorPlugin,
         item::ItemPlugin,
         rendering::MapRenderingPlugin,
+        vfx::VfxPlugin,
     ));
 }
 

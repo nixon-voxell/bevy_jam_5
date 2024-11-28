@@ -1,28 +1,24 @@
-use bevy::{color::palettes::css, math::uvec2, prelude::*};
+use bevy::color::palettes::css;
+use bevy::math::uvec2;
+use bevy::prelude::*;
 use bevy_trauma_shake::TraumaCommands;
 
 use crate::game::actors::spawn::SpawnAnimation;
 use crate::game::actors::ActorBundle;
 use crate::game::actors_list::PlayerActorList;
+use crate::game::constants::*;
 use crate::game::cycle::{Season, TimeOfDay, Turn, TURN_PER_DAY};
 use crate::game::level::Terrain;
 use crate::game::map::VillageMap;
 use crate::game::selection::SelectionMap;
 use crate::game::tile_set::{tile_coord_translation, TileSet, TILE_ANCHOR};
+use crate::game::vfx::{FireOneShotVfx, OneShotVfx};
 use crate::path_finding::tiles::{Tile, TileDir};
 use crate::screen::playing::GameState;
 use crate::screen::Screen;
-use crate::ui::icon_set::IconSet;
 
 use super::spawn::DespawnAnimation;
 use super::{Directions, EnemyActor, Health, IsAirborne, Movement};
-
-/// Distance from border that the enemy will spawn in.
-pub const ENEMY_SPAWN_RANGE: u32 = 2;
-/// Claw animation extra duration.
-pub const CLAW_ANIM_DURATION: f32 = 1.0;
-const SPAWN_TRIAL: usize = 10;
-const ENEMY_MOVE_SPEED: f32 = 4.0;
 
 pub struct EnemyActorsPlugin;
 
@@ -31,6 +27,7 @@ impl Plugin for EnemyActorsPlugin {
         app.init_state::<EnemyActionState>()
             .add_systems(OnEnter(TimeOfDay::Night), spawn_enemies)
             .add_systems(OnEnter(GameState::EnemyTurn), find_movement_path)
+            .add_systems(OnEnter(GameState::BuildingTurn), hide_thick_borders)
             .add_systems(
                 Update,
                 (
@@ -44,6 +41,15 @@ impl Plugin for EnemyActorsPlugin {
     }
 }
 
+/// Hide all thick borders (enemy attack indicators).
+fn hide_thick_borders(mut q_vis: Query<&mut Visibility>, selection_map: Res<SelectionMap>) {
+    for (_, &entity) in selection_map.thick_borders.iter() {
+        if let Ok(mut vis) = q_vis.get_mut(entity) {
+            *vis = Visibility::Hidden;
+        }
+    }
+}
+
 fn perform_attack(
     mut commands: Commands,
     mut q_enemy_attacks: Query<(Entity, &mut EnemyAttack), With<EnemyActor>>,
@@ -53,34 +59,41 @@ fn perform_attack(
     village_map: Res<VillageMap>,
     selection_map: Res<SelectionMap>,
     mut next_enemy_action_state: ResMut<NextState<EnemyActionState>>,
-    icon_set: Res<IconSet>,
     time: Res<Time>,
+    mut evw_oneshot_vfx: EventWriter<FireOneShotVfx>,
 ) {
     let Some((entity, mut enemy_attack)) = q_enemy_attacks.iter_mut().next() else {
         next_enemy_action_state.set(EnemyActionState::Move);
         return;
     };
 
+    let tile = enemy_attack.tile.to_ivec2().as_vec2();
+    let mut tile_trans = tile_coord_translation(tile.x, tile.y, 3.0);
+    tile_trans.y += 100.0;
+
     if enemy_attack.factor == 0.0 {
-        let tile = enemy_attack.tile.to_ivec2().as_vec2();
-        let translation = tile_coord_translation(tile.x, tile.y, 3.0);
-        commands.spawn(ClawMarkBundle {
-            sprite: SpriteBundle {
-                sprite: Sprite {
-                    anchor: TILE_ANCHOR,
-                    ..default()
-                },
-                texture: icon_set.get("claw_mark"),
-                ..default()
-            },
-            despawn_anim: DespawnAnimation::new(translation)
-                .with_extra_progress(CLAW_ANIM_DURATION),
-        });
+        evw_oneshot_vfx.send(FireOneShotVfx(
+            OneShotVfx::AttackFlash,
+            Transform::from_translation(tile_trans),
+        ));
+
+        if village_map
+            .actors
+            .get(enemy_attack.tile)
+            // Can only deal damage to non enemy units
+            .filter(|e| q_not_enemy_units.contains(*e))
+            .is_some_and(|e| q_health.contains(e))
+        {
+            evw_oneshot_vfx.send(FireOneShotVfx(
+                OneShotVfx::BloodSplash,
+                Transform::from_translation(tile_trans),
+            ));
+        }
         commands.add_trauma(0.5);
     }
 
     enemy_attack.factor += time.delta_seconds();
-    if enemy_attack.factor >= CLAW_ANIM_DURATION {
+    if enemy_attack.factor >= ATK_ANIM_DURATION {
         // Deal damage
         if let Some(mut health) = village_map
             .actors
@@ -91,6 +104,7 @@ fn perform_attack(
         {
             health.value = health.value.saturating_sub(1);
         }
+
         // Hide marked tile
         if let Some(mut vis) = selection_map
             .thick_borders

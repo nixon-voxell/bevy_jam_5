@@ -14,13 +14,7 @@ impl Plugin for IconSetUiPlugin {
 }
 
 fn load_icon_set(asset_server: Res<AssetServer>, mut icon_set: ResMut<IconSet>) {
-    const PIXEL_ICONS: &[&str] = &[
-        "gold_coins",
-        "population",
-        "selection_arrow",
-        "attack_arrow",
-        "hourglass",
-    ];
+    const PIXEL_ICONS: &[&str] = &["selection_arrow", "attack_arrow", "hourglass"];
     const ICONS: &[&str] = &[
         // Weapons
         "axe",
@@ -30,13 +24,16 @@ fn load_icon_set(asset_server: Res<AssetServer>, mut icon_set: ResMut<IconSet>) 
         "mace",
         "sword",
         "whip",
+        // Vfx
+        "claw_mark",
         // Potions
         "fire_potion",
         "health_potion",
         "speed_potion",
         "strength_potion",
         // General
-        "claw_mark",
+        "gold_coins",
+        "population",
         "shop",
         "shop_character",
         "bg1",
@@ -44,6 +41,8 @@ fn load_icon_set(asset_server: Res<AssetServer>, mut icon_set: ResMut<IconSet>) 
         "button1",
         "button1-gs",
         "heart",
+        "leaf",
+        "snowflake",
     ];
 
     for pixel_icon in PIXEL_ICONS {

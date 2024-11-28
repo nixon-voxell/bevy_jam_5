@@ -33,3 +33,10 @@ pub const UNIT_LIST_ZINDEX: ZIndex = ZIndex::Global(150);
 pub const CURSOR_COLOR: bevy::prelude::Srgba = YELLOW_300;
 
 pub const DEPLOYMENT_ZONE_COLOR: bevy::prelude::Srgba = GREEN_YELLOW;
+
+/// Distance from border that the enemy will spawn in.
+pub const ENEMY_SPAWN_RANGE: u32 = 2;
+/// Claw animation extra duration.
+pub const ATK_ANIM_DURATION: f32 = 1.0;
+pub const SPAWN_TRIAL: usize = 10;
+pub const ENEMY_MOVE_SPEED: f32 = 4.0;
