@@ -66,7 +66,6 @@ fn perform_attack(
     village_map: Res<VillageMap>,
     selection_map: Res<SelectionMap>,
     mut next_enemy_action_state: ResMut<NextState<EnemyActionState>>,
-    icon_set: Res<IconSet>,
     time: Res<Time>,
     mut evw_oneshot_vfx: EventWriter<FireOneShotVfx>,
 ) {
@@ -75,31 +74,29 @@ fn perform_attack(
         return;
     };
 
-    if enemy_attack.factor == 0.0 {
-        let tile = enemy_attack.tile.to_ivec2().as_vec2();
-        let translation = tile_coord_translation(tile.x, tile.y, 3.0);
+    let tile = enemy_attack.tile.to_ivec2().as_vec2();
+    let mut tile_trans = tile_coord_translation(tile.x, tile.y, 3.0);
+    tile_trans.y += 100.0;
 
+    if enemy_attack.factor == 0.0 {
         evw_oneshot_vfx.send(FireOneShotVfx(
             OneShotVfx::AttackFlash,
-            Transform::from_translation(translation),
+            Transform::from_translation(tile_trans),
         ));
-        // evw_oneshot_vfx.send(FireOneShotVfx(
-        //     OneShotVfx::BloodSplash,
-        //     Transform::from_translation(translation),
-        // ));
 
-        // commands.spawn(ClawMarkBundle {
-        //     sprite: SpriteBundle {
-        //         sprite: Sprite {
-        //             anchor: TILE_ANCHOR,
-        //             ..default()
-        //         },
-        //         texture: icon_set.get("claw_mark"),
-        //         ..default()
-        //     },
-        //     despawn_anim: DespawnAnimation::new(translation)
-        //         .with_extra_progress(CLAW_ANIM_DURATAION),
-        // });
+        if village_map
+            .actors
+            .get(enemy_attack.tile)
+            // Can only deal damage to non enemy units
+            .filter(|e| q_not_enemy_units.contains(*e))
+            .is_some_and(|e| q_health.contains(e))
+        {
+            evw_oneshot_vfx.send(FireOneShotVfx(
+                OneShotVfx::BloodSplash,
+                Transform::from_translation(tile_trans),
+            ));
+        }
+
         commands.add_trauma(0.5);
     }
 
@@ -115,6 +112,7 @@ fn perform_attack(
         {
             health.value = health.value.saturating_sub(1);
         }
+
         // Hide marked tile
         if let Some(mut vis) = selection_map
             .thick_borders

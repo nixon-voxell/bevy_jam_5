@@ -130,7 +130,7 @@ fn apply_item_effect(
         return;
     }
 
-    println!("Using item: {}", item.name);
+    info!("Using item: {}", item.name);
 
     let possible_action_tiles =
         find_all_within_distance_unweighted(inventory_selection.tile, item.range, |t| {
