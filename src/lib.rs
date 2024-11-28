@@ -78,6 +78,8 @@ impl Plugin for AppPlugin {
             .add_systems(Startup, spawn_camera)
             .add_systems(Update, update_camera_scale);
 
+        app.add_plugins(game::rendering::extract_map::MapExtractionPlugin);
+
         // Enable dev tools for dev builds.
         #[cfg(feature = "dev")]
         app.add_plugins(dev_tools::plugin);
