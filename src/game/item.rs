@@ -15,7 +15,7 @@ use crate::{
 };
 
 use super::{
-    actors::{stats::Health, ActorTurnState, EnemyActor},
+    actors::{stats::Health, ActorTurnState, ClearUndoEvent, EnemyActor},
     inventory::{Inventory, Item},
     map::VillageMap,
     selection::{self, SelectedActor, SelectedTiles, SelectionEvent},
@@ -96,6 +96,7 @@ fn apply_item_effect(
     selected_unit: Res<SelectedActor>,
     inventory_selection: Res<InventorySelection>,
     mut selection_events: EventReader<SelectionEvent>,
+    mut clear_undo_event: EventWriter<ClearUndoEvent>,
 ) {
     if selection_events.is_empty() {
         return;
@@ -177,6 +178,8 @@ fn apply_item_effect(
             }
 
             turn_state.used_action = true;
+
+            clear_undo_event.send(ClearUndoEvent);
         }
     }
 }
