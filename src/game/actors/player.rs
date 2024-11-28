@@ -47,6 +47,7 @@ pub fn add_starting_player_units(
 }
 
 pub fn move_unit(
+    reset_event_reader: EventReader<ClearUndoEvent>,
     mut event_reader: EventReader<TilePressedEvent>,
     selected_unit: Res<SelectedActor>,
     mut village_map: ResMut<VillageMap>,
@@ -61,6 +62,12 @@ pub fn move_unit(
         With<PlayerActor>,
     >,
 ) {
+    if !reset_event_reader.is_empty() {
+        for (mut turn_state, ..) in turn_state_query.iter_mut() {
+            turn_state.previous_position = None;
+        }
+    }
+
     if let Some(TilePressedEvent(target)) = event_reader.read().last() {
         let Some(selected) = selected_unit.entity else {
             return;
@@ -72,15 +79,16 @@ pub fn move_unit(
             return;
         };
 
-        if turn_state.used_move || movement.0 == 0 {
+        if (turn_state.used_move && turn_state.previous_position == None) || movement.0 == 0 {
             return;
         }
 
-        let Some(current_pos) = village_map
-            .actors
-            .locate(selected)
-            .filter(|pos| *pos != *target)
-        else {
+        let Some(current_pos) = turn_state.previous_position.or_else(|| {
+            village_map
+                .actors
+                .locate(selected)
+                .filter(|pos| *pos != *target)
+        }) else {
             return;
         };
 
@@ -88,6 +96,7 @@ pub fn move_unit(
             .flood(current_pos, movement.0, &TileDir::EDGES, false)
             .contains(target)
         {
+            turn_state.previous_position = Some(current_pos);
             village_map.actors.set(*target, selected);
             turn_state.used_move = true;
             transform.translation =

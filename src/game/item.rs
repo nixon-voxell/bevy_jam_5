@@ -4,7 +4,7 @@ use bevy_trauma_shake::TraumaCommands;
 use crate::{
     game::{
         actors::{
-            enemy::{ClawMarkBundle, CLAW_ANIM_DURATAION},
+            enemy::{ClawMarkBundle, CLAW_ANIM_DURATION},
             spawn::DespawnAnimation,
         },
         tile_set::{tile_coord_translation, TILE_ANCHOR},
@@ -15,7 +15,7 @@ use crate::{
 };
 
 use super::{
-    actors::{stats::Health, ActorTurnState, EnemyActor},
+    actors::{stats::Health, ActorTurnState, ClearUndoEvent, EnemyActor},
     inventory::{Inventory, Item},
     map::VillageMap,
     selection::{self, SelectedActor, SelectedTiles, SelectionEvent},
@@ -96,6 +96,7 @@ fn apply_item_effect(
     selected_unit: Res<SelectedActor>,
     inventory_selection: Res<InventorySelection>,
     mut selection_events: EventReader<SelectionEvent>,
+    mut clear_undo_event: EventWriter<ClearUndoEvent>,
 ) {
     if selection_events.is_empty() {
         return;
@@ -158,7 +159,7 @@ fn apply_item_effect(
                         ..default()
                     },
                     despawn_anim: DespawnAnimation::new(translation)
-                        .with_extra_progress(CLAW_ANIM_DURATAION),
+                        .with_extra_progress(CLAW_ANIM_DURATION),
                 });
                 commands.add_trauma(0.5);
 
@@ -177,6 +178,8 @@ fn apply_item_effect(
             }
 
             turn_state.used_action = true;
+
+            clear_undo_event.send(ClearUndoEvent);
         }
     }
 }

@@ -2,7 +2,7 @@
 //! They represent any substantial game objects: player controlled characters, buildings, monsters, trees, etc
 //! Each map tile can hold a maximum of one actor.
 
-use crate::path_finding::tiles::TileDir;
+use crate::path_finding::tiles::{Tile, TileDir};
 use crate::screen::Screen;
 use bevy::prelude::*;
 use enemy::EnemyActorsPlugin;
@@ -88,6 +88,9 @@ impl Default for AvailableActorNames {
     }
 }
 
+#[derive(Event)]
+pub struct ClearUndoEvent;
+
 impl AvailableActorNames {
     pub fn next_name(&mut self) -> String {
         self.0
@@ -101,6 +104,7 @@ pub struct ActorPlugin;
 impl Plugin for ActorPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((EnemyActorsPlugin, SpawnActorsPlugin))
+            .add_event::<ClearUndoEvent>()
             .add_systems(Update, health_ui.run_if(in_state(Screen::Playing)));
     }
 }
@@ -155,6 +159,8 @@ pub struct Directions(pub Vec<TileDir>);
 pub struct ActorTurnState {
     pub used_move: bool,
     pub used_action: bool,
+    /// position for undo
+    pub previous_position: Option<Tile>,
 }
 
 impl ActorTurnState {
