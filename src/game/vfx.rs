@@ -5,6 +5,8 @@ use bevy_enoki::prelude::*;
 use strum::{EnumCount, IntoEnumIterator};
 use strum_macros::{AsRefStr, EnumCount, EnumIter};
 
+use crate::ui::icon_set::IconSet;
+
 pub(super) struct VfxPlugin;
 
 impl Plugin for VfxPlugin {
@@ -30,7 +32,12 @@ fn fire_oneshot_vfx(
     }
 }
 
-fn setup_attack_vfx(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn setup_attack_vfx(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut sprite_mats: ResMut<Assets<SpriteParticle2dMaterial>>,
+    icon_set: Res<IconSet>,
+) {
     let map = OneShotVfxMap(
         OneShotVfx::iter()
             .map(|vfx| {
@@ -53,6 +60,15 @@ fn setup_attack_vfx(mut commands: Commands, asset_server: Res<AssetServer>) {
             .try_into()
             .unwrap(),
     );
+
+    commands
+        .entity(map[OneShotVfx::AttackFlash])
+        .remove::<Handle<ColorParticle2dMaterial>>()
+        .insert(sprite_mats.add(SpriteParticle2dMaterial::new(
+            icon_set.get("claw_mark"),
+            1,
+            1,
+        )));
 
     commands.insert_resource(map);
 }
