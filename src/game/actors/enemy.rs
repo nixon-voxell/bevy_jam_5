@@ -12,6 +12,8 @@ use crate::game::level::Terrain;
 use crate::game::map::VillageMap;
 use crate::game::selection::SelectionMap;
 use crate::game::tile_set::{tile_coord_translation, TileSet, TILE_ANCHOR};
+use crate::game::vfx::FireOneShotVfx;
+use crate::game::vfx::OneShotVfx::BloodSplash;
 use crate::path_finding::tiles::{Tile, TileDir};
 use crate::screen::playing::GameState;
 use crate::screen::Screen;
@@ -32,7 +34,6 @@ pub struct EnemyActorsPlugin;
 impl Plugin for EnemyActorsPlugin {
     fn build(&self, app: &mut App) {
         app.init_state::<EnemyActionState>()
-            .add_systems(Startup, setup_attack_vfx)
             .add_systems(OnEnter(TimeOfDay::Night), spawn_enemies)
             .add_systems(OnEnter(GameState::EnemyTurn), find_movement_path)
             .add_systems(
@@ -48,26 +49,9 @@ impl Plugin for EnemyActorsPlugin {
     }
 }
 
-fn setup_attack_vfx(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.spawn((
-        ParticleSpawnerBundle {
-            state: ParticleSpawnerState {
-                active: false,
-                ..default()
-            },
-            effect: asset_server.load("enoki/blood_splashing.ron"),
-            material: DEFAULT_MATERIAL,
-            ..default()
-        },
-        OneShot::Deactivate,
-        BloodSplashVfx,
-    ));
-}
-
 // TODO: Attack vfx needs to be an event!
 fn perform_attack(
     mut commands: Commands,
-    mut q_blood_vfx: Query<(&mut ParticleSpawnerState, &mut Transform), With<BloodSplashVfx>>,
     mut q_enemy_attacks: Query<(Entity, &mut EnemyAttack), With<EnemyActor>>,
     q_not_enemy_units: Query<(), Without<EnemyActor>>,
     mut q_health: Query<&mut Health>,
@@ -77,9 +61,8 @@ fn perform_attack(
     mut next_enemy_action_state: ResMut<NextState<EnemyActionState>>,
     icon_set: Res<IconSet>,
     time: Res<Time>,
+    mut evw_oneshot_vfx: EventWriter<FireOneShotVfx>,
 ) {
-    let (mut blood_vfx, mut blood_vfx_transform) = q_blood_vfx.single_mut();
-
     let Some((entity, mut enemy_attack)) = q_enemy_attacks.iter_mut().next() else {
         next_enemy_action_state.set(EnemyActionState::Move);
         return;
@@ -89,8 +72,10 @@ fn perform_attack(
         let tile = enemy_attack.tile.to_ivec2().as_vec2();
         let translation = tile_coord_translation(tile.x, tile.y, 3.0);
 
-        blood_vfx_transform.translation = translation;
-        blood_vfx.active = true;
+        evw_oneshot_vfx.send(FireOneShotVfx(
+            BloodSplash,
+            Transform::from_translation(translation),
+        ));
 
         commands.spawn(ClawMarkBundle {
             sprite: SpriteBundle {
@@ -474,6 +459,3 @@ pub(super) enum EnemyActionState {
     Attack,
     Move,
 }
-
-#[derive(Component)]
-pub struct BloodSplashVfx;
