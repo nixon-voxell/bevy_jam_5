@@ -264,6 +264,7 @@ fn enter_playing(
                 ui.label(LabelConfig::from("Turn Until"))
                     .insert(WatchRes::<Turn>::default())
                     .style()
+                    .align_self(AlignSelf::End)
                     .font_size(LABEL_SIZE);
 
                 ui.column(|ui| {
