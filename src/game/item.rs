@@ -6,7 +6,6 @@ use crate::path_finding::find_all_within_distance_unweighted;
 use crate::path_finding::tiles::Tile;
 use crate::screen::playing::GameState;
 use crate::screen::Screen;
-use crate::ui::icon_set::IconSet;
 
 use super::actors::{stats::Health, ActorTurnState, ClearUndoEvent, EnemyActor};
 use super::inventory::{Inventory, Item};
@@ -85,7 +84,6 @@ fn apply_item_effect(
     mut q_healths: Query<&mut Health>,
     q_enemy_units: Query<(), With<EnemyActor>>,
     mut village_map: ResMut<VillageMap>,
-    icon_set: Res<IconSet>,
     selected_unit: Res<SelectedActor>,
     inventory_selection: Res<InventorySelection>,
     mut selection_events: EventReader<SelectionEvent>,

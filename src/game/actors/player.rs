@@ -79,7 +79,7 @@ pub fn move_unit(
             return;
         };
 
-        if (turn_state.used_move && turn_state.previous_position == None) || movement.0 == 0 {
+        if (turn_state.used_move && turn_state.previous_position.is_none()) || movement.0 == 0 {
             return;
         }
 
