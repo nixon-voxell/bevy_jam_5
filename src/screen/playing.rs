@@ -341,10 +341,13 @@ fn enter_playing(
                 .z_index(UNIT_LIST_ZINDEX)
                 .width(Val::Percent(100.))
                 .height(Val::Percent(100.))
-                .justify_content(JustifyContent::Center);
+                .justify_content(JustifyContent::Start);
+
+            ui.row(|_| {}).style().height(Val::Px(60.));
+
             ui.row(|ui| {
                 ui.style()
-                    .align_items(AlignItems::Center)
+                    .align_items(AlignItems::Start)
                     .justify_content(JustifyContent::Start)
                     .margin(UiRect::left(Val::Px(10.)));
                 ui.column(|ui| {
