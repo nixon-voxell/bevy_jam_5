@@ -99,7 +99,7 @@ pub fn show_movement_range(
         return;
     }
 
-    let tiles = village_map.flood(tile, movement.0, &TileDir::EDGES, false);
+    let tiles = village_map.flood(tile, movement.0, &TileDir::EDGES, false, &[]);
     selected_tiles.tiles = tiles;
     match q_enemies.contains(entity) {
         true => selected_tiles.color = css::INDIAN_RED.into(),
