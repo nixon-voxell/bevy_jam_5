@@ -23,6 +23,7 @@ use crate::game::tile_set::TILE_ANCHOR;
 use crate::path_finding::tiles::Tile;
 use crate::path_finding::tiles::TileCorner;
 use crate::path_finding::tiles::TileEdge;
+use crate::path_finding::tiles::Tiled;
 use crate::screen::playing::GameState;
 use crate::ui::icon_set::IconSet;
 
@@ -143,11 +144,20 @@ fn extract_selected_tiles(
     selected: Extract<Res<SelectedTiles>>,
     tile_set: Extract<Res<TileSet>>,
     ent: Extract<Res<MapEnt>>,
+    maybe_village_map: Extract<Option<Res<VillageMap>>>,
 ) {
+    let Some(village_map) = maybe_village_map.as_ref() else {
+        return;
+    };
     let edge_image = tile_set.get("edge");
     let ne_corner_image = tile_set.get("ne_corner");
     let se_corner_image = tile_set.get("se_corner");
-    for tile in selected.tiles.iter().copied() {
+    for tile in selected
+        .tiles
+        .iter()
+        .copied()
+        .filter(|tile| village_map.contains_tile(*tile))
+    {
         let border_edges = TileEdge::ALL
             .iter()
             .filter(|e| {
