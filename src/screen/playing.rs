@@ -17,6 +17,7 @@ use crate::game::deployment::{
     deployment_setup, deployment_zone_visualization, is_deployment_ready,
 };
 use crate::game::events::{EndDayTurn, SelectStructureTypeEvent};
+use crate::game::level::load_level;
 use crate::game::resources::{
     SelectedStructueType, VillageEmployment, VillageGold, VillagePopulation,
 };
@@ -133,13 +134,13 @@ pub(super) fn plugin(app: &mut App) {
                 .run_if(in_state(Screen::Playing).and_then(in_state(GameState::BuildingTurn))),
         )
         .add_systems(
-            Update,
+            OnEnter(TimeOfDay::Day),
             (
-                update_building_progress.run_if(in_state(Screen::Playing)),
-                update_building_progress_labels
-                    .run_if(in_state(Screen::Playing))
-                    .after(update_building_progress),
-            ),
+                update_building_progress,
+                update_building_progress_labels.after(update_building_progress),
+            )
+                .chain()
+                .run_if(in_state(Screen::Playing)),
         )
         .add_systems(Update, enter_tavern_modal.after(dispatch_object_pressed))
         .add_systems(

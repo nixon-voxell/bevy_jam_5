@@ -7,6 +7,3 @@ pub struct SelectStructureTypeEvent(pub StructureType);
 
 #[derive(Event, Copy, Clone, PartialEq)]
 pub struct EndDayTurn;
-
-#[derive(Event, Copy, Clone, PartialEq)]
-pub struct NewDayEvent;

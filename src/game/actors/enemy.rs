@@ -7,7 +7,7 @@ use crate::game::actors::spawn::SpawnAnimation;
 use crate::game::actors::ActorBundle;
 use crate::game::actors_list::PlayerActorList;
 use crate::game::constants::*;
-use crate::game::cycle::{Season, TimeOfDay, Turn, TURN_PER_DAY};
+use crate::game::cycle::{DayCycle, Season, TimeOfDay, Turn};
 use crate::game::level::Terrain;
 use crate::game::map::VillageMap;
 use crate::game::selection::SelectionMap;
@@ -133,8 +133,9 @@ fn move_enemies(
     player_unit_list: Res<PlayerActorList>,
     turn: Res<Turn>,
     time: Res<Time>,
+    day_cycle: Res<DayCycle>,
 ) {
-    if turn.0 != 0 && turn.0 % TURN_PER_DAY == 0 {
+    if turn.0 != 0 && turn.0 % day_cycle.turns_per_day() == 0 {
         // Next day starts, clear all enemy units
         for (enemy_entity, transform, ..) in q_enemy_units.iter() {
             commands

@@ -7,8 +7,6 @@ use super::{
     resources::VillageEmployment, update_resource_label, update_resource_label_system, WatchRes,
 };
 
-/// Number of turns in a day.
-pub const TURN_PER_DAY: u32 = 10;
 /// Number of days in a season.
 pub const DAY_PER_SEASON: u32 = 2; // TODO: Determine a balanced number, set to low for testing.
 /// Number of days in a cycle which contains all 3 seasons.
@@ -113,7 +111,7 @@ fn update_cycle(
     mut game_state: ResMut<NextState<GameState>>,
 ) {
     // Season
-    let day = turn.0 / TURN_PER_DAY;
+    let day = turn.0 / day_cycle.turns_per_day();
     season.set_if_neq(match (day % DAY_PER_CYCLE) / DAY_PER_SEASON {
         0 => Season::Summer,
         1 => Season::Autumn,
@@ -125,14 +123,14 @@ fn update_cycle(
     *day_cycle = DayCycle::from(*season);
 
     // Time of day
-    match turn.0 % TURN_PER_DAY >= day_cycle.day {
+    match turn.0 % day_cycle.turns_per_day() >= day_cycle.day {
         true => {
             next_tod.set(TimeOfDay::Night);
         }
         false => next_tod.set(TimeOfDay::Day),
     }
 
-    if turn.0 % TURN_PER_DAY == day_cycle.day {
+    if turn.0 % day_cycle.turns_per_day() == day_cycle.day {
         game_state.set(GameState::Deployment);
     }
 }
@@ -146,9 +144,9 @@ fn turn_until_label(
         return;
     };
 
-    let turn_in_day = turn.0 % day_cycle.count();
+    let turn_in_day = turn.0 % day_cycle.turns_per_day();
     let (turn_left, target_day) = match turn_in_day >= day_cycle.day {
-        true => (day_cycle.count() - turn_in_day, "day"),
+        true => (day_cycle.turns_per_day() - turn_in_day, "day"),
         false => (day_cycle.day - turn_in_day, "night"),
     };
 
@@ -208,7 +206,7 @@ pub struct DayCycle {
 }
 
 impl DayCycle {
-    pub fn count(&self) -> u32 {
+    pub fn turns_per_day(&self) -> u32 {
         self.day + self.night
     }
 }
