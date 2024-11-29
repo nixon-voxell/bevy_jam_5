@@ -94,7 +94,7 @@ pub fn show_movement_range(
         return;
     };
 
-    if turn_state.used_move {
+    if turn_state.used_move && turn_state.previous_position.is_none() {
         selected_tiles.tiles.clear();
         return;
     }
