@@ -32,7 +32,6 @@ impl Plugin for SelectionPlugin {
             .add_systems(
                 Update,
                 (
-                    //show_selected_tiles.run_if(resource_changed::<SelectedTiles>),
                     color_selected_tiles.run_if(resource_changed::<SelectedTiles>),
                     set_selected_unit
                         .run_if(in_state(Screen::Playing))
