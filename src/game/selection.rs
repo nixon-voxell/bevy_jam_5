@@ -3,7 +3,8 @@ use bevy::prelude::*;
 use bevy::utils::{HashMap, HashSet};
 
 use super::actors::stats::Movement;
-use super::actors::{ActorTurnState, EnemyActor};
+use super::actors::{ActorTurnState, EnemyActor, PlayerActor};
+use super::audio::soundtrack::PlaySoundtrack;
 use super::components::GroundTileLayer;
 use super::deployment::deploy_unit;
 use super::map::VillageMap;
@@ -80,10 +81,11 @@ fn color_selected_tiles(
 
 pub fn show_movement_range(
     q_movements: Query<(&Movement, &ActorTurnState)>,
-    q_enemies: Query<(), With<EnemyActor>>,
+    q_enemies: Query<Entity, With<EnemyActor>>,
     selected_unit: Res<SelectedActor>,
     mut selected_tiles: ResMut<SelectedTiles>,
     village_map: Res<VillageMap>,
+    player_actor_query: Query<Entity, With<PlayerActor>>,
 ) {
     let Some(entity) = selected_unit.entity else {
         return;
@@ -99,7 +101,15 @@ pub fn show_movement_range(
         return;
     }
 
-    let tiles = village_map.flood(tile, movement.0, &TileDir::EDGES, false, &[]);
+    let allied_actors: Vec<Entity> = if player_actor_query.contains(entity) {
+        player_actor_query.iter().collect()
+    } else if q_enemies.contains(entity) {
+        q_enemies.iter().collect()
+    } else {
+        vec![]
+    };
+
+    let tiles = village_map.flood(tile, movement.0, &TileDir::EDGES, false, &allied_actors);
     selected_tiles.tiles = tiles;
     match q_enemies.contains(entity) {
         true => selected_tiles.color = css::INDIAN_RED.into(),
