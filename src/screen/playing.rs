@@ -261,17 +261,7 @@ fn enter_playing(
 
             ui.row(|ui| {
                 ui.style().justify_content(JustifyContent::SpaceBetween);
-                ui.label(LabelConfig::from("Turn Until"))
-                    .insert(WatchRes::<Turn>::default())
-                    .style()
-                    .align_self(AlignSelf::End)
-                    .font_size(LABEL_SIZE);
-
                 ui.column(|ui| {
-                    ui.style()
-                        .justify_content(JustifyContent::Center)
-                        .justify_items(JustifyItems::Center);
-
                     ui.container(
                         ButtonBundle {
                             image: UiImage::new(icon_set.get("shop")),
@@ -281,17 +271,29 @@ fn enter_playing(
                     )
                     .insert((
                         InteractionPalette {
-                            none: Color::WHITE,
-                            hovered: Color::WHITE.lighter(0.4),
-                            pressed: Color::WHITE,
+                            none: Color::BLACK,
+                            hovered: Color::BLACK.with_alpha(0.4),
+                            pressed: Color::BLACK,
                         },
                         OpenMerchantButton,
                     ))
                     .style()
-                    .margin(UiRect::px(10., 10., 10., 20.))
-                    .border_radius(BorderRadius::all(Val::Px(50.)))
-                    .width(Val::Px(100.0))
-                    .height(Val::Px(100.0));
+                    .margin(UiRect::all(Val::Px(10.0)))
+                    .border_radius(BorderRadius::all(Val::Px(40.)))
+                    .width(Val::Px(80.0))
+                    .height(Val::Px(80.0));
+
+                    ui.label(LabelConfig::from("Turn Until"))
+                        .insert(WatchRes::<Turn>::default())
+                        .style()
+                        .align_self(AlignSelf::End)
+                        .font_size(LABEL_SIZE);
+                });
+
+                ui.column(|ui| {
+                    ui.style()
+                        .justify_content(JustifyContent::End)
+                        .justify_items(JustifyItems::End);
 
                     ui.container(ButtonBundle::default(), |ui| {
                         ui.label(LabelConfig::from("End Turn"))
@@ -307,10 +309,10 @@ fn enter_playing(
                         EndTurnButton,
                     ))
                     .style()
-                    .padding(UiRect::all(Val::Px(10.)))
-                    .border_radius(BorderRadius::all(Val::Px(5.)));
+                    .padding(UiRect::all(Val::Px(6.)))
+                    .border_radius(BorderRadius::all(Val::Px(4.)));
 
-                    ui.container(ButtonBundle { ..default() }, |ui| {
+                    ui.container(ButtonBundle::default(), |ui| {
                         ui.label(LabelConfig::from("Fight"))
                             .insert(FightButton)
                             .style()
@@ -319,15 +321,15 @@ fn enter_playing(
                     .insert((
                         InteractionPalette {
                             none: css::PURPLE.into(),
-                            hovered: css::DARK_RED.into(),
-                            pressed: css::INDIAN_RED.into(),
+                            hovered: css::MEDIUM_PURPLE.into(),
+                            pressed: css::REBECCA_PURPLE.into(),
                         },
                         FightButton,
                     ))
                     .style()
                     .display(Display::None)
-                    .padding(UiRect::all(Val::Px(10.)))
-                    .border_radius(BorderRadius::all(Val::Px(5.)));
+                    .padding(UiRect::all(Val::Px(6.)))
+                    .border_radius(BorderRadius::all(Val::Px(4.)));
                 });
             });
         })
