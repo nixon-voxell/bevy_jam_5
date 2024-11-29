@@ -12,7 +12,7 @@ use crate::game::construction::{
     build_btn_interaction, building_panel_layout, spawn_in_progress_building, update_build_panel,
     update_building_progress, update_building_progress_labels, BuildingPanel, StructureCosts,
 };
-use crate::game::cycle::{EndDeployment, EndTurn, Season, TimeOfDay, Turn};
+use crate::game::cycle::{DayCycle, EndDeployment, EndTurn, Season, TimeOfDay, Turn};
 use crate::game::deployment::{
     deployment_setup, deployment_zone_visualization, is_deployment_ready,
 };
@@ -75,6 +75,12 @@ pub(super) fn plugin(app: &mut App) {
         )
         .add_systems(
             OnExit(GameState::Deployment),
+            |mut selected_tiles: ResMut<SelectedTiles>| {
+                selected_tiles.tiles.clear();
+            },
+        )
+        .add_systems(
+            OnEnter(TimeOfDay::Day),
             |mut selected_tiles: ResMut<SelectedTiles>| {
                 selected_tiles.tiles.clear();
             },
