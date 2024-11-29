@@ -81,14 +81,6 @@ pub fn touch_tile(
         if let Some(touched_point) = camera
             .viewport_to_world(camera_transform, touch.position())
             .map(|ray| ray.origin.truncate())
-        // <<<<<<< HEAD
-        //             .map(Tile::from)
-        //             .filter(|tile| village_map.contains_tile(*tile))
-        // ||||||| 6ae4b19
-        //             .map(|point| Tile::from(point))
-        //             .filter(|tile| village_map.contains_tile(*tile))
-        // =======
-        // >>>>>>> main
         {
             let tile_point = camera_to_tile(touched_point);
             let tile = Tile::from(tile_point);
