@@ -24,6 +24,12 @@ impl Plugin for SelectionPlugin {
             .add_event::<SelectionEvent>()
             .add_event::<ObjectPressedEvent>()
             .add_systems(
+                OnExit(GameState::Deployment),
+                |mut selected_actor: ResMut<SelectedActor>| {
+                    selected_actor.entity = None;
+                },
+            )
+            .add_systems(
                 Update,
                 (
                     //show_selected_tiles.run_if(resource_changed::<SelectedTiles>),
@@ -109,7 +115,9 @@ pub fn show_movement_range(
         vec![]
     };
 
-    let tiles = village_map.flood(tile, movement.0, &TileDir::EDGES, false, &allied_actors);
+    let start = turn_state.previous_position.unwrap_or(tile);
+
+    let tiles = village_map.flood(start, movement.0, &TileDir::EDGES, false, &allied_actors);
     selected_tiles.tiles = tiles;
     match q_enemies.contains(entity) {
         true => selected_tiles.color = css::INDIAN_RED.into(),
