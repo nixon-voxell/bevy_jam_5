@@ -9,9 +9,12 @@ pub struct DebugPlugin;
 impl Plugin for DebugPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, show_states)
-            .add_systems(Update, update_states);
+            .add_systems(Update, (toggle_debug_panel, update_states));
     }
 }
+
+#[derive(Component)]
+pub struct DebugPanelMarker;
 
 #[derive(Component)]
 pub struct GameStateLabel;
@@ -20,6 +23,7 @@ pub struct ScreenLabel;
 
 pub fn show_states(mut commands: Commands) {
     commands.ui_builder(UiRoot).column(|ui| {
+        ui.insert(DebugPanelMarker);
         ui.row(|ui| {
             ui.style()
                 .margin(UiRect::all(Val::Percent(2.)))
@@ -72,6 +76,20 @@ pub fn update_states(
                     color: Color::WHITE,
                 },
             );
+        }
+    }
+}
+
+pub fn toggle_debug_panel(
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut query: Query<&mut Style, With<DebugPanelMarker>>,
+) {
+    if keyboard_input.just_pressed(KeyCode::KeyD) && keyboard_input.pressed(KeyCode::ControlLeft) {
+        for mut style in query.iter_mut() {
+            style.display = match style.display {
+                Display::None => Display::Flex,
+                _ => Display::None,
+            };
         }
     }
 }
