@@ -146,14 +146,19 @@ fn turn_until_label(
         return;
     };
 
-    let turn_in_day = turn.0 % TURN_PER_DAY;
+    let turn_in_day = turn.0 % day_cycle.count();
     let (turn_left, target_day) = match turn_in_day >= day_cycle.day {
-        true => (TURN_PER_DAY - turn_in_day, "day"),
+        true => (day_cycle.count() - turn_in_day, "day"),
         false => (day_cycle.day - turn_in_day, "night"),
     };
 
     let section = &mut text.sections[0];
-    section.value = format!("{} turn(s) until {}", turn_left, target_day);
+
+    if turn.0 == 0 {
+        section.value = format!("Daytime");
+    } else {
+        section.value = format!("{} turn(s) until {}", turn_left, target_day);
+    }
 }
 
 /// Current turn in the day cycle.
@@ -217,9 +222,9 @@ impl Default for DayCycle {
 impl From<Season> for DayCycle {
     fn from(season: Season) -> Self {
         match season {
-            Season::Summer => DayCycle { day: 6, night: 4 },
-            Season::Autumn => DayCycle { day: 5, night: 5 },
-            Season::Winter => DayCycle { day: 4, night: 6 },
+            Season::Summer => DayCycle { day: 1, night: 4 },
+            Season::Autumn => DayCycle { day: 1, night: 5 },
+            Season::Winter => DayCycle { day: 1, night: 6 },
         }
     }
 }

@@ -80,7 +80,7 @@ impl StructureType {
 pub struct BuildButton(pub StructureType);
 
 pub struct StructureCost {
-    pub turns: u32,
+    pub days: u32,
     pub workers: u32,
     pub gold: u32,
     /// only one of these structures can be built
@@ -96,7 +96,7 @@ impl Default for StructureCosts {
             (
                 StructureType::SmallHouse,
                 StructureCost {
-                    turns: 2,
+                    days: 1,
                     workers: 5,
                     gold: 25,
                     is_exclusive: false,
@@ -105,7 +105,7 @@ impl Default for StructureCosts {
             (
                 StructureType::House,
                 StructureCost {
-                    turns: 4,
+                    days: 1,
                     workers: 10,
                     gold: 50,
                     is_exclusive: false,
@@ -114,7 +114,7 @@ impl Default for StructureCosts {
             (
                 StructureType::StrongHouse,
                 StructureCost {
-                    turns: 6,
+                    days: 1,
                     workers: 15,
                     gold: 100,
                     is_exclusive: false,
@@ -123,7 +123,7 @@ impl Default for StructureCosts {
             (
                 StructureType::Tavern,
                 StructureCost {
-                    turns: 5,
+                    days: 1,
                     workers: 10,
                     gold: 75,
                     is_exclusive: true,
@@ -132,7 +132,7 @@ impl Default for StructureCosts {
             (
                 StructureType::ArcherTower,
                 StructureCost {
-                    turns: 3,
+                    days: 1,
                     workers: 5,
                     gold: 25,
                     is_exclusive: false,
@@ -141,7 +141,7 @@ impl Default for StructureCosts {
             (
                 StructureType::Blacksmith,
                 StructureCost {
-                    turns: 7,
+                    days: 1,
                     workers: 10,
                     gold: 125,
                     is_exclusive: true,
@@ -217,7 +217,7 @@ pub fn building_panel_layout(mut commands: Commands, costs: Res<StructureCosts>)
                                 for (icon, value) in [
                                     ("icons/gold_coins.png", cost.gold.to_string()),
                                     ("icons/population.png", cost.workers.to_string()),
-                                    ("icons/hourglass.png", cost.turns.to_string()),
+                                    ("icons/hourglass.png", cost.days.to_string()),
                                 ] {
                                     ui.row(|ui| {
                                         ui.style()
@@ -345,7 +345,7 @@ pub fn spawn_in_progress_building(
             },
             StateScoped(Screen::Playing),
             structure_type,
-            RemainingConstructionTurns(cost.turns),
+            RemainingConstructionTurns(cost.days),
             ConstructionWorkers(cost.workers),
             BuildingSite,
             Structure,
@@ -354,7 +354,7 @@ pub fn spawn_in_progress_building(
             builder.spawn((
                 Text2dBundle {
                     text: Text::from_section(
-                        cost.turns.to_string(),
+                        cost.days.to_string(),
                         TextStyle {
                             font_size: 100.,
                             ..Default::default()
