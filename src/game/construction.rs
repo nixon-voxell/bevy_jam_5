@@ -2,6 +2,8 @@ use bevy::color::palettes::css;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 use sickle_ui::prelude::*;
+use strum::IntoEnumIterator;
+use strum_macros::{AsRefStr, EnumIter};
 
 use crate::screen::Screen;
 use crate::ui::prelude::InteractionPalette;
@@ -33,42 +35,27 @@ use super::tile_set::tile_coord_translation;
 use super::tile_set::TileSet;
 use super::tile_set::TILE_ANCHOR;
 
-#[derive(Component, Copy, Clone, Debug, Eq, PartialEq, Hash)]
+#[derive(Component, EnumIter, AsRefStr, Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum StructureType {
-    SmallHouse,
     House,
-    StrongHouse,
     Tavern,
     ArcherTower,
     Blacksmith,
 }
 
 impl StructureType {
-    pub const ALL: [Self; 6] = [
-        Self::SmallHouse,
-        Self::House,
-        Self::StrongHouse,
-        Self::Tavern,
-        Self::ArcherTower,
-        Self::Blacksmith,
-    ];
-
     pub fn name(&self) -> &str {
         match self {
-            StructureType::SmallHouse => "small house",
-            StructureType::House => "house",
-            StructureType::StrongHouse => "strong house",
-            StructureType::Tavern => "tavern",
-            StructureType::ArcherTower => "tower",
-            StructureType::Blacksmith => "blacksmith",
+            StructureType::House => "House",
+            StructureType::Tavern => "Tavern",
+            StructureType::ArcherTower => "Tower",
+            StructureType::Blacksmith => "Blacksmith",
         }
     }
 
     pub fn tile_texture(&self) -> &str {
         match self {
-            StructureType::SmallHouse => "house1",
-            StructureType::House => "house1",
-            StructureType::StrongHouse => "house1",
+            StructureType::House => "house",
             StructureType::Tavern => "tavern",
             StructureType::ArcherTower => "tower",
             StructureType::Blacksmith => "blacksmith",
@@ -78,6 +65,9 @@ impl StructureType {
 
 #[derive(Component)]
 pub struct BuildButton(pub StructureType);
+
+#[derive(Component)]
+pub struct CancelBuildButton;
 
 pub struct StructureCost {
     pub turns: u32,
@@ -93,15 +83,15 @@ pub struct StructureCosts(pub HashMap<StructureType, StructureCost>);
 impl Default for StructureCosts {
     fn default() -> Self {
         let costs: HashMap<_, _> = [
-            (
-                StructureType::SmallHouse,
-                StructureCost {
-                    turns: 2,
-                    workers: 5,
-                    gold: 25,
-                    is_exclusive: false,
-                },
-            ),
+            // (
+            //     StructureType::SmallHouse,
+            //     StructureCost {
+            //         turns: 2,
+            //         workers: 5,
+            //         gold: 25,
+            //         is_exclusive: false,
+            //     },
+            // ),
             (
                 StructureType::House,
                 StructureCost {
@@ -111,15 +101,15 @@ impl Default for StructureCosts {
                     is_exclusive: false,
                 },
             ),
-            (
-                StructureType::StrongHouse,
-                StructureCost {
-                    turns: 6,
-                    workers: 15,
-                    gold: 100,
-                    is_exclusive: false,
-                },
-            ),
+            // (
+            //     StructureType::StrongHouse,
+            //     StructureCost {
+            //         turns: 6,
+            //         workers: 15,
+            //         gold: 100,
+            //         is_exclusive: false,
+            //     },
+            // ),
             (
                 StructureType::Tavern,
                 StructureCost {
@@ -158,82 +148,76 @@ impl Default for StructureCosts {
 #[derive(Component)]
 pub struct BuildingPanel;
 
-pub fn building_panel_layout(mut commands: Commands, costs: Res<StructureCosts>) {
+#[derive(Component)]
+pub struct StructureDetail;
+
+pub fn building_panel_layout(mut commands: Commands) {
     commands.ui_builder(UiRoot).row(|ui| {
-        ui.insert(StateScoped(Screen::Playing))
-            .insert(BuildingPanel)
-            .style()
+        ui.insert((BuildingPanel, StateScoped(Screen::Playing)));
+        ui.style()
             .width(Val::Percent(100.))
             .height(Val::Percent(100.))
-            .justify_content(JustifyContent::End)
-            .align_items(AlignItems::Center);
+            .justify_content(JustifyContent::End);
+
         ui.column(|ui| {
             ui.style()
-                .height(Val::Auto)
-                .padding(UiRect::all(Val::Px(4.)))
-                .border(UiRect::all(Val::Px(1.)))
-                .border_color(Color::WHITE)
-                .background_color(Color::BLACK.with_alpha(0.6))
-                .row_gap(Val::Px(2.))
-                .flex_grow(0.)
-                .flex_shrink(0.)
-                .margin(UiRect::all(Val::Px(10.)))
-                .width(Val::Px(300.));
+                .padding(UiRect::all(Val::Px(10.)))
+                .justify_content(JustifyContent::Start);
 
-            ui.label(LabelConfig::from("Build"))
-                .style()
-                .font_size(BIG_TEXT_SIZE);
+            ui.row(|_| {}).style().height(Val::Px(60.));
 
-            for building_type in StructureType::ALL {
-                let Some(cost) = costs.get(&building_type) else {
-                    continue;
-                };
-
-                ui.container(ButtonBundle { ..default() }, |ui| {
-                    ui.insert((
-                        BuildButton(building_type),
-                        InteractionPalette {
-                            none: css::BLACK.into(),
-                            hovered: css::TEAL.into(),
-                            pressed: css::INDIAN_RED.into(),
-                        },
-                    ))
+            ui.row(|ui| {
+                ui.style().justify_content(JustifyContent::End);
+                ui.label(LabelConfig::from("Build"))
                     .style()
-                    .border(UiRect::all(Val::Px(2.)))
-                    .border_color(Color::WHITE)
-                    .padding(UiRect::all(Val::Px(5.)));
+                    .font_size(BIG_TEXT_SIZE);
+            });
 
-                    ui.row(|ui| {
-                        ui.style().justify_content(JustifyContent::SpaceBetween);
-                        ui.label(LabelConfig::from(building_type.name()))
-                            .style()
-                            .font_size(TEXT_SIZE);
+            ui.row(|ui| {
+                for building_type in StructureType::iter() {
+                    ui.container(ButtonBundle::default(), |ui| {
+                        ui.style()
+                            .flex_shrink(1.)
+                            .flex_grow(0.)
+                            .align_self(AlignSelf::End);
+
+                        ui.insert((
+                            BuildButton(building_type),
+                            InteractionPalette {
+                                none: css::BLACK.into(),
+                                hovered: css::TEAL.into(),
+                                pressed: css::INDIAN_RED.into(),
+                            },
+                        ))
+                        .style()
+                        .border(UiRect::all(Val::Px(2.)))
+                        .border_color(Color::WHITE)
+                        .padding(UiRect::all(Val::Px(4.)));
 
                         ui.column(|ui| {
-                            ui.style().justify_content(JustifyContent::End);
-                            ui.row(|ui| {
-                                ui.style().column_gap(Val::Px(10.));
-                                for (icon, value) in [
-                                    ("icons/gold_coins.png", cost.gold.to_string()),
-                                    ("icons/population.png", cost.workers.to_string()),
-                                    ("icons/hourglass.png", cost.turns.to_string()),
-                                ] {
-                                    ui.row(|ui| {
-                                        ui.style()
-                                            .justify_content(JustifyContent::End)
-                                            .column_gap(Val::Px(1.));
-                                        ui.icon(icon).style().width(ICON_SIZE).height(ICON_SIZE);
-
-                                        ui.label(LabelConfig::from(value))
-                                            .style()
-                                            .font_size(TEXT_SIZE);
-                                    });
-                                }
-                            });
+                            ui.style().justify_content(JustifyContent::SpaceBetween);
+                            ui.icon("icons/".to_owned() + building_type.tile_texture() + ".png")
+                                .style()
+                                .height(Val::Px(30.))
+                                .width(Val::Px(30.));
                         });
                     });
+                }
+            });
+
+            ui.column(|ui| {
+                ui.style().padding(UiRect {
+                    left: Val::Px(20.),
+                    right: Val::Px(5.),
+                    top: Val::Px(10.),
+                    ..default()
                 });
-            }
+
+                ui.row(|ui| {
+                    ui.style().justify_content(JustifyContent::End);
+                    ui.insert(StructureDetail);
+                });
+            });
         });
     });
 }
@@ -247,6 +231,93 @@ pub fn build_btn_interaction(
         if *i == Interaction::Pressed {
             build_select.send(SelectStructureTypeEvent(b.0));
             selected_structure.0 = Some(b.0);
+        }
+    }
+}
+
+pub fn update_structure_detail(
+    mut commands: Commands,
+    q_structure_detail: Query<Entity, With<StructureDetail>>,
+    selected_structure: Res<SelectedStructueType>,
+    costs: Res<StructureCosts>,
+) {
+    let Ok(entity) = q_structure_detail.get_single() else {
+        return;
+    };
+    commands.entity(entity).despawn_descendants();
+
+    let Some(structure_type) = selected_structure.0 else {
+        return;
+    };
+
+    let Some(cost) = costs.get(&structure_type) else {
+        return;
+    };
+
+    commands.ui_builder(entity).column(|ui| {
+        ui.style()
+            .padding(UiRect::all(Val::Px(10.)))
+            .border(UiRect::all(Val::Px(2.)))
+            .border_color(Color::WHITE.with_alpha(0.3))
+            .background_color(Color::BLACK.with_alpha(0.3))
+            .row_gap(Val::Px(10.));
+
+        ui.row(|ui| {
+            ui.label(LabelConfig::from(structure_type.name()))
+                .style()
+                .font_size(TEXT_SIZE);
+        });
+
+        ui.style().row_gap(Val::Px(10.));
+        for (icon, value) in [
+            ("icons/gold_coins.png", cost.gold.to_string()),
+            ("icons/population.png", cost.workers.to_string()),
+            ("icons/hourglass.png", cost.turns.to_string()),
+        ] {
+            ui.row(|ui| {
+                ui.style().justify_content(JustifyContent::End);
+                ui.icon(icon).style().width(ICON_SIZE).height(ICON_SIZE);
+
+                ui.label(LabelConfig::from(value))
+                    .style()
+                    .font_size(TEXT_SIZE);
+            });
+        }
+
+        ui.row(|ui| {
+            ui.label(LabelConfig::from("Select tile to build."))
+                .style()
+                .font_size(TEXT_SIZE * 0.5);
+        });
+
+        ui.row(|ui| {
+            ui.container(ButtonBundle::default(), |ui| {
+                ui.label(LabelConfig::from("Cancel"))
+                    .style()
+                    .font_size(TEXT_SIZE);
+            })
+            .insert((
+                CancelBuildButton,
+                InteractionPalette {
+                    none: css::RED.into(),
+                    hovered: css::INDIAN_RED.into(),
+                    pressed: css::DARK_RED.into(),
+                },
+            ))
+            .style()
+            .padding(UiRect::all(Val::Px(4.)))
+            .border_radius(BorderRadius::all(Val::Px(4.)));
+        });
+    });
+}
+
+pub fn cancel_build_btn_interaction(
+    q_interactions: Query<&Interaction, (Changed<Interaction>, With<CancelBuildButton>)>,
+    mut selected_structure: ResMut<SelectedStructueType>,
+) {
+    for i in q_interactions.iter() {
+        if *i == Interaction::Pressed {
+            selected_structure.0 = None;
         }
     }
 }
@@ -430,15 +501,15 @@ pub fn update_building_progress(
                         println!("Insert Tavern");
                         object_entity.insert(Tavern);
                     }
-                    StructureType::SmallHouse => {
-                        object_entity.insert(House);
-                    }
+                    // StructureType::SmallHouse => {
+                    //     object_entity.insert(House);
+                    // }
                     StructureType::House => {
                         object_entity.insert(House);
                     }
-                    StructureType::StrongHouse => {
-                        object_entity.insert(House);
-                    }
+                    // StructureType::StrongHouse => {
+                    //     object_entity.insert(House);
+                    // }
                     StructureType::ArcherTower => {
                         object_entity.insert(ArcherTower);
                     }

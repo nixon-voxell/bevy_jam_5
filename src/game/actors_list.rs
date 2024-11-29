@@ -241,10 +241,10 @@ pub fn update_inventory_icons(
                         .style()
                         .image(ImageSource::Path(format!("icons/{}.png", item.name)));
                 } else {
-                    // commands
-                    //     .ui_builder(*c)
-                    //     .style()
-                    //     .image(ImageSource::Path("icons/population.png".to_string()));
+                    commands
+                        .ui_builder(*c)
+                        .style()
+                        .image(ImageSource::Path(String::new()));
                 }
             }
         }
