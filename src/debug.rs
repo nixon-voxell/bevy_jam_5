@@ -1,5 +1,7 @@
 use crate::screen::playing::GameState;
 use crate::screen::Screen;
+use bevy::color::palettes::css::NAVY;
+use bevy::color::palettes::css::RED;
 use bevy::prelude::*;
 use sickle_ui::prelude::*;
 pub struct DebugPlugin;
@@ -19,12 +21,23 @@ pub struct ScreenLabel;
 pub fn show_states(mut commands: Commands) {
     commands.ui_builder(UiRoot).column(|ui| {
         ui.row(|ui| {
-            ui.style().z_index(ZIndex::Global(10000));
-
+            ui.style()
+                .margin(UiRect::all(Val::Percent(2.)))
+                .z_index(ZIndex::Global(10000))
+                .background_color(NAVY.into())
+                .border(UiRect::all(Val::Px(2.)))
+                .padding(UiRect::all(Val::Px(2.)))
+                .border_color(RED.into());
             ui.column(|ui| {
-                ui.label(LabelConfig::from("AppState")).insert(ScreenLabel);
+                ui.label(LabelConfig::from("AppState"))
+                    .insert(ScreenLabel)
+                    .style()
+                    .align_self(AlignSelf::Start);
+
                 ui.label(LabelConfig::from("GameState"))
-                    .insert(GameStateLabel);
+                    .insert(GameStateLabel)
+                    .style()
+                    .align_self(AlignSelf::Start);
             });
         });
     });
@@ -35,15 +48,30 @@ pub fn update_states(
     gamestate: Res<State<GameState>>,
     mut q_screen_label: Query<&mut Text, (With<ScreenLabel>, Without<GameStateLabel>)>,
     mut q_game_state_label: Query<&mut Text, (Without<ScreenLabel>, With<GameStateLabel>)>,
+    asset_server: Res<AssetServer>,
 ) {
     if screen.is_changed() {
         for mut t in q_screen_label.iter_mut() {
-            t.sections[0] = TextSection::from(format!("{:?}", screen.get()));
+            t.sections[0] = TextSection::new(
+                format!("{:?}", screen.get()),
+                TextStyle {
+                    font: asset_server.load("fonts/GaramondLibre-Regular.otf"),
+                    font_size: 20.,
+                    color: Color::WHITE,
+                },
+            );
         }
     }
     if gamestate.is_changed() {
         for mut t in q_game_state_label.iter_mut() {
-            t.sections[0] = TextSection::from(format!("{:?}", gamestate.get()));
+            t.sections[0] = TextSection::new(
+                format!("{:?}", gamestate.get()),
+                TextStyle {
+                    font: asset_server.load("fonts/GaramondLibre-Regular.otf"),
+                    font_size: 20.,
+                    color: Color::WHITE,
+                },
+            );
         }
     }
 }
