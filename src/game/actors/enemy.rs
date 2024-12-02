@@ -1,4 +1,3 @@
-use bevy::color::palettes::css;
 use bevy::math::uvec2;
 use bevy::prelude::*;
 use bevy_trauma_shake::TraumaCommands;
@@ -103,7 +102,6 @@ fn move_enemies(
         With<EnemyActor>,
     >,
     q_not_enemy_units: Query<(), Without<EnemyActor>>,
-    mut q_sprites: Query<(&mut Sprite, &mut Visibility)>,
     q_transforms: Query<&Transform, Without<EnemyActor>>,
     mut next_game_state: ResMut<NextState<GameState>>,
     mut next_enemy_action_state: ResMut<NextState<EnemyActionState>>,
