@@ -400,9 +400,9 @@ impl TilePath {
 
 #[derive(Component, Default, Debug, Clone)]
 pub struct EnemyAttack {
-    tile: Tile,
+    pub tile: Tile,
     /// Animation factor.
-    factor: f32,
+    pub factor: f32,
 }
 
 impl EnemyAttack {
