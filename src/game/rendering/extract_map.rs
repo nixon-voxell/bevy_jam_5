@@ -172,9 +172,9 @@ fn extract_selected_tiles(
         for edge in border_edges {
             let scalar = match edge {
                 TileEdge::North => vec2(-1., 1.),
-                TileEdge::East => Vec2::ONE,
+                TileEdge::West => Vec2::ONE,
                 TileEdge::South => vec2(1., -1.),
-                TileEdge::West => -Vec2::ONE,
+                TileEdge::East => -Vec2::ONE,
             };
 
             extracted_sprites.sprites.insert(
@@ -204,10 +204,10 @@ fn extract_selected_tiles(
         });
         for corner in corners {
             let (image, scalar) = match corner {
-                TileCorner::NorthEast => (&ne_corner_image, Vec2::ONE),
-                TileCorner::SouthEast => (&se_corner_image, Vec2::ONE),
-                TileCorner::SouthWest => (&ne_corner_image, -Vec2::ONE),
-                TileCorner::NorthWest => (&se_corner_image, -Vec2::ONE),
+                TileCorner::NorthWest => (&ne_corner_image, Vec2::ONE),
+                TileCorner::SouthWest => (&se_corner_image, Vec2::ONE),
+                TileCorner::SouthEast => (&ne_corner_image, -Vec2::ONE),
+                TileCorner::NorthEast => (&se_corner_image, -Vec2::ONE),
             };
 
             extracted_sprites.sprites.insert(
@@ -328,9 +328,9 @@ fn extract_arrow_sprites(
 
     let (flip_x, flip_y) = match edge {
         TileEdge::North => (true, false),
-        TileEdge::East => (false, false),
+        TileEdge::West => (false, false),
         TileEdge::South => (false, true),
-        TileEdge::West => (true, true),
+        TileEdge::East => (true, true),
     };
 
     while let Some(cursor) = line_iterator
