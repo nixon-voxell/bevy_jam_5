@@ -153,7 +153,7 @@ fn turn_until_label(
     let section = &mut text.sections[0];
 
     if turn.0 == 0 {
-        section.value = format!("Daytime");
+        section.value = "Daytime".to_string();
     } else {
         section.value = format!("{} turn(s) until {}", turn_left, target_day);
     }
