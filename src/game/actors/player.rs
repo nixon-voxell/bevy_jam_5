@@ -61,6 +61,7 @@ pub fn move_unit(
         ),
         With<PlayerActor>,
     >,
+    player_actors: Query<Entity, With<PlayerActor>>,
 ) {
     if !reset_event_reader.is_empty() {
         for (mut turn_state, ..) in turn_state_query.iter_mut() {
@@ -92,8 +93,20 @@ pub fn move_unit(
             return;
         };
 
+        if village_map.actors.is_occupied(*target) {
+            return;
+        }
+
+        let allied_actors: Vec<Entity> = player_actors.iter().collect();
+
         if village_map
-            .flood(current_pos, movement.0, &TileDir::EDGES, false)
+            .flood(
+                current_pos,
+                movement.0,
+                &TileDir::EDGES,
+                false,
+                &allied_actors,
+            )
             .contains(target)
         {
             turn_state.previous_position = Some(current_pos);
