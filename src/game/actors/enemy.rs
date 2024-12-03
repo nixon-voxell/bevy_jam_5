@@ -1,4 +1,3 @@
-use bevy::color::palettes::css;
 use bevy::math::uvec2;
 use bevy::prelude::*;
 use bevy_trauma_shake::TraumaCommands;
@@ -10,7 +9,6 @@ use crate::game::constants::*;
 use crate::game::cycle::{DayCycle, Season, TimeOfDay, Turn};
 use crate::game::level::Terrain;
 use crate::game::map::VillageMap;
-use crate::game::selection::SelectionMap;
 use crate::game::tile_set::{tile_coord_translation, TileSet, TILE_ANCHOR};
 use crate::game::vfx::{FireOneShotVfx, OneShotVfx};
 use crate::path_finding::tiles::{Tile, TileDir};
@@ -27,7 +25,6 @@ impl Plugin for EnemyActorsPlugin {
         app.init_state::<EnemyActionState>()
             .add_systems(OnEnter(TimeOfDay::Night), spawn_enemies)
             .add_systems(OnEnter(GameState::EnemyTurn), find_movement_path)
-            .add_systems(OnEnter(GameState::BuildingTurn), hide_thick_borders)
             .add_systems(
                 Update,
                 (
@@ -41,23 +38,12 @@ impl Plugin for EnemyActorsPlugin {
     }
 }
 
-/// Hide all thick borders (enemy attack indicators).
-fn hide_thick_borders(mut q_vis: Query<&mut Visibility>, selection_map: Res<SelectionMap>) {
-    for (_, &entity) in selection_map.thick_borders.iter() {
-        if let Ok(mut vis) = q_vis.get_mut(entity) {
-            *vis = Visibility::Hidden;
-        }
-    }
-}
-
 fn perform_attack(
     mut commands: Commands,
     mut q_enemy_attacks: Query<(Entity, &mut EnemyAttack), With<EnemyActor>>,
     q_not_enemy_units: Query<(), Without<EnemyActor>>,
     mut q_health: Query<&mut Health>,
-    mut q_vis: Query<&mut Visibility>,
     village_map: Res<VillageMap>,
-    selection_map: Res<SelectionMap>,
     mut next_enemy_action_state: ResMut<NextState<EnemyActionState>>,
     time: Res<Time>,
     mut evw_oneshot_vfx: EventWriter<FireOneShotVfx>,
@@ -105,14 +91,6 @@ fn perform_attack(
             health.value = health.value.saturating_sub(1);
         }
 
-        // Hide marked tile
-        if let Some(mut vis) = selection_map
-            .thick_borders
-            .get(&enemy_attack.tile)
-            .and_then(|e| q_vis.get_mut(*e).ok())
-        {
-            *vis = Visibility::Hidden;
-        }
         commands.entity(entity).remove::<EnemyAttack>();
     }
 }
@@ -124,12 +102,10 @@ fn move_enemies(
         With<EnemyActor>,
     >,
     q_not_enemy_units: Query<(), Without<EnemyActor>>,
-    mut q_sprites: Query<(&mut Sprite, &mut Visibility)>,
     q_transforms: Query<&Transform, Without<EnemyActor>>,
     mut next_game_state: ResMut<NextState<GameState>>,
     mut next_enemy_action_state: ResMut<NextState<EnemyActionState>>,
     mut village_map: ResMut<VillageMap>,
-    selection_map: ResMut<SelectionMap>,
     player_unit_list: Res<PlayerActorList>,
     turn: Res<Turn>,
     time: Res<Time>,
@@ -157,12 +133,6 @@ fn move_enemies(
             }
         }
 
-        // Hide all thick borders
-        for border in selection_map.thick_borders.values() {
-            if let Ok((_, mut vis)) = q_sprites.get_mut(*border) {
-                *vis = Visibility::Hidden;
-            }
-        }
         next_game_state.set(GameState::BuildingTurn);
         return;
     }
@@ -195,16 +165,6 @@ fn move_enemies(
                     commands
                         .entity(entity)
                         .insert(EnemyAttack::new(attack_tile));
-
-                    // Add a red marker for indication
-                    if let Some((mut sprite, mut vis)) = selection_map
-                        .thick_borders
-                        .get(&attack_tile)
-                        .and_then(|e| q_sprites.get_mut(*e).ok())
-                    {
-                        sprite.color = css::RED.into();
-                        *vis = Visibility::Inherited;
-                    }
 
                     // Only 1 object can be attacked at the same time
                     break;
@@ -438,9 +398,9 @@ impl TilePath {
 
 #[derive(Component, Default, Debug, Clone)]
 pub struct EnemyAttack {
-    tile: Tile,
+    pub tile: Tile,
     /// Animation factor.
-    factor: f32,
+    pub factor: f32,
 }
 
 impl EnemyAttack {

@@ -1,10 +1,9 @@
 use bevy::color::palettes::css;
 use bevy::prelude::*;
-use bevy::utils::{HashMap, HashSet};
+use bevy::utils::HashSet;
 
 use super::actors::stats::Movement;
 use super::actors::{ActorTurnState, EnemyActor, PlayerActor};
-use super::audio::soundtrack::PlaySoundtrack;
 use super::components::GroundTileLayer;
 use super::deployment::deploy_unit;
 use super::map::VillageMap;
@@ -19,7 +18,6 @@ pub struct SelectionPlugin;
 impl Plugin for SelectionPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<SelectedTiles>()
-            .init_resource::<SelectionMap>()
             .init_resource::<SelectedActor>()
             .add_event::<SelectionEvent>()
             .add_event::<ObjectPressedEvent>()
@@ -63,12 +61,6 @@ impl SelectedActor {
 pub struct SelectedTiles {
     pub color: Color,
     pub tiles: HashSet<Tile>,
-}
-
-#[derive(Resource, Default)]
-pub struct SelectionMap {
-    pub borders: HashMap<Tile, Entity>,
-    pub thick_borders: HashMap<Tile, Entity>,
 }
 
 fn color_selected_tiles(

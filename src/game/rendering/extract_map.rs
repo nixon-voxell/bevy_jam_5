@@ -1,4 +1,5 @@
 use bevy::app::Plugin;
+use bevy::color::palettes::css::RED;
 use bevy::color::palettes::tailwind::YELLOW_300;
 use bevy::math::vec2;
 use bevy::prelude::*;
@@ -9,7 +10,9 @@ use bevy::sprite::ExtractedSprite;
 use bevy::sprite::ExtractedSprites;
 use bevy::sprite::SpriteSystem;
 
+use crate::game::actors::enemy::EnemyAttack;
 use crate::game::actors::stats::Health;
+use crate::game::actors::EnemyActor;
 use crate::game::components::ArcherTower;
 use crate::game::constants;
 use crate::game::constants::CURSOR_COLOR;
@@ -52,6 +55,7 @@ impl Plugin for MapExtractionPlugin {
                 (
                     extract_terrain,
                     extract_selected_tiles,
+                    extract_targeted_tiles,
                     extract_arrow_sprites,
                     extract_tile_cursor,
                     extract_arrow_sprites,
@@ -168,9 +172,9 @@ fn extract_selected_tiles(
         for edge in border_edges {
             let scalar = match edge {
                 TileEdge::North => vec2(-1., 1.),
-                TileEdge::East => Vec2::ONE,
+                TileEdge::West => Vec2::ONE,
                 TileEdge::South => vec2(1., -1.),
-                TileEdge::West => -Vec2::ONE,
+                TileEdge::East => -Vec2::ONE,
             };
 
             extracted_sprites.sprites.insert(
@@ -200,10 +204,10 @@ fn extract_selected_tiles(
         });
         for corner in corners {
             let (image, scalar) = match corner {
-                TileCorner::NorthEast => (&ne_corner_image, Vec2::ONE),
-                TileCorner::SouthEast => (&se_corner_image, Vec2::ONE),
-                TileCorner::SouthWest => (&ne_corner_image, -Vec2::ONE),
-                TileCorner::NorthWest => (&se_corner_image, -Vec2::ONE),
+                TileCorner::NorthWest => (&ne_corner_image, Vec2::ONE),
+                TileCorner::SouthWest => (&se_corner_image, Vec2::ONE),
+                TileCorner::SouthEast => (&ne_corner_image, -Vec2::ONE),
+                TileCorner::NorthEast => (&se_corner_image, -Vec2::ONE),
             };
 
             extracted_sprites.sprites.insert(
@@ -226,6 +230,37 @@ fn extract_selected_tiles(
                 },
             );
         }
+    }
+}
+
+fn extract_targeted_tiles(
+    mut commands: Commands,
+    mut extracted_sprites: ResMut<ExtractedSprites>,
+    tile_set: Extract<Res<TileSet>>,
+    ent: Extract<Res<MapEnt>>,
+    q_enemy_attacks: Extract<Query<&EnemyAttack, With<EnemyActor>>>,
+) {
+    let border_image = tile_set.get("border_thick");
+
+    for enemy_attack in q_enemy_attacks.iter() {
+        extracted_sprites.sprites.insert(
+            commands.spawn_empty().id(),
+            ExtractedSprite {
+                color: RED.into(),
+                transform: Transform {
+                    translation: tile_to_camera(enemy_attack.tile, 1.1),
+                    ..Default::default()
+                }
+                .into(),
+                rect: None,
+                anchor: TILE_ANCHOR.as_vec(),
+                original_entity: Some(ent.0),
+                custom_size: None,
+                image_handle_id: border_image.id(),
+                flip_x: false,
+                flip_y: false,
+            },
+        );
     }
 }
 
@@ -293,9 +328,9 @@ fn extract_arrow_sprites(
 
     let (flip_x, flip_y) = match edge {
         TileEdge::North => (true, false),
-        TileEdge::East => (false, false),
+        TileEdge::West => (false, false),
         TileEdge::South => (false, true),
-        TileEdge::West => (true, true),
+        TileEdge::East => (true, true),
     };
 
     while let Some(cursor) = line_iterator
