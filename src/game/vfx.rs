@@ -5,7 +5,8 @@ use bevy_enoki::prelude::*;
 use strum::{EnumCount, IntoEnumIterator};
 use strum_macros::{AsRefStr, EnumCount, EnumIter};
 
-use crate::{screen::Screen, ui::icon_set::IconSet};
+use crate::screen::Screen;
+use crate::ui::icon_set::IconSet;
 
 use super::cycle::Season;
 

@@ -40,7 +40,7 @@ impl FromWorld for HandleMap<ImageKey> {
     }
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Hash, Reflect)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Reflect)]
 pub enum SfxKey {
     ButtonHover,
     ButtonPress,
@@ -48,6 +48,14 @@ pub enum SfxKey {
     Step2,
     Step3,
     Step4,
+    ClawSlash,
+    SwordSlash,
+    AxeSlash,
+    ArrowFire,
+    Hit,
+    Health,
+    BuildingPlacement,
+    CoinPurchase,
 }
 
 impl AssetKey for SfxKey {
@@ -56,20 +64,30 @@ impl AssetKey for SfxKey {
 
 impl FromWorld for HandleMap<SfxKey> {
     fn from_world(world: &mut World) -> Self {
+        use SfxKey::*;
+
         let asset_server = world.resource::<AssetServer>();
         [
+            (ButtonHover, asset_server.load("audio/sfx/button_hover.ogg")),
+            (ButtonPress, asset_server.load("audio/sfx/button_press.ogg")),
+            (Step1, asset_server.load("audio/sfx/step1.ogg")),
+            (Step2, asset_server.load("audio/sfx/step2.ogg")),
+            (Step3, asset_server.load("audio/sfx/step3.ogg")),
+            (Step4, asset_server.load("audio/sfx/step4.ogg")),
+            (ClawSlash, asset_server.load("audio/sfx/claw_slash.ogg")),
+            (SwordSlash, asset_server.load("audio/sfx/sword_slash.ogg")),
+            (AxeSlash, asset_server.load("audio/sfx/axe_slash.ogg")),
+            (ArrowFire, asset_server.load("audio/sfx/arrow_fire.ogg")),
+            (Hit, asset_server.load("audio/sfx/hit.ogg")),
+            (Health, asset_server.load("audio/sfx/health.ogg")),
             (
-                SfxKey::ButtonHover,
-                asset_server.load("audio/sfx/button_hover.ogg"),
+                BuildingPlacement,
+                asset_server.load("audio/sfx/building_placement.ogg"),
             ),
             (
-                SfxKey::ButtonPress,
-                asset_server.load("audio/sfx/button_press.ogg"),
+                CoinPurchase,
+                asset_server.load("audio/sfx/coin_purchase.ogg"),
             ),
-            (SfxKey::Step1, asset_server.load("audio/sfx/step1.ogg")),
-            (SfxKey::Step2, asset_server.load("audio/sfx/step2.ogg")),
-            (SfxKey::Step3, asset_server.load("audio/sfx/step3.ogg")),
-            (SfxKey::Step4, asset_server.load("audio/sfx/step4.ogg")),
         ]
         .into()
     }

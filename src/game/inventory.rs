@@ -2,6 +2,8 @@ use bevy::prelude::*;
 
 use crate::path_finding::tiles::TileDir;
 
+use super::assets::SfxKey;
+
 pub const ITEM_TEMPLATES: &[Item] = &[
     Item {
         name: "axe",
@@ -12,6 +14,7 @@ pub const ITEM_TEMPLATES: &[Item] = &[
         range: 2,
         cost: 10,
         air: false,
+        sfx: SfxKey::AxeSlash,
     },
     Item {
         name: "dagger",
@@ -22,6 +25,7 @@ pub const ITEM_TEMPLATES: &[Item] = &[
         range: 1,
         cost: 40,
         air: false,
+        sfx: SfxKey::SwordSlash,
     },
     Item {
         name: "sword",
@@ -32,6 +36,7 @@ pub const ITEM_TEMPLATES: &[Item] = &[
         range: 2,
         cost: 30,
         air: false,
+        sfx: SfxKey::SwordSlash,
     },
     Item {
         name: "whip",
@@ -42,6 +47,7 @@ pub const ITEM_TEMPLATES: &[Item] = &[
         range: 3,
         cost: 20,
         air: true,
+        sfx: SfxKey::Hit,
     },
     Item {
         name: "bow",
@@ -52,6 +58,7 @@ pub const ITEM_TEMPLATES: &[Item] = &[
         range: 3,
         cost: 30,
         air: true,
+        sfx: SfxKey::ArrowFire,
     },
     Item {
         name: "health_potion",
@@ -62,6 +69,7 @@ pub const ITEM_TEMPLATES: &[Item] = &[
         range: 2,
         cost: 20,
         air: false,
+        sfx: SfxKey::Health,
     },
 ];
 
@@ -164,4 +172,5 @@ pub struct Item {
     /// Cost of the item in gold coins
     pub cost: u32,
     pub air: bool,
+    pub sfx: SfxKey,
 }

@@ -1,6 +1,7 @@
 use bevy::{color::palettes::css, prelude::*};
 use bevy_trauma_shake::TraumaCommands;
 
+use crate::game::audio::sfx::PlaySfx;
 use crate::game::tile_set::tile_coord_translation;
 use crate::path_finding::find_all_within_distance_unweighted;
 use crate::path_finding::tiles::Tile;
@@ -157,6 +158,8 @@ fn apply_item_effect(
                     village_map.actors.remove_entity(target_entity);
                 }
             }
+
+            commands.trigger(PlaySfx::Key(item.sfx));
 
             println!("Successfully used item: {}", item.name);
 

@@ -5,6 +5,8 @@ use bevy_trauma_shake::TraumaCommands;
 use crate::game::actors::spawn::SpawnAnimation;
 use crate::game::actors::ActorBundle;
 use crate::game::actors_list::PlayerActorList;
+use crate::game::assets::SfxKey;
+use crate::game::audio::sfx::PlaySfx;
 use crate::game::constants::*;
 use crate::game::cycle::{DayCycle, Season, TimeOfDay, Turn};
 use crate::game::level::Terrain;
@@ -62,6 +64,7 @@ fn perform_attack(
             OneShotVfx::AttackFlash,
             Transform::from_translation(tile_trans),
         ));
+        commands.trigger(PlaySfx::Key(SfxKey::ClawSlash));
 
         if village_map
             .actors
