@@ -86,7 +86,7 @@ impl Default for StructureCosts {
             // (
             //     StructureType::SmallHouse,
             //     StructureCost {
-            //         turns: 2,
+            //         days: 1,
             //         workers: 5,
             //         gold: 25,
             //         is_exclusive: false,
@@ -95,7 +95,7 @@ impl Default for StructureCosts {
             (
                 StructureType::House,
                 StructureCost {
-                    turns: 4,
+                    turns: 1,
                     workers: 10,
                     gold: 50,
                     is_exclusive: false,
@@ -104,7 +104,7 @@ impl Default for StructureCosts {
             // (
             //     StructureType::StrongHouse,
             //     StructureCost {
-            //         turns: 6,
+            //         days: 1,
             //         workers: 15,
             //         gold: 100,
             //         is_exclusive: false,
@@ -113,7 +113,7 @@ impl Default for StructureCosts {
             (
                 StructureType::Tavern,
                 StructureCost {
-                    turns: 5,
+                    turns: 1,
                     workers: 10,
                     gold: 75,
                     is_exclusive: true,
@@ -122,7 +122,7 @@ impl Default for StructureCosts {
             (
                 StructureType::ArcherTower,
                 StructureCost {
-                    turns: 3,
+                    turns: 1,
                     workers: 5,
                     gold: 25,
                     is_exclusive: false,
@@ -131,7 +131,7 @@ impl Default for StructureCosts {
             (
                 StructureType::Blacksmith,
                 StructureCost {
-                    turns: 7,
+                    turns: 1,
                     workers: 10,
                     gold: 125,
                     is_exclusive: true,
@@ -455,7 +455,6 @@ pub fn spawn_in_progress_building(
 
 pub fn update_building_progress(
     mut commands: Commands,
-    mut events: EventReader<EndDayTurn>,
     mut building_query: Query<(
         Entity,
         &mut RemainingConstructionTurns,
@@ -466,60 +465,57 @@ pub fn update_building_progress(
     tile_set: Res<TileSet>,
     mut working_population: ResMut<VillageEmployment>,
 ) {
-    if events.read().last().is_some() {
-        for (e, mut b, s, w) in building_query.iter_mut() {
-            b.0 = b.0.saturating_sub(1);
-            if b.0 == 0 {
-                working_population.0 = working_population.0.saturating_sub(w.0);
-                commands.entity(e).despawn_recursive();
-                let Some(tile) = village_map.actors.locate(e) else {
-                    continue;
-                };
-                let object_translation =
-                    tile_coord_translation(tile.x() as f32, tile.y() as f32, 2.);
-                let mut object_entity = commands.spawn((
-                    SpriteBundle {
-                        sprite: Sprite {
-                            anchor: TILE_ANCHOR,
-                            ..Default::default()
-                        },
-                        texture: tile_set.get(s.tile_texture()),
-                        transform: Transform::from_translation(object_translation),
-                        ..default()
+    for (e, mut b, s, w) in building_query.iter_mut() {
+        b.0 = b.0.saturating_sub(1);
+        if b.0 == 0 {
+            working_population.0 = working_population.0.saturating_sub(w.0);
+            commands.entity(e).despawn_recursive();
+            let Some(tile) = village_map.actors.locate(e) else {
+                continue;
+            };
+            let object_translation = tile_coord_translation(tile.x() as f32, tile.y() as f32, 2.);
+            let mut object_entity = commands.spawn((
+                SpriteBundle {
+                    sprite: Sprite {
+                        anchor: TILE_ANCHOR,
+                        ..Default::default()
                     },
-                    tile,
-                    PickableTile,
-                    StateScoped(Screen::Playing),
-                    StructureBundle::default(),
-                    SpawnAnimation::new(object_translation),
-                    *s,
-                ));
-                println!("building structure type = {s:?}");
-                println!("entity = {:?}", object_entity.id());
-                match s {
-                    StructureType::Tavern => {
-                        println!("Insert Tavern");
-                        object_entity.insert(Tavern);
-                    }
-                    // StructureType::SmallHouse => {
-                    //     object_entity.insert(House);
-                    // }
-                    StructureType::House => {
-                        object_entity.insert(House);
-                    }
-                    // StructureType::StrongHouse => {
-                    //     object_entity.insert(House);
-                    // }
-                    StructureType::ArcherTower => {
-                        object_entity.insert(ArcherTower);
-                    }
-                    StructureType::Blacksmith => {
-                        object_entity.insert(Blacksmith);
-                    }
-                };
+                    texture: tile_set.get(s.tile_texture()),
+                    transform: Transform::from_translation(object_translation),
+                    ..default()
+                },
+                tile,
+                PickableTile,
+                StateScoped(Screen::Playing),
+                StructureBundle::default(),
+                SpawnAnimation::new(object_translation),
+                *s,
+            ));
+            println!("building structure type = {s:?}");
+            println!("entity = {:?}", object_entity.id());
+            match s {
+                StructureType::Tavern => {
+                    println!("Insert Tavern");
+                    object_entity.insert(Tavern);
+                }
+                // StructureType::SmallHouse => {
+                //     object_entity.insert(House);
+                // }
+                StructureType::House => {
+                    object_entity.insert(House);
+                }
+                // StructureType::StrongHouse => {
+                //     object_entity.insert(House);
+                // }
+                StructureType::ArcherTower => {
+                    object_entity.insert(ArcherTower);
+                }
+                StructureType::Blacksmith => {
+                    object_entity.insert(Blacksmith);
+                }
+            };
 
-                village_map.actors.set(tile, object_entity.id());
-            }
+            village_map.actors.set(tile, object_entity.id());
         }
     }
 }

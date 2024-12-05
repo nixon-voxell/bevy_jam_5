@@ -118,6 +118,7 @@ impl VillageMap {
         max_distance: u32,
         directions: &[TileDir],
         is_airborne: bool,
+        ignore: &[Entity],
     ) -> HashSet<Tile> {
         find_all_within_distance_unweighted(start, max_distance, |tile_coord| {
             directions.iter().filter_map(move |dir| {
@@ -127,8 +128,10 @@ impl VillageMap {
                 }
 
                 // There is an obstacle blocking it
-                if self.actors.is_occupied(final_coord) {
-                    return None;
+                if let Some(actor) = self.actors.get(final_coord) {
+                    if !ignore.contains(&actor) {
+                        return None;
+                    }
                 }
 
                 // Check eligibility of moving on top of water tile
@@ -162,7 +165,7 @@ impl VillageMap {
         is_airborne: bool,
     ) -> Option<Tile> {
         let mut tiles = self
-            .flood(start, max_distance, directions, is_airborne)
+            .flood(start, max_distance, directions, is_airborne, &[])
             .iter()
             .cloned()
             .collect::<Vec<_>>();
@@ -181,7 +184,7 @@ impl VillageMap {
         is_airborne: bool,
     ) -> Option<Tile> {
         let mut tiles = self
-            .flood(start, max_distance, directions, is_airborne)
+            .flood(start, max_distance, directions, is_airborne, &[])
             .iter()
             .cloned()
             .collect::<Vec<_>>();
@@ -519,7 +522,7 @@ mod tests {
         let start = Tile(0, 0);
         let directions = &TileDir::ALL;
 
-        let flooded_tiles = village_map.flood(start, 3, directions, false);
+        let flooded_tiles = village_map.flood(start, 3, directions, false, &[]);
         assert!(flooded_tiles.len() == 1);
         assert!(flooded_tiles.contains(&Tile(0, 0)));
     }
@@ -531,7 +534,7 @@ mod tests {
         let start = Tile(0, 0);
         let directions = &TileDir::ALL;
 
-        let flooded_tiles = village_map.flood(start, 3, directions, false);
+        let flooded_tiles = village_map.flood(start, 3, directions, false, &[]);
 
         assert_eq!(flooded_tiles.len(), 2);
         assert!(flooded_tiles.contains(&Tile(0, 0)));
@@ -545,7 +548,7 @@ mod tests {
         let start = Tile(0, 0);
         let directions = &TileDir::ALL;
 
-        let flooded_tiles = village_map.flood(start, 3, directions, false);
+        let flooded_tiles = village_map.flood(start, 3, directions, false, &[]);
         assert_eq!(flooded_tiles.len(), 2);
         assert!(flooded_tiles.contains(&Tile(0, 0)));
         assert!(flooded_tiles.contains(&Tile(1, 0)));
@@ -558,7 +561,7 @@ mod tests {
         let start = Tile(0, 0);
         let directions = &TileDir::ALL;
 
-        let flooded_tiles = village_map.flood(start, 3, directions, false);
+        let flooded_tiles = village_map.flood(start, 3, directions, false, &[]);
         println!("flooded_tiles = {flooded_tiles:?}");
         assert_eq!(flooded_tiles.len(), 6);
     }
@@ -570,7 +573,7 @@ mod tests {
         let start = Tile(0, 0);
         let directions = &TileDir::ALL;
 
-        let flooded_tiles = village_map.flood(start, 3, directions, false);
+        let flooded_tiles = village_map.flood(start, 3, directions, false, &[]);
         assert!(flooded_tiles.contains(&Tile(3, 3)));
     }
 

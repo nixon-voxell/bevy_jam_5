@@ -1,6 +1,5 @@
 //! Spawn the main level by triggering other observers.
 
-use bevy::color::palettes::css::YELLOW;
 use bevy::prelude::*;
 
 use crate::game::actors::spawn::SpawnAnimation;
@@ -9,7 +8,7 @@ use crate::path_finding::tiles::{Tile, TileDim};
 use crate::{screen::Screen, VillageCamera};
 
 use super::actors::EnemyActor;
-use super::{picking::PickableTile, selection::SelectionMap};
+use super::picking::PickableTile;
 
 use self::level_asset::{LevelAsset, LevelAssetPlugin, Levels};
 
@@ -54,7 +53,6 @@ pub fn load_level(
         return;
     };
 
-    let mut selection_map = SelectionMap::default();
     let mut village_map = VillageMap::new(TileDim::splat(level_asset.size as i32));
 
     let camera_translation = Vec3::new(
@@ -76,7 +74,6 @@ pub fn load_level(
 
             let (xf, yf) = (x as f32, y as f32);
 
-            let edge_translation = tile_coord_translation(xf, yf, 1.0);
             let object_translation = tile_coord_translation(xf, yf, 2.0);
 
             let (xi, yi) = (x as i32, y as i32);
@@ -92,53 +89,6 @@ pub fn load_level(
             };
 
             village_map.set_terrain(Tile(xi, yi), terrain);
-
-            // Border
-            let id = commands
-                .spawn((
-                    SpriteBundle {
-                        sprite: Sprite {
-                            anchor: TILE_ANCHOR,
-                            color: YELLOW.into(),
-                            ..Default::default()
-                        },
-                        texture: tile_set.get("border"),
-                        transform: Transform {
-                            translation: edge_translation + Vec3::Z * 2.0,
-                            ..Default::default()
-                        },
-                        visibility: Visibility::Hidden,
-                        ..default()
-                    },
-                    StateScoped(Screen::Playing),
-                    Tile(xi, yi),
-                    TileBorder,
-                ))
-                .id();
-            selection_map.borders.insert(Tile(xi, yi), id);
-            // Thick border
-            let id = commands
-                .spawn((
-                    SpriteBundle {
-                        sprite: Sprite {
-                            anchor: TILE_ANCHOR,
-                            color: YELLOW.into(),
-                            ..Default::default()
-                        },
-                        texture: tile_set.get("border_thick"),
-                        transform: Transform {
-                            translation: edge_translation + Vec3::Z,
-                            ..Default::default()
-                        },
-                        visibility: Visibility::Hidden,
-                        ..default()
-                    },
-                    StateScoped(Screen::Playing),
-                    Tile(xi, yi),
-                    TileThickBorder,
-                ))
-                .id();
-            selection_map.thick_borders.insert(Tile(xi, yi), id);
 
             if object_tile_name != "empty" {
                 let object_entity = commands.spawn((
@@ -164,7 +114,6 @@ pub fn load_level(
 
     village_map.generate_heat_map(|e| enemies_query.contains(e));
     commands.insert_resource(village_map);
-    commands.insert_resource(selection_map)
 }
 
 #[derive(Component, Default, Debug, Copy, Clone, PartialEq, Eq, Hash)]
