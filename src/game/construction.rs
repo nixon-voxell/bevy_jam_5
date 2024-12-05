@@ -83,15 +83,6 @@ pub struct StructureCosts(pub HashMap<StructureType, StructureCost>);
 impl Default for StructureCosts {
     fn default() -> Self {
         let costs: HashMap<_, _> = [
-            // (
-            //     StructureType::SmallHouse,
-            //     StructureCost {
-            //         days: 1,
-            //         workers: 5,
-            //         gold: 25,
-            //         is_exclusive: false,
-            //     },
-            // ),
             (
                 StructureType::House,
                 StructureCost {
@@ -101,15 +92,6 @@ impl Default for StructureCosts {
                     is_exclusive: false,
                 },
             ),
-            // (
-            //     StructureType::StrongHouse,
-            //     StructureCost {
-            //         days: 1,
-            //         workers: 15,
-            //         gold: 100,
-            //         is_exclusive: false,
-            //     },
-            // ),
             (
                 StructureType::Tavern,
                 StructureCost {
@@ -495,18 +477,11 @@ pub fn update_building_progress(
             println!("entity = {:?}", object_entity.id());
             match s {
                 StructureType::Tavern => {
-                    println!("Insert Tavern");
                     object_entity.insert(Tavern);
                 }
-                // StructureType::SmallHouse => {
-                //     object_entity.insert(House);
-                // }
                 StructureType::House => {
                     object_entity.insert(House);
                 }
-                // StructureType::StrongHouse => {
-                //     object_entity.insert(House);
-                // }
                 StructureType::ArcherTower => {
                     object_entity.insert(ArcherTower);
                 }
