@@ -8,6 +8,8 @@ use strum_macros::{AsRefStr, EnumCount, EnumIter};
 use crate::screen::Screen;
 use crate::ui::icon_set::IconSet;
 
+use super::assets::SfxKey;
+use super::audio::sfx::PlaySfx;
 use super::cycle::Season;
 
 pub(super) struct VfxPlugin;
@@ -31,6 +33,7 @@ impl Plugin for VfxPlugin {
 }
 
 fn fire_oneshot_vfx(
+    mut commands: Commands,
     mut q_states: Query<(&mut ParticleSpawnerState, &mut Transform)>,
     oneshot_vfx_map: Res<OneShotVfxMap>,
     mut evr_oneshot_vfx: EventReader<FireOneShotVfx>,
@@ -42,6 +45,10 @@ fn fire_oneshot_vfx(
 
         state.active = true;
         *transform = oneshot.1;
+
+        if let OneShotVfx::BloodSplash = oneshot.0 {
+            commands.trigger(PlaySfx::Key(SfxKey::BloodSplatter))
+        }
     }
 }
 

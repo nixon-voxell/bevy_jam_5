@@ -53,6 +53,8 @@ pub enum SfxKey {
     AxeSlash,
     ArrowFire,
     Hit,
+    Whip,
+    BloodSplatter,
     Health,
     BuildingPlacement,
     CoinPurchase,
@@ -79,6 +81,11 @@ impl FromWorld for HandleMap<SfxKey> {
             (AxeSlash, asset_server.load("audio/sfx/axe_slash.ogg")),
             (ArrowFire, asset_server.load("audio/sfx/arrow_fire.ogg")),
             (Hit, asset_server.load("audio/sfx/hit.ogg")),
+            (Whip, asset_server.load("audio/sfx/whip.ogg")),
+            (
+                BloodSplatter,
+                asset_server.load("audio/sfx/blood_splatter.ogg"),
+            ),
             (Health, asset_server.load("audio/sfx/health.ogg")),
             (
                 BuildingPlacement,

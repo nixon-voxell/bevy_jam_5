@@ -35,7 +35,11 @@ impl Plugin for MerchantModalPlugin {
                 (
                     exit_mechant_btn_interaction,
                     sell_btn_interaction,
-                    item_btn_interaction,
+                    (
+                        item_btn_interaction,
+                        item_btn_highlight.run_if(resource_changed::<MerchantItems>),
+                    )
+                        .chain(),
                     buy_btn_interaction,
                 ),
             );
@@ -74,8 +78,8 @@ fn merchant_modal_layout(
     icon_set: Res<IconSet>,
     mut merchant_items: ResMut<MerchantItems>,
 ) {
-    for item in merchant_items.items.iter_mut() {
-        if item.is_none() {
+    if merchant_items.items.iter().any(|item| item.is_none()) {
+        for item in merchant_items.items.iter_mut() {
             let index = rand::random::<usize>() % ITEM_TEMPLATES.len();
             *item = Some(&ITEM_TEMPLATES[index]);
         }
@@ -90,24 +94,27 @@ fn merchant_modal_layout(
                     .border(UiRect::all(Val::Px(2.)))
                     .border_color(Color::WHITE)
                     .background_color(Color::BLACK.with_alpha(0.8))
-                    .width(Val::Px(600.))
-                    .height(Val::Px(600.))
+                    .width(Val::Vh(80.))
+                    .height(Val::Vh(80.))
                     .justify_content(JustifyContent::Center);
 
                 ui.column(|ui| {
                     ui.style()
                         .align_items(AlignItems::Center)
-                        .justify_content(JustifyContent::SpaceBetween);
+                        .justify_content(JustifyContent::Center);
+
                     ui.icon("icons/shop_character.png")
                         .style()
-                        .width(Val::Px(192.))
-                        .height(Val::Px(192.));
-                    ui.label(LabelConfig::from("Buy anything you like!"))
-                        .style()
-                        .margin(UiRect::all(Val::Px(16.)));
+                        .width(Val::Vh(12.0))
+                        .height(Val::Vh(12.0))
+                        .margin(UiRect::all(Val::Px(6.0)));
 
                     ui.row(|ui| {
-                        ui.style().column_gap(Val::Px(16.));
+                        ui.style()
+                            .column_gap(Val::Px(16.))
+                            .justify_content(JustifyContent::Center)
+                            .padding(UiRect::all(Val::Px(6.0)));
+
                         for (i, item) in merchant_items.items.iter().enumerate() {
                             let mut image = UiImage::default();
                             if let Some(item) = item {
@@ -119,18 +126,19 @@ fn merchant_modal_layout(
                                     InteractionPalette {
                                         none: Color::BLACK,
                                         hovered: Color::BLACK.lighter(0.4),
-                                        pressed: Color::BLACK,
+                                        pressed: Color::BLACK.lighter(0.2),
                                     },
                                     ItemButton(i),
                                 ))
                                 .style()
-                                .border(UiRect::all(Val::Px(2.)))
+                                .border(UiRect::all(Val::Px(2.0)))
                                 .border_color(Color::WHITE)
-                                .border_radius(BorderRadius::all(Val::Px(16.)))
+                                .border_radius(BorderRadius::all(Val::Px(8.0)))
                                 .align_items(AlignItems::Center)
                                 .justify_content(JustifyContent::Center)
-                                .width(Val::Px(128.))
-                                .height(Val::Px(128.));
+                                .padding(UiRect::all(Val::Px(4.0)))
+                                .width(Val::Vh(10.))
+                                .height(Val::Vh(10.));
                         }
                     });
 
@@ -142,8 +150,8 @@ fn merchant_modal_layout(
                     })
                     .style()
                     .background_color(Color::BLACK)
-                    .margin(UiRect::all(Val::Px(20.)))
-                    .flex_grow(1.)
+                    .padding(UiRect::all(Val::Px(8.0)))
+                    .margin(UiRect::all(Val::Px(6.0)))
                     .align_items(AlignItems::Center)
                     .justify_content(JustifyContent::Center);
 
@@ -163,12 +171,12 @@ fn merchant_modal_layout(
                         BuyButton,
                     ))
                     .style()
-                    .padding(UiRect::all(Val::Px(20.0)));
+                    .padding(UiRect::all(Val::Px(6.0)));
                 });
 
                 // Close button
                 ui.container(ButtonBundle::default(), |ui| {
-                    ui.label(LabelConfig::from("x"))
+                    ui.label(LabelConfig::from("Close"))
                         .style()
                         .font_size(HEADER_SIZE)
                         .font_color(css::RED.into());
@@ -191,13 +199,26 @@ fn merchant_modal_layout(
         .align_items(AlignItems::Center);
 }
 
+fn item_btn_highlight(
+    mut q_interactions: Query<(&ItemButton, &mut BorderColor)>,
+    merchant_items: Res<MerchantItems>,
+) {
+    for (button, mut border_col) in q_interactions.iter_mut() {
+        if merchant_items.selection == Some(button.0) {
+            border_col.0 = css::YELLOW.into();
+        } else {
+            border_col.0 = Color::WHITE;
+        }
+    }
+}
+
 fn item_btn_interaction(
-    q_interactions: Query<(&Interaction, &ItemButton), Changed<Interaction>>,
+    mut q_interactions: Query<(&Interaction, &ItemButton), Changed<Interaction>>,
     mut q_cost_label: Query<&mut Text, (With<CostLabel>, Without<DescriptionLabel>)>,
     mut q_description_label: Query<&mut Text, (With<DescriptionLabel>, Without<CostLabel>)>,
     mut merchant_items: ResMut<MerchantItems>,
 ) {
-    for (interaction, button) in q_interactions.iter() {
+    for (interaction, button) in q_interactions.iter_mut() {
         let (Ok(mut cost), Ok(mut description)) = (
             q_cost_label.get_single_mut(),
             q_description_label.get_single_mut(),

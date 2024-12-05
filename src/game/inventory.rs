@@ -47,7 +47,7 @@ pub const ITEM_TEMPLATES: &[Item] = &[
         range: 3,
         cost: 20,
         air: true,
-        sfx: SfxKey::Hit,
+        sfx: SfxKey::Whip,
     },
     Item {
         name: "bow",
