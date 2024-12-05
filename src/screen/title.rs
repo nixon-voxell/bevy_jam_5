@@ -24,13 +24,43 @@ enum TitleAction {
     Exit,
 }
 
-fn enter_title(mut commands: Commands) {
+fn enter_title(mut commands: Commands, asset_server: Res<AssetServer>) {
+    // Load the poster texture
+    let poster_handle = asset_server.load("images/poster.png");
+
+    // Trigger the soundtrack
     commands.trigger(PlaySoundtrack::Key(SoundtrackKey::Title));
 
     commands
         .ui_root()
         .insert(StateScoped(Screen::Title))
         .with_children(|children| {
+            // Add the poster image
+            children
+                .spawn(NodeBundle {
+                    style: Style {
+                        position_type: PositionType::Absolute, // Make it an absolutely positioned node
+                        width: Val::Percent(100.0),            // Full width
+                        height: Val::Percent(100.0),           // Full height
+                        ..Default::default()
+                    },
+                    background_color: BackgroundColor(Color::NONE), // Transparent background for the container
+                    ..Default::default()
+                })
+                .with_children(|poster| {
+                    poster.spawn(ImageBundle {
+                        image: UiImage::new(poster_handle),
+                        style: Style {
+                            width: Val::Percent(100.0), // Full width for image
+                            height: Val::Auto,          // Maintain aspect ratio for height
+                            ..Default::default()
+                        },
+                        z_index: ZIndex::Local(-1), // Ensure it's behind text and buttons
+                        ..Default::default()
+                    });
+                });
+
+            // Add the title and buttons
             children.title("Cycle of Valor");
             children.title_button("Play").insert(TitleAction::Play);
             children

@@ -17,6 +17,6 @@ pub const NODE_BACKGROUND: Color = Color::srgb(0.286, 0.478, 0.773);
 pub const TITLE_BUTTON_BACKGROUND: Color = Color::srgb(0.4, 0.025, 0.1);
 pub const TITLE_BUTTON_HOVERED_BACKGROUND: Color = Color::srgb(0.75, 0.05, 0.2);
 pub const TITLE_BUTTON_PRESSED_BACKGROUND: Color = Color::Srgba(css::RED);
-pub const TITLE_BUTTON_TEXT_COLOR: Color = Color::srgb(0.1, 0.0, 0.0);
+pub const TITLE_BUTTON_TEXT_COLOR: Color = Color::srgb(1.0, 1.0, 1.0);
 
 pub const TITLE_TEXT_FONT_PATH: &str = "fonts/CloisterBlackLight-axjg.ttf";

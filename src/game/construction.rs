@@ -269,7 +269,7 @@ pub fn update_structure_detail(
         ui.row(|ui| {
             ui.label(LabelConfig::from("Select tile to build."))
                 .style()
-                .font_size(TEXT_SIZE * 0.5);
+                .font_size(TEXT_SIZE * 0.6);
         });
 
         ui.row(|ui| {
