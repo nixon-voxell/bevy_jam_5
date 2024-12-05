@@ -4,6 +4,8 @@ use bevy::ui::FocusPolicy;
 use sickle_ui::prelude::*;
 
 use crate::game::actors_list::SellItemButton;
+use crate::game::assets::SfxKey;
+use crate::game::audio::sfx::PlaySfx;
 use crate::game::constants::TEXT_SIZE;
 use crate::game::inventory::Inventory;
 use crate::game::inventory::Item;
@@ -251,6 +253,7 @@ fn item_btn_interaction(
 }
 
 fn buy_btn_interaction(
+    mut commands: Commands,
     selected_unit: Res<SelectedActor>,
     mut iq: Query<&mut Inventory>,
     q_interactions: Query<&Interaction, (Changed<Interaction>, With<BuyButton>)>,
@@ -280,11 +283,14 @@ fn buy_btn_interaction(
                     next_game_state.set(GameState::BuildingTurn);
                 }
             }
+
+            commands.trigger(PlaySfx::Key(SfxKey::CoinPurchase));
         }
     }
 }
 
 fn sell_btn_interaction(
+    mut commands: Commands,
     selected: Res<SelectedActor>,
     q_interactions: Query<&Interaction, (Changed<Interaction>, With<SellItemButton>)>,
     mut iq: Query<&mut Inventory>,
@@ -306,6 +312,8 @@ fn sell_btn_interaction(
             if let Some(item) = inventory.take(i) {
                 gold.0 += item.cost / 2;
             }
+
+            commands.trigger(PlaySfx::Key(SfxKey::CoinPurchase));
         }
     }
 }

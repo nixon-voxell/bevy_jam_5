@@ -11,6 +11,8 @@ use crate::ui::prelude::InteractionPalette;
 use super::actors::spawn::SpawnAnimation;
 use super::actors::Structure;
 use super::actors::StructureBundle;
+use super::assets::SfxKey;
+use super::audio::sfx::PlaySfx;
 use super::components::ArcherTower;
 use super::components::Blacksmith;
 use super::components::BuildingProgressLabel;
@@ -433,6 +435,7 @@ pub fn spawn_in_progress_building(
         .id();
 
     game.insert(*tile, id);
+    commands.trigger(PlaySfx::Key(SfxKey::ButtonPress));
 }
 
 pub fn update_building_progress(
