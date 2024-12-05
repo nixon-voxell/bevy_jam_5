@@ -435,7 +435,7 @@ pub fn spawn_in_progress_building(
         .id();
 
     game.insert(*tile, id);
-    commands.trigger(PlaySfx::Key(SfxKey::ButtonPress));
+    commands.trigger(PlaySfx::Key(SfxKey::BuildingPlacement));
 }
 
 pub fn update_building_progress(
