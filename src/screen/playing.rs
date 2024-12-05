@@ -87,24 +87,19 @@ pub(super) fn plugin(app: &mut App) {
         )
         .add_systems(
             OnEnter(GameState::Deployment),
-            (
-                hide_all_with::<EndTurnButton>,
-                hide_all_with::<OpenMerchantButton>,
-            ),
+            (hide_all_with::<EndTurnButton>,),
         )
         .add_systems(OnEnter(Screen::Playing), |mut commands: Commands| {
             commands.trigger(PlaySoundtrack::Key(SoundtrackKey::Gameplay));
         })
         .add_systems(
             OnEnter(GameState::BuildingTurn),
-            (
-                show_all_with::<OpenMerchantButton>,
-                (|mut commands: Commands| {
-                    commands.trigger(PlaySoundtrack::Key(SoundtrackKey::Gameplay));
-                })
-                .run_if(in_state(Screen::Playing)),
-            ),
+            ((|mut commands: Commands| {
+                commands.trigger(PlaySoundtrack::Key(SoundtrackKey::Gameplay));
+            })
+            .run_if(in_state(Screen::Playing)),),
         )
+        .add_systems(Update, set_merchant_button_display)
         .add_systems(
             Update,
             show_all_with::<FightButton>
@@ -463,6 +458,22 @@ pub fn show_all_with<T: Component>(
         *vis = Visibility::Visible;
         if let Some(mut style) = style {
             style.display = displays.0.remove(&entity).unwrap_or(Display::DEFAULT);
+        }
+    }
+}
+
+pub fn set_merchant_button_display(
+    game_state: Res<State<GameState>>,
+    mut vis_query: Query<&mut Style, With<OpenMerchantButton>>,
+) {
+    for mut style in vis_query.iter_mut() {
+        let display = if *game_state.get() == GameState::BuildingTurn {
+            Display::Flex
+        } else {
+            Display::None
+        };
+        if style.display != display {
+            style.display = display;
         }
     }
 }
