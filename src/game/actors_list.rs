@@ -17,17 +17,13 @@ pub struct PlayerActorIcon;
 
 pub fn actor_list_layout(ui: &mut UiBuilder<Entity>) {
     ui.row(|ui| {
-        ui.column(|ui| {
-            ui.insert(ActorListContainer)
-                .style()
-                .align_items(AlignItems::Start)
-                .justify_content(JustifyContent::Start)
-                .background_color(Color::BLACK)
-                .border_color(Color::WHITE)
-                .border(UiRect::all(Val::Px(2.)))
-                .padding(UiRect::all(Val::Px(2.)))
-                .row_gap(Val::Px(2.));
-        });
+        ui.insert(ActorListContainer)
+            .style()
+            .align_items(AlignItems::Start)
+            .justify_content(JustifyContent::Start)
+            .border(UiRect::all(Val::Px(2.)))
+            .padding(UiRect::all(Val::Px(2.)))
+            .column_gap(Val::Px(2.));
     });
 }
 
@@ -41,7 +37,6 @@ pub fn update_actor_list_container(
     mut local: Local<Vec<Entity>>,
     mut commands: Commands,
     container_query: Query<Entity, With<ActorListContainer>>,
-    unit_query: Query<&ActorName>,
     player_unit_list: Res<PlayerActorList>,
     selected_unit: Res<SelectedActor>,
 ) {
@@ -50,50 +45,32 @@ pub fn update_actor_list_container(
     } else if !selected_unit.is_changed() {
         return;
     }
+
     for entity in container_query.iter() {
         commands.entity(entity).despawn_descendants();
         let mut ui = commands.ui_builder(entity);
         for unit_entity in player_unit_list.0.iter() {
-            let Ok(name) = unit_query.get(*unit_entity) else {
-                continue;
+            let back_color = match selected_unit.entity == Some(*unit_entity) {
+                true => Color::WHITE,
+                false => Color::BLACK,
             };
-            let (text_color, back_color) = if selected_unit.entity == Some(*unit_entity) {
-                (Color::BLACK, Color::WHITE)
-            } else {
-                (Color::WHITE, Color::BLACK)
-            };
+
             ui.container(ButtonBundle::default(), |ui| {
                 ui.style()
-                    .border_color(Color::WHITE)
+                    .border_color(css::DARK_GRAY.into())
                     .background_color(back_color)
                     .border(UiRect::all(Val::Px(2.)))
                     .column_gap(Val::Px(4.))
-                    .width(Val::Percent(100.))
-                    .padding(UiRect::axes(Val::Px(10.), Val::Px(6.)));
+                    .padding(UiRect::all(Val::Px(4.)));
                 ui.style()
                     .align_items(AlignItems::Center)
                     .justify_content(JustifyContent::SpaceBetween);
 
-                ui.icon("icons/human.png")
-                    .insert(PlayerActorIcon)
-                    .style()
-                    .width(Val::Px(16.))
-                    .height(Val::Px(24.));
                 ui.icon("icons/warrior.png")
                     .insert(PlayerActorIcon)
                     .style()
-                    .width(Val::Px(16.))
-                    .height(Val::Px(24.));
-
-                ui.row(|ui| {
-                    ui.style().padding(UiRect::all(Val::Px(4.)));
-                    ui.label(LabelConfig::from(
-                        name.0.split_whitespace().next().unwrap_or(""),
-                    ))
-                    .style()
-                    .font_size(20.)
-                    .font_color(text_color);
-                });
+                    .width(Val::Px(32.))
+                    .height(Val::Px(32.));
             })
             .insert((
                 InteractionPalette {
@@ -136,10 +113,7 @@ pub fn inventory_list_layout(ui: &mut UiBuilder<Entity>) -> Vec<Entity> {
             for i in 0..INVENTORY_CAPACITY {
                 let id = ui
                     .container(ButtonBundle { ..default() }, |ui| {
-                        ui.icon("icons/population.png")
-                            .style()
-                            .width(Val::Px(48.))
-                            .height(Val::Px(48.));
+                        ui.icon("").style().width(Val::Px(24.)).height(Val::Px(24.));
                     })
                     .insert(ItemSlotIndex(i))
                     .insert((InteractionPalette {
@@ -150,8 +124,8 @@ pub fn inventory_list_layout(ui: &mut UiBuilder<Entity>) -> Vec<Entity> {
                     .style()
                     .border(UiRect::all(Val::Px(2.)))
                     .border_color(Color::WHITE)
-                    .padding(UiRect::all(Val::Px(10.0)))
-                    .border_radius(BorderRadius::all(Val::Px(5.0)))
+                    .padding(UiRect::all(Val::Px(4.0)))
+                    .border_radius(BorderRadius::all(Val::Px(4.0)))
                     .id();
                 out.push(id);
             }
@@ -270,7 +244,7 @@ pub fn update_inventory_icons(
                     commands
                         .ui_builder(*c)
                         .style()
-                        .image(ImageSource::Path("icons/population.png".to_string()));
+                        .image(ImageSource::Path(String::new()));
                 }
             }
         }

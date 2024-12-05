@@ -9,8 +9,9 @@ use super::Screen;
 use crate::game::actors::AvailableActorNames;
 use crate::game::constants::{INITIAL_GOLD, INITIAL_POPULATION, UNIT_LIST_ZINDEX};
 use crate::game::construction::{
-    build_btn_interaction, building_panel_layout, spawn_in_progress_building, update_build_panel,
-    update_building_progress, update_building_progress_labels, BuildingPanel, StructureCosts,
+    build_btn_interaction, building_panel_layout, cancel_build_btn_interaction,
+    spawn_in_progress_building, update_build_panel, update_building_progress,
+    update_building_progress_labels, update_structure_detail, BuildingPanel, StructureCosts,
 };
 use crate::game::cycle::{EndDeployment, EndTurn, Season, TimeOfDay, Turn};
 use crate::game::deployment::{
@@ -128,8 +129,10 @@ pub(super) fn plugin(app: &mut App) {
         .add_systems(
             Update,
             (
-                build_btn_interaction.run_if(in_state(GameState::BuildingTurn)),
-                update_build_panel.run_if(resource_changed::<SelectedStructueType>),
+                (build_btn_interaction, cancel_build_btn_interaction)
+                    .run_if(in_state(GameState::BuildingTurn)),
+                (update_build_panel, update_structure_detail)
+                    .run_if(resource_changed::<SelectedStructueType>),
             )
                 .chain(),
         )
@@ -267,17 +270,7 @@ fn enter_playing(
 
             ui.row(|ui| {
                 ui.style().justify_content(JustifyContent::SpaceBetween);
-                ui.label(LabelConfig::from("Turn Until"))
-                    .insert(WatchRes::<Turn>::default())
-                    .style()
-                    .align_self(AlignSelf::End)
-                    .font_size(LABEL_SIZE);
-
                 ui.column(|ui| {
-                    ui.style()
-                        .justify_content(JustifyContent::Center)
-                        .justify_items(JustifyItems::Center);
-
                     ui.container(
                         ButtonBundle {
                             image: UiImage::new(icon_set.get("shop")),
@@ -287,17 +280,29 @@ fn enter_playing(
                     )
                     .insert((
                         InteractionPalette {
-                            none: Color::WHITE,
-                            hovered: Color::WHITE.lighter(0.4),
-                            pressed: Color::WHITE,
+                            none: Color::BLACK,
+                            hovered: Color::BLACK.with_alpha(0.4),
+                            pressed: Color::BLACK,
                         },
                         OpenMerchantButton,
                     ))
                     .style()
-                    .margin(UiRect::px(10., 10., 10., 20.))
-                    .border_radius(BorderRadius::all(Val::Px(50.)))
-                    .width(Val::Px(100.0))
-                    .height(Val::Px(100.0));
+                    .margin(UiRect::all(Val::Px(10.0)))
+                    .border_radius(BorderRadius::all(Val::Px(40.)))
+                    .width(Val::Px(80.0))
+                    .height(Val::Px(80.0));
+
+                    ui.label(LabelConfig::from("Turn Until"))
+                        .insert(WatchRes::<Turn>::default())
+                        .style()
+                        .align_self(AlignSelf::End)
+                        .font_size(LABEL_SIZE);
+                });
+
+                ui.column(|ui| {
+                    ui.style()
+                        .justify_content(JustifyContent::End)
+                        .justify_items(JustifyItems::End);
 
                     ui.container(ButtonBundle::default(), |ui| {
                         ui.label(LabelConfig::from("End Turn"))
@@ -313,10 +318,10 @@ fn enter_playing(
                         EndTurnButton,
                     ))
                     .style()
-                    .padding(UiRect::all(Val::Px(10.)))
-                    .border_radius(BorderRadius::all(Val::Px(5.)));
+                    .padding(UiRect::all(Val::Px(6.)))
+                    .border_radius(BorderRadius::all(Val::Px(4.)));
 
-                    ui.container(ButtonBundle { ..default() }, |ui| {
+                    ui.container(ButtonBundle::default(), |ui| {
                         ui.label(LabelConfig::from("Fight"))
                             .insert(FightButton)
                             .style()
@@ -325,45 +330,45 @@ fn enter_playing(
                     .insert((
                         InteractionPalette {
                             none: css::PURPLE.into(),
-                            hovered: css::DARK_RED.into(),
-                            pressed: css::INDIAN_RED.into(),
+                            hovered: css::MEDIUM_PURPLE.into(),
+                            pressed: css::REBECCA_PURPLE.into(),
                         },
                         FightButton,
                     ))
                     .style()
                     .display(Display::None)
-                    .padding(UiRect::all(Val::Px(10.)))
-                    .border_radius(BorderRadius::all(Val::Px(5.)));
+                    .padding(UiRect::all(Val::Px(6.)))
+                    .border_radius(BorderRadius::all(Val::Px(4.)));
                 });
             });
         })
         .insert(StateScoped(Screen::Playing));
 
-    commands
-        .ui_builder(UiRoot)
-        .column(|ui| {
-            ui.insert(StateScoped(Screen::Playing));
-            ui.style()
-                .z_index(UNIT_LIST_ZINDEX)
-                .width(Val::Percent(100.))
-                .height(Val::Percent(100.))
-                .justify_content(JustifyContent::Center);
-            ui.row(|ui| {
-                ui.style()
-                    .align_items(AlignItems::Center)
-                    .justify_content(JustifyContent::Start)
-                    .margin(UiRect::left(Val::Px(10.)));
-                ui.column(|ui| {
-                    ui.style().row_gap(Val::Px(20.));
-                    actor_list_layout(ui);
+    commands.ui_builder(UiRoot).column(|ui| {
+        ui.insert(StateScoped(Screen::Playing));
+        ui.style()
+            .z_index(UNIT_LIST_ZINDEX)
+            .width(Val::Percent(100.))
+            .height(Val::Percent(100.))
+            .justify_content(JustifyContent::Start);
 
-                    ui.row(|ui| {
-                        item_slots.0 = inventory_list_layout(ui);
-                    });
+        ui.row(|_| {}).style().height(Val::Px(60.));
+
+        ui.row(|ui| {
+            ui.style()
+                .align_items(AlignItems::Start)
+                .justify_content(JustifyContent::Start)
+                .margin(UiRect::left(Val::Px(10.)));
+            ui.column(|ui| {
+                ui.style().row_gap(Val::Px(20.));
+                actor_list_layout(ui);
+
+                ui.row(|ui| {
+                    item_slots.0 = inventory_list_layout(ui);
                 });
             });
-        })
-        .style();
+        });
+    });
 }
 
 fn end_turn_btn_interaction(

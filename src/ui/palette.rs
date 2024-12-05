@@ -1,7 +1,7 @@
 use bevy::color::palettes::css;
 use bevy::prelude::*;
 
-pub const LABEL_SIZE: f32 = 18.0;
+pub const LABEL_SIZE: f32 = 16.0;
 pub const HEADER_SIZE: f32 = 24.0;
 
 pub const BUTTON_HOVERED_BACKGROUND: Color = Color::srgb(0.186, 0.328, 0.573);

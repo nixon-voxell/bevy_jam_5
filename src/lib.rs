@@ -47,6 +47,9 @@ impl Plugin for AppPlugin {
                         resolution: (844.0, 390.0).into(),
                         canvas: Some("#bevy".to_string()),
                         fit_canvas_to_parent: true,
+                        #[cfg(debug_assertions)]
+                        prevent_default_event_handling: false,
+                        #[cfg(not(debug_assertions))]
                         prevent_default_event_handling: true,
                         ..default()
                     }
